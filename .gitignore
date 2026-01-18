@@ -1,0 +1,9 @@
+.*
+!.gitignore
+sitemap.txt
+**/config/temp/
+**/config/param/
+**/shared/logs/
+**/config/index.php
+**/cache/
+**/nogit
