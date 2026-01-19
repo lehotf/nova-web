@@ -2,17 +2,25 @@
 
 ## Escopo e organizacao
 - Trabalhar apenas dentro de `Htdocs`.
-- `Htdocs2` serve apenas para consulta e comparacao.
+- `Htdocs2` serve apenas para consulta e comparacao, é a versão antiga do site.
+- Vários sites serão publicados em um mesmo servidor compartilhado com diretórios diferentes. Exemplo: `eupenso.com`, `calculatudo.com`, `quemoleza.com`.
 - Codigo compartilhado entre todos os sites fica em `shared/comum`.
 - Codigo compartilhado por tipo de site fica em `shared/sites/<tipo>`.
-- Cache compartilhado de assets (css/js) fica em `shared/cache`.
-- O arquivo `index.php` fica na raiz de cada site e serve como ponto de entrada desse site.
-- O `index.php` usa apenas componentes comuns em `shared`, sem dados especificos hardcoded.
-- Cada site possui um link simbolico `comum` apontando para `shared/comum` para facilitar os includes.
-- Nao e necessario verificar existencia de modulos, recursos ou diretorios base; eles sempre existem.
+- <tipo> é o tipo de site. O site eupenso.com é do tipo "publicação de artigos". Então, a estrutura comum para esse tipo de site fica em `shared/sites/artigos`.
+- Cache compartilhado de assets (css/js) fica em `shared/cache`. São os arquivos css e js que sao usados por todos os sites.
+- O arquivo `index.php` fica na raiz de cada site e serve como ponto de entrada desse site. 
+- .htaccess é configurado para remanejar todos os acessos para o arquivo index.php. (Não precisamos fazer o arquivo.htaccess)
+
+RewriteBase / 
+RewriteCond %{REQUEST_FILENAME} !-f     
+RewriteRule (.*) index.php
+
+- Não incluiremos nos arquivos index.php nenhum valor hardcoded específico do site atual. Ao invés disso, usaremos o arquivo config.php do site para carregar as configuracoes particulares do site.
+- Cada site possui um link simbolico `comum` apontando para `shared/comum` para facilitar os includes; portanto, `site.com/comum/...` e `shared/comum/...` apontam para o mesmo arquivo (nao ha duplicacao).
+- Assuma que modulos, recursos e diretorios sempre existem; nao faça verificacoes de existencia para eles.
 
 ## Configuracao
-- Cada site tera um unico arquivo `config.php` dentro do seu diretorio (ex.: `eupenso.com/config/config.php`).
+- Cada site terá um unico arquivo `config.php` dentro do seu diretorio `config`(ex.: `eupenso.com/config/config.php`).
 - O `config.php` do site deve conter apenas dados especificos daquele site (ex.: IDs, titulo, descricao, flags).
 - As configuracoes comuns a todos os sites ficam em `shared/comum/config/config.php`.
 - O carregamento de configuracao acontece no `index.php` do site, incluindo o config comum e o config do site via `comum/`.
@@ -20,11 +28,12 @@
 - Configuracoes que podem variar por site (ex.: `CACHE_ATIVO`) devem ficar no `config.php` do site, nao no comum.
 
 ## Cache
-- O diretorio de cache HTML e montado diretamente no `GerenciadorCache` como `cache/html` (caminho relativo ao `index.php`).
-- O `GerenciadorCache` recebe o `Guardiao` existente (injeção) para evitar criar outro e repetir resolucoes de IP/URL.
-- O `GerenciadorCache` nao deve criar um `Guardiao`; o `Guardiao` e criado uma unica vez no inicio e compartilhado.
-- O `GerenciadorCache` deve ser simples: `buscar()` e `salvar()` e nada de verificacoes extras.
-- O `Verificador` recebe o `Guardiao` existente e usa o `GerenciadorCache` antes de chamar o construtor de conteudo.
+- O diretorio de cache HTML e montado diretamente no `Cache` como `cache/html` (caminho relativo ao `index.php`).
+- O `Cache` recebe o `Guardiao` existente (injeção) para evitar criar outro e repetir resolucoes de IP/URL.
+- O `Cache` nao deve criar um `Guardiao`; o `Guardiao` e criado uma unica vez no inicio e compartilhado.
+- O `Cache` deve ser simples: `buscar()` e `salvar()` e nada de verificacoes extras.
+- O `Verificador` recebe o `Guardiao` existente e usa o `Cache` antes de chamar o construtor de conteudo.
+- O `Cache` deve ser sempre instanciado com `Guardiao` (sem default `null`).
 
 ## Bots e bloqueio
 - A primeira verificacao deve ser a lista negra; se o IP estiver nela, retornar 404 vazio e renovar o TTL.
@@ -35,6 +44,7 @@
 - O `Guardiao` responde `PNF` (404) e decide blacklist/whitelist: primeiro verifica lista negra, depois lista branca, depois valida Googlebot, e so entao adiciona na lista negra.
 - O `Guardiao` deve ser criado e checado antes de carregar configs e outros arquivos do site.
 - Nao repetir verificacoes de blacklist em outras classes; o `Guardiao` faz isso uma unica vez no inicio.
+- O `Guardiao` registra acessos (TTL 5s) e, ao atingir o limite (5 acessos), chama `PNF` para aplicar a logica completa de bloqueio.
 
 ## Linguagem e nomes
 - Nomes de classes, variaveis e funcoes em portugues.
@@ -44,7 +54,7 @@
 ## Logica
 - Evitar duplicar logicas antigas quando estiverem confusas; ajustar para clareza.
 - Manter a funcionalidade equivalente, mas com estrutura mais clara e segura.
-- Evitar variaveis e constantes redundantes; usar `__DIR__` quando o caminho do arquivo atual for suficiente.
+- Evitar variaveis e constantes redundantes; preferir caminhos relativos ao `index.php` (sem `__DIR__`) conforme padrão atual.
 - Nao inventar APIs ou callbacks sem combinacao previa; manter o fluxo direto e acordado.
 
 ## Constantes x variaveis
@@ -54,4 +64,97 @@
 ## Processo
 - Evoluir passo a passo, com ajustes pequenos e validaveis.
 - Sempre revisar o que foi feito e adequar antes de seguir.
-- Sempre que surgir uma nova regra durante a conversa, adicionar o topico correspondente em `diretriz.md`.
+- IMPORTANTE: Sempre que surgir uma nova regra durante a conversa, que não esteja contida neste arquivo, adicionar o topico correspondente em `diretriz.md`.
+- Nao e necessario verificar a existencia de uma constante global.
+
+# As classes Principais
+
+## Cache
+
+Responsável por:
+
+1 - verificar se existe um cache para a URL atual e retornar o conteúdo do cache ao usuário.
+2 - salvar o conteúdo do cache para a URL atual.
+
+## Guardiao
+
+Responsável por;
+1 - verificar se o IP e URL atual estão na lista negra e lista branca.
+2 - Um IP é cadastrado na lista negra em caso de acessar uma página inexistente e não ser um googlebot. 
+3 - A verificação se um IP é um googlebot é feita através de Lookup Reverso. Quando um IP acessa uma página inexistente, verificamos se ele é um googlebot ou não. Se for, ele é cadastrado na lista branca. Se não for, é cadastrado na lista negra.
+4 - caso o IP esteja na lista negra, retornar 404 vazio e renovar o TTL de 30 segundos daquele IP na lista negra.
+5 - caso o IP esteja na lista branca, impede que ele seja cadastrado na lista negra em caso de acessar uma página inexistente.
+6 - Sanitizar e armazenar URL e IP.
+
+## Logger
+
+Responsável por;
+
+1 - Registrar acessos e acessos negados.
+2 - Registrar acessos subsequentes.
+
+## Controlador
+
+É o componente que coordena as operações do sistema. Ele aciona o guardião, logger e cache para a tomada de decisão sobre prosseguir com o carregamento da página ou interromper o processo retornando 404.
+
+## BD
+
+Responsável por;
+1 - Acesso ao banco de dados
+
+## Carregador
+
+Responsável por;
+1 - Carregar o conteúdo do arquivo solicitado, caso ele não esteja em cache.
+  - Este carregamento observará o TIPO de site. Sendo um site de artigos, o carregamento acontecerá através do carregamento da página artigo.php do diretório compartilhado comum/site/artigos/php/path.
+2 - Encaminhar o conteúdo para o objeto cache para geração do cache.
+3 - Encaminhar para o Guardião, caso não localize o conteúdo solicitado no banco de dados. Assim, o guardião retornará 404 e decidirá se adiciona o IP em lista negra ou branca.
+
+
+# Estrutura de Diretorios
+
+```
+Htdocs/
+├── [site].com/
+│   ├── config/
+│   │   └── config.php      # Config específica do site
+│   ├── comum -> ../shared/comum  # Symlink para shared/comum
+│   └── index.php           # Ponto de entrada
+├── shared/
+│   ├── comum/              # Código comum a todos os sites
+│   │   ├── config/
+│   │   │   └── config.php  # Configurações globais
+│   │   ├── estatico/       # Arquivos estáticos compartilhados
+│   │   │   ├── css/        # Arquivos CSS
+│   │   │   ├── fonts/      # Arquivos de fontes
+│   │   │   ├── html/       # Arquivos HTML
+│   │   │   └── js/         # Arquivos JS
+│   │   └── php/            # Classes e scripts PHP comuns
+│   │       ├── controlador.php (classes: Cache, Logger, Controlador)
+│   │       ├── guardiao.php (classes: Guardiao)
+│   │       ├── path/       # Caminhos do site
+│   │       ├── xhr/        # Arquivos que respondem solicitações XHR
+│   │       └── template/   # Arquivos do template para respostas HTML
+│   └── sites/              # Código específico por tipo de site
+│       └── [tipo]/
+```
+
+
+# Progresso
+
+Tarefas Executadas:
+
+
+
+# Próximos passos:
+
+- Finalizar o arquivo controlador.php
+
+
+## Refazer os arquivos baseados na versão anterior
+
+(A versão anterior do site fica em Htdocs2)
+
+- db.php (Na versão anterior está em comum/php/sistema/db/db.php). No novo formato estará no mesmo diretório dos objetos principais.
+
+- artigo.php

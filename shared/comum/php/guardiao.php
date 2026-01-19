@@ -3,13 +3,21 @@
 class Guardiao
 {
     const TTL = 30;
+    const TTL_ACESSOS = 5;
+    const MAX_ACESSOS = 5;
     private $ip;
     private $url;
 
     public function __construct()
     {
         $this->ip = $this->resolverIp();
+
+        if ($this->ipEmListaNegra()) {
+            $this->pnf();
+        }
+        $this->registrarAcesso();
         $this->url = $this->resolverUrl();
+
     }
 
     public function getIp()
@@ -120,6 +128,33 @@ class Guardiao
     private function chaveListaBranca()
     {
         return 'branca_' . $this->ip;
+    }
+
+    private function chaveListaAcessos()
+    {
+        return 'acesso_' . $this->ip;
+    }
+
+    private function registrarAcesso()
+    {
+        $chave = $this->chaveListaAcessos();
+        $agora = time();
+
+        if (apcu_exists($chave)) {
+            $dados = apcu_fetch($chave);
+            if (!is_array($dados)) {
+                $dados = ['inicio' => $agora, 'quantidade' => 0];
+            }
+            $dados['quantidade'] = (int) $dados['quantidade'] + 1;
+        } else {
+            $dados = ['inicio' => $agora, 'quantidade' => 1];
+        }
+
+        apcu_store($chave, $dados, self::TTL_ACESSOS);
+
+        if ($dados['quantidade'] >= self::MAX_ACESSOS) {
+            $this->pnf();
+        }
     }
 
     private function resolverUrl()

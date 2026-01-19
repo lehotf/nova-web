@@ -1,6 +1,6 @@
 <?php
 
-class GerenciadorCache
+class Cache
 {
     /**
      * @var string Diretorio base do cache HTML do site
@@ -16,11 +16,11 @@ class GerenciadorCache
     /**
      * @param bool $cacheAtivo Se true, o cache sera utilizado
      */
-    public function __construct($cacheAtivo = true, $guardiao = null)
+    public function __construct($cacheAtivo = true, $guardiao)
     {
         $this->cacheAtivo = (bool) $cacheAtivo;
         $this->diretorioCache = 'cache/html';
-        $this->guardiao = $guardiao ?: new Guardiao();
+        $this->guardiao = $guardiao;
     }
 
     /**
@@ -160,7 +160,7 @@ class Logger
 
             file_put_contents(
                 CAMINHO . '/cache/sistema/acessos',
-                date('d/m/Y H:i:s') . ' ' . $guardiao->getIp() . ' ' . $guardiao->getUrl() . $nota . "\n",
+                date('d/m/Y H:i:s') . ' ' . $this->guardiao->getIp() . ' ' . $this->guardiao->getUrl() . $nota . "\n",
                 FILE_APPEND
             );
         }
@@ -176,11 +176,11 @@ class Controlador
     public function __construct($guardiao)
     {
         $this->guardiao = $guardiao;
-        $this->cache = new GerenciadorCache(CACHE_ATIVO, $this->guardiao);
+        $this->cache = new Cache(CACHE_ATIVO, $this->guardiao);
         $this->logger = new Logger($this->guardiao);
         $this->verificaCache();
 
-        require 'comPum/php/carregador.php';
+        require 'comum/php/carregador.php';
 
         $c = new Carregador($this->guardiao, $this->logger, $this->cache);
     }
