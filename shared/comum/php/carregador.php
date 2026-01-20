@@ -50,10 +50,6 @@ class Carregador
         $this->urlBase = $this->guardiao->getUrl();
         $this->verificaAMP();
         $comando = $this->identificaComando();
-
-        global $db;
-        $db = new database;
-
         $this->executaPadrao($comando);
     }
 

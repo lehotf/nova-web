@@ -117,7 +117,7 @@ class Logger
             $linha = date('d/m/Y H:i:s') . ' ' . $this->guardiao->getIp() . ' ' . $this->guardiao->getUrl() . $nota . "\n";
 
             file_put_contents(
-                CAMINHO . '/cache/sistema/acessos_negados',
+                'cache/sistema/acessos_negados',
                 $linha,
                 FILE_APPEND
             );
@@ -138,7 +138,7 @@ class Logger
             // Flush a cada 10 logs
             if (count($buffer) >= 10) {
                 file_put_contents(
-                    CAMINHO . '/cache/sistema/acessos_negados',
+                    'cache/sistema/acessos_negados',
                     implode('', $buffer),
                     FILE_APPEND | LOCK_EX
                 );

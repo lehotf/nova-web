@@ -66,6 +66,11 @@ RewriteRule (.*) index.php
 - Sempre revisar o que foi feito e adequar antes de seguir.
 - IMPORTANTE: Sempre que surgir uma nova regra durante a conversa, que não esteja contida neste arquivo, adicionar o topico correspondente em `diretriz.md`.
 - Nao e necessario verificar a existencia de uma constante global.
+- Estamos implementando a migração da versão antiga em `Htdocs2` para a versão nova em `Htdocs`.
+  - `Htdocs2` é a referência para o trabalho realizado em `Htdocs`.
+  - Os diretórios em `Htdocs` estão sendo preenchidos gradativamente conforme os arquivos são adaptados.
+  - A ausência de um arquivo em `Htdocs` não significa que ele foi eliminado; pode indicar apenas que ainda não foi adaptado.
+  - À medida que houver necessidade de adaptar um arquivo, ele será inserido em `Htdocs` com sua versão atualizada.
 
 # As classes Principais
 
@@ -140,21 +145,49 @@ Htdocs/
 ```
 
 
-# Progresso
+# Progresso - Arquivos modificados
 
-Tarefas Executadas:
-
-
-
-# Próximos passos:
-
-- Finalizar o arquivo controlador.php
+Htdocs
+  ├── shared/comum/php/carregador.php (objetos: Carregador)
+  ├── shared/comum/php/controlador.php (objetos: Cache, Logger, Controlador)
+  ├── shared/comum/php/guardiao.php (objetos: Guardiao)
+  └── shared/sites/artigos/php/path/artigo.php
 
 
-## Refazer os arquivos baseados na versão anterior
 
-(A versão anterior do site fica em Htdocs2)
+# Próximo passo:
 
-- db.php (Na versão anterior está em comum/php/sistema/db/db.php). No novo formato estará no mesmo diretório dos objetos principais.
+Vamos analisar a possibilidade de aprimorar a estrutura de templates.
 
-- artigo.php
+O diretório cache/template contém os templates de arquivos que podem ser utilizados para responder solicitações HTML. O conteúdo gerado através dos arquivos PHP são colocados dentro destes templates para evitar a necessidade de repetir código em todos os arquivos PHP. Além de facilitar a mudança de estilos e estrutura de arquivos HTML.
+
+A linha 257 do arquivo carregador.php é a seguinte:
+
+    require 'site/php/path/' . PADRAO . '.php';
+
+A constante PADRAO é preenchida  na linha 7 do aruivo config/config.php:
+
+    define('PADRAO', 'artigo');
+
+Ou seja, quando o sistema recebe uma requisição e não identifica existencia de cache para esta requisição, será executado o arquivo PADRAO para aquele site. O arquivo padrão para sites de publicações de artigos é artigo.php.
+
+Portanto, será executado 'site/php/path/artigo.php'
+
+lembrando que "site" é um symlink para shared/sites/artigos/
+
+
+O arquivo artigo.php é executado DENTRO de private function executaPadrao($comando), do objeto carregador. 
+
+Mas esta versão do artigo.php corresponde a versão utilizada antes da modificação que estamos fazendo. Portanto, certamente haverá necessidade de ajustes.
+
+Nosso papel, hoje, é:
+
+1 - Ajustar artigo.php para funcionar com a nova estrutura do site
+2 - Verificar se a lógica de template pode ser melhorada para ficar mais eficiente e minimalista
+
+# Sugestões de Mudanças
+
+1 - Alterar os objetos/funções de artigo.php para a nova formatação (com os novos objetos que são diferentes dos objetos da versão anterior)
+2 - Criar a classe Montador para centralizar a lógica de montagem de artigos. Ele terá funções para montar o artigo, o sidebar, o modulos, etc.
+3 - Reduzir uso de variávies globais no montador. Passar variáveis por parâmetro no executaPadrao.
+4 - Verificar se /comum/php/core/montador/pesquisa.php apenas contém arquivos necessários para montagem de artigo. Caso contrário, mover o conteúdo de pesquisa.php para pesquisa_artigo.php
