@@ -65,13 +65,13 @@ function modulo($param)
     return $conteudo;
 }
 
-function getTagsID($tags)
+function getTagsID($db, $tags)
 {
     $strWhere = "(path = '" . url_amigavel($tags[0]) . "')";
     for ($z = 1; $z < count($tags); $z++) {
         $strWhere .= " and (path = '" . url_amigavel($tags[$z]) . "')";
     }
-    $tags = v_select("nome, id from tags where $strWhere");
+    $tags = v_select($db, "nome, id from tags where $strWhere");
     if (count($tags) == 1) {
         global $legenda;
         $legenda = $tags[0]['nome'];
@@ -96,7 +96,7 @@ function removeItemDuplicado($vetor, $max)
     return $vetor;
 }
 
-function getLinksFromTagsID($tagsID, $offset, $max, $root, $order = '')
+function getLinksFromTagsID($db, $tagsID, $offset, $max, $root, $order = '')
 {
     if (!$tagsID) {
         header('Location: /');
@@ -131,14 +131,14 @@ function getLinksFromTagsID($tagsID, $offset, $max, $root, $order = '')
     }
 
     if (count($tagsID) > 1) {
-        return removeItemDuplicado(v_select("id, CONCAT(links.basepath,links.path) as path, links.thumb_titulo_html, links.thumb, links.duracao, links.titulo, links.subtitulo from links_tags inner join links on links.id = links_tags.linkID where (links.publicado = 1 and links.search = 1 $tagWhere$root$remove) order by ${order}links.datePublished desc, links.id DESC LIMIT $offset, " . (2 * $max)), $max);
+        return removeItemDuplicado(v_select($db, "id, CONCAT(links.basepath,links.path) as path, links.thumb_titulo_html, links.thumb, links.duracao, links.titulo, links.subtitulo from links_tags inner join links on links.id = links_tags.linkID where (links.publicado = 1 and links.search = 1 $tagWhere$root$remove) order by ${order}links.datePublished desc, links.id DESC LIMIT $offset, " . (2 * $max)), $max);
     } else {
-        return v_select("id, CONCAT(links.basepath,links.path) as path, links.thumb_titulo_html, links.thumb, links.duracao, links.titulo, links.subtitulo from links_tags inner join links on links.id = links_tags.linkID where (links.publicado = 1 and links.search = 1 $tagWhere$root$remove) order by ${order}links.datePublished desc, links.id DESC LIMIT $offset, $max");
+        return v_select($db, "id, CONCAT(links.basepath,links.path) as path, links.thumb_titulo_html, links.thumb, links.duracao, links.titulo, links.subtitulo from links_tags inner join links on links.id = links_tags.linkID where (links.publicado = 1 and links.search = 1 $tagWhere$root$remove) order by ${order}links.datePublished desc, links.id DESC LIMIT $offset, $max");
     }
 
 }
 
-function listaItem($param = [])
+function listaItem($db, $param = [])
 {
     global $removedLinks;
     $max    = isset($param['max']) ? $param['max'] : '4';
@@ -152,7 +152,7 @@ function listaItem($param = [])
         $remove = '';
     }
 
-    $links = v_select("id, CONCAT(links.basepath,links.path) as path, links.thumb_titulo_html, links.thumb, links.duracao, links.titulo, links.subtitulo from links where (links.publicado = 1 and links.search = 1 $root$remove) order by ${order}links.datePublished desc, links.id DESC LIMIT $offset, $max");
+    $links = v_select($db, "id, CONCAT(links.basepath,links.path) as path, links.thumb_titulo_html, links.thumb, links.duracao, links.titulo, links.subtitulo from links where (links.publicado = 1 and links.search = 1 $root$remove) order by ${order}links.datePublished desc, links.id DESC LIMIT $offset, $max");
 
     if (count($links) == $max) {
         $GLOBALS['next_page'] = $offset + $max + 1;
@@ -169,7 +169,7 @@ function listaItem($param = [])
     return '';
 }
 
-function pesquisaTag($tags, $param = [])
+function pesquisaTag($db, $tags, $param = [])
 {
     $max    = isset($param['max']) ? $param['max'] : '4';
     $root   = isset($param['root']) ? 'and links.root = 1' : '';
@@ -178,7 +178,7 @@ function pesquisaTag($tags, $param = [])
 
     if ($tags) {
         if (!isset($param['id'])) {
-            $tagsID = getTagsID($tags);
+            $tagsID = getTagsID($db, $tags);
         } else {
             $tagsID = $tags;
         }
@@ -186,7 +186,7 @@ function pesquisaTag($tags, $param = [])
         $tagsID = [0];
     }
 
-    $links = getLinksFromTagsID($tagsID, $offset, $max, $root, $order);
+    $links = getLinksFromTagsID($db, $tagsID, $offset, $max, $root, $order);
 
     if ($links) {
 
@@ -205,11 +205,11 @@ function pesquisaTag($tags, $param = [])
     return '';
 }
 
-function showTextLinks($max)
+function showTextLinks($db, $max)
 {
     global $removedLinks;
 
-    $links = v_select("id, CONCAT(links.basepath,links.path) as path, links.thumb_titulo_html, links.titulo, links.subtitulo from links where (links.publicado = 1 and links.search = 1 and id NOT IN (" . $removedLinks . ")) order by links.datePublished desc, links.id DESC LIMIT $max");
+    $links = v_select($db, "id, CONCAT(links.basepath,links.path) as path, links.thumb_titulo_html, links.titulo, links.subtitulo from links where (links.publicado = 1 and links.search = 1 and id NOT IN (" . $removedLinks . ")) order by links.datePublished desc, links.id DESC LIMIT $max");
 
     $texto = '<div class="divisor"><div class="textLink">';
 
@@ -225,13 +225,13 @@ function showTextLinks($max)
 
 }
 
-function pesquisaByTagID($vetID, $param = [])
+function pesquisaByTagID($db, $vetID, $param = [])
 {
     $param['campo'] = 'id';
-    return pesquisaTag($vetID, $param);
+    return pesquisaTag($db, $vetID, $param);
 }
 
-function pesquisaLink($texto, $param = [])
+function pesquisaLink($db, $texto, $param = [])
 {
 
     if (strlen($texto) < 4) {
@@ -241,7 +241,7 @@ function pesquisaLink($texto, $param = [])
     $max    = $param['max'] ? $param['max'] : '24';
     $offset = isset($param['offset']) ? $param['offset'] : 0;
 
-    $links = v_select("id, CONCAT(links.basepath,links.path) as path, links.thumb_titulo_html, links.thumb, links.duracao, links.titulo, links.subtitulo from links where (links.publicado = 1 and links.search = 1 and (links.titulo like '%$texto%' or links.subtitulo like '%$texto%')) order by links.datePublished desc, links.id DESC LIMIT $offset, $max");
+    $links = v_select($db, "id, CONCAT(links.basepath,links.path) as path, links.thumb_titulo_html, links.thumb, links.duracao, links.titulo, links.subtitulo from links where (links.publicado = 1 and links.search = 1 and (links.titulo like '%$texto%' or links.subtitulo like '%$texto%')) order by links.datePublished desc, links.id DESC LIMIT $offset, $max");
     //$links2 = v_select("CONCAT(basepath,path) as path, thumb, titulo, subtitulo from links where (titulo like '%$texto%' and publicado = 1 and thumb = '') order by data desc, id DESC LIMIT $max");
 
     if (($links) && (count($links) == $max)) {
@@ -255,7 +255,7 @@ function pesquisaLink($texto, $param = [])
     return modulo(['classe' => 'c25', 'links' => $links]);
 }
 
-function getLinkIDFromPath($path)
+function getLinkIDFromPath($db, $path)
 {
     if (preg_match('/(\/\w+\/)([^\/]+)/', $path, $m)) {
         $basepath = $m[1];
@@ -264,33 +264,34 @@ function getLinkIDFromPath($path)
         $basepath = '/';
         $path     = str_replace('/', '', $path);
     }
-    return select("id from links where basepath = '$basepath' and path = '$path'")['id'];
+    $resultado = select($db, "id from links where basepath = '$basepath' and path = '$path'");
+    return $resultado ? $resultado['id'] : null;
 }
 
-function getTagsFromLinkID($linkID)
+function getTagsFromLinkID($db, $linkID)
 {    
-    return v_select("tagID as id, tags.nome as nome, tags.path as path from links_tags inner join tags on links_tags.tagID = tags.id where linkID = $linkID order by nome");
+    return v_select($db, "tagID as id, tags.nome as nome, tags.path as path from links_tags inner join tags on links_tags.tagID = tags.id where linkID = $linkID order by nome");
 }
 
-function showRelatedLinks($path)
+function showRelatedLinks($db, $path)
 {
     $modulos = '';
     global $removedLinks;
     global $tags;
 
-    $removedLinks = getLinkIDFromPath($path);
+    $removedLinks = getLinkIDFromPath($db, $path);
     
     if ($removedLinks){
-        $tags         = getTagsFromLinkID($removedLinks);
+        $tags         = getTagsFromLinkID($db, $removedLinks);
     }
     
     if ($tags) {
-        $modulos .= pesquisaByTagID($tags, ['max' => 8, 'id' => true]);
+        $modulos .= pesquisaByTagID($db, $tags, ['max' => 8, 'id' => true]);
     } else {
-        $modulos .= pesquisaTag(null, ['max' => 8]);
+        $modulos .= pesquisaTag($db, null, ['max' => 8]);
     }
 
-    return '<!--googleoff: all-->' . $modulos . showTextLinks(4) . ' <!--googleon: all-->';
+    return '<!--googleoff: all-->' . $modulos . showTextLinks($db, 4) . ' <!--googleon: all-->';
 }
 
 function showTags()

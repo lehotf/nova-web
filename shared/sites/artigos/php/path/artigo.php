@@ -1,9 +1,9 @@
 <?php
 
-$dados = prepare_select("id, artigo, titulo, subtitulo, thumb, duracao, datePublished, dateModified, amp, keywords from links where path = ?",'s',$comando);
+$dados = prepare_select($db, "id, artigo, titulo, subtitulo, thumb, duracao, datePublished, dateModified, amp, keywords from links where path = ?", 's', $comando);
 
 if ($dados) {
-    require CAMINHO . '/comum/php/core/montador/pesquisa.php';
+    require CAMINHO . '/comum/php/montador/pesquisa.php';
     require CAMINHO . '/comum/php/sistema/tool/texto.php';
 
     if ($this->amp) {
@@ -12,12 +12,13 @@ if ($dados) {
         $artigo_html = converte($dados['artigo']);
     }
 
-    if ($this->cacheManager->isNoCacheEnabled()) {
+    if (! $this->cache->getCache()) {
         $pagina = '_artigo';
         $add    = '';
     } else {
         $pagina = 'artigo';
-        $add    = '<div class="divisor">' . adsense('article') . '</div>';
+        #$add    = '<div class="divisor">' . adsense('article') . '</div>';
+        $add    = '';
     }
 
     $amp_script = '';
@@ -27,7 +28,7 @@ if ($dados) {
         }
     }
 
-    $modulos = '<div class="interesse">Talvez seja de seu interesse</div>' . showRelatedLinks($this->verificador->url);
+    $modulos = '<div class="interesse">Talvez seja de seu interesse</div>' . showRelatedLinks($db, $this->guardiao->getUrl());
 //$modulos .= fb_comment(DNS_SITE . $this->url, FACEBOOK_ID);
 
     if ($dados['keywords'] != '') {
@@ -45,7 +46,7 @@ if ($dados) {
 
     $description = $dados['subtitulo'] . ' ' . $dados['keywords'];
 
-    $structured = structured($dados['titulo'], $dados['datePublished'], $dados['dateModified'], $image, $description, $this->verificador->url);
+    $structured = structured($dados['titulo'], $dados['datePublished'], $dados['dateModified'], $image, $description, $this->guardiao->getUrl());
 
 //Colocando a data
     $timestamp = '<span>Publicado em ' . DateTime::createFromFormat("Y-m-d H:i:s", $dados['datePublished'])->format('d/m/Y') . '</span>';
@@ -54,7 +55,7 @@ if ($dados) {
         $timestamp .= '<span>Última atualização em ' . DateTime::createFromFormat("Y-m-d H:i:s", $dados['dateModified'])->format('d/m/Y \à\s H:i:s') . '</span>';
     }
 
-    $contato = '<div class="contato"><b>Contato:</b> Caso você tenha identificado algum erro ou imprecisão no conteúdo acima, por gentileza, considere informar <a target="_blank" href="https://docs.google.com/forms/d/e/1FAIpQLScX2d2cqz6DoJQga6S988u9Ci895meVc5zNehAXcevhvfOpiw/viewform?entry.278388629=' . SITE . $this->verificador->url . '">clicando aqui</a>. Você poderá utilizar o mesmo link caso queira entrar em contato por qualquer outro motivo.</div>';
+    $contato = '<div class="contato"><b>Contato:</b> Caso você tenha identificado algum erro ou imprecisão no conteúdo acima, por gentileza, considere informar <a target="_blank" href="https://docs.google.com/forms/d/e/1FAIpQLScX2d2cqz6DoJQga6S988u9Ci895meVc5zNehAXcevhvfOpiw/viewform?entry.278388629=' . SITE . $this->guardiao->getUrl() . '">clicando aqui</a>. Você poderá utilizar o mesmo link caso queira entrar em contato por qualquer outro motivo.</div>';
 
     $dados_preparados = [
         //'searchscript' => "<script>function search(link){document.getElementById('gsc-i-id1').value = link.innerHTML;document.getElementsByClassName('gsc-search-button gsc-search-button-v2')[0].click();}</script>",

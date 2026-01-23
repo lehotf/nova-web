@@ -9,6 +9,36 @@ class Carregador
     private $cache;
     private $urlBase;
     private $urlSemBarra;
+    private $tipoSite;
+
+    /**
+     * Converte um nome lógico de asset em path real do arquivo fonte.
+     */
+    private function minPathExtend($arquivo, $tipo)
+    {
+        preg_match('#^(comum|config)\/(.*)#', $arquivo, $nome);
+
+        $path = (count($nome) > 1) ? $nome[1] : '';
+
+        switch ($path) {
+            case 'comum':
+                return '/comum/estatico/' . $tipo . '/' . $nome[2] . '.' . $tipo;
+
+            case 'config':
+                return '/config/' . $nome[2] . '.' . $tipo;
+
+            default:
+                return '/site/estatico/' . $tipo . '/' . $arquivo . '.' . $tipo;
+        }
+    }
+
+     /**
+     * Converte um nome lógico de asset em path cacheado.
+     */
+    private function minPathToCache($filePath, $tipo)
+    {
+        return '/cache/' . $tipo . '/' . preg_replace('#^(comum|config)\/#', '', $filePath) . '.' . $tipo;
+    }
 
 /**
  * [verificaAMP description]
@@ -151,11 +181,11 @@ class Carregador
         $codigo = '';
         if (DEBUG) {
             foreach ($vetor as $arquivo) {
-                $codigo = $codigo . $this->montaObjeto(minPathExtend($arquivo, $tipo), $tipo);
+                $codigo = $codigo . $this->montaObjeto($this->minPathExtend($arquivo, $tipo), $tipo);
             }
         } else {
             foreach ($vetor as $arquivo) {
-                $codigo = $codigo . $this->montaObjeto(minPathToCache($arquivo, $tipo), $tipo);
+                $codigo = $codigo . $this->montaObjeto($this->minPathToCache($arquivo, $tipo), $tipo);
             }
         }
         return $codigo;
@@ -247,6 +277,11 @@ class Carregador
 
     private function executaPadrao($comando)
     {
+        require 'comum/php/db.php';
+        require 'comum/config/ad.php';
+        $db = new database('localhost', BD_LOGIN, BD_SENHA, BD);
+        
+        
         if ($comando == 'root') {
             require 'site/php/path/root.php';
         } else {

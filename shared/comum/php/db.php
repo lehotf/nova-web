@@ -7,27 +7,21 @@ class database
 {
     public $link;
 
-    public function __construct()
+    public function __construct($host, $login, $senha, $db)
     {
-        $this->connect(BD);
+        $this->connect($host, $login, $senha, $db);
     }
 
-    public function connect($db)
+    public function connect($host, $login, $senha, $db)
     {
-        global $l;
-
-        /** @var string $php_errormsg */
-
-        if ($l) {
-            $l->close();
+        if ($this->link instanceof mysqli) {
+            $this->link->close();
         }
 
-        $l = new mysqli(BD_DNS, BD_LOGIN, BD_SENHA, $db);
-        if (!$l) {
-            die("ErrDB:" . $php_errormsg);
+        $this->link = new mysqli($host, $login, $senha, $db);
+        if ($this->link->connect_error) {
+            die('ErrDB:' . $this->link->connect_error);
         }
-
-        $this->link = $l;
         $this->link->set_charset('utf8');
     }
 
@@ -39,27 +33,34 @@ class database
 
     public function getID($valor, $tabela, $nome = 'nome')
     {
-        global $db;
-
-        /** @var string $query */
-
-        $result = $db->link->query("select id from $tabela where $nome = '$valor'" . $query) or die($db->link->error);
-        if ($result) {
-            $item = $result->fetch_array(MYSQLI_ASSOC);
-            return $item['id'];
-        } else {
+        if (!preg_match('/^[a-zA-Z0-9_]+$/', $tabela) || !preg_match('/^[a-zA-Z0-9_]+$/', $nome)) {
             return -1;
         }
+
+        $stmt = $this->link->prepare("select id from $tabela where $nome = ?");
+        if (!$stmt) {
+            return -1;
+        }
+        $stmt->bind_param('s', $valor);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        if ($result && $result->num_rows) {
+            $item = $result->fetch_array(MYSQLI_ASSOC);
+            return $item['id'];
+        }
+
+        return -1;
     }
 }
 
-
-function prepare_select($query, $type, $param)
+function prepare_select($db, $query, $type, $param)
 {
-    global $db;
-
     $statement = $db->link->prepare("select " . $query);
-    $statement->bind_param($type, $param);
+    if (!$statement) {
+        return false;
+    }
+    $params = is_array($param) ? $param : [$param];
+    $statement->bind_param($type, ...$params);
     $statement->execute();
     $result = $statement->get_result();
 
@@ -70,10 +71,8 @@ function prepare_select($query, $type, $param)
     }
 }
 
-function select($query)
+function select($db, $query)
 {
-    global $db;
-
     $result = $db->link->query("select " . $query) or die($db->link->error);
 
     if ($result) {
@@ -84,10 +83,8 @@ function select($query)
     }
 }
 
-function v_select($query)
+function v_select($db, $query)
 {
-    global $db;
-
     $result = $db->link->query("select " . $query) or die($db->link->error);
 
     if ($result) {
@@ -103,10 +100,8 @@ function v_select($query)
     return false;
 }
 
-function f_select($query, $function)
+function f_select($db, $query, $function)
 {
-    global $db;
-
     $result = $db->link->query("select " . $query) or die($db->link->error);
 
     if ($result) {
@@ -118,17 +113,22 @@ function f_select($query, $function)
     }
 }
 
-function query($query)
+function query($db, $query)
 {
-    global $db;
     return $db->link->query($query) or die($db->link->error);
 }
 
-function queryXHR($query)
+function queryXHR($db, $query, $erroHandler = null)
 {
-    global $db;
-    global $o;
-    return $db->link->query($query) or $o->envia->erro($db->link->error);
+    $resultado = $db->link->query($query);
+    if ($resultado) {
+        return $resultado;
+    }
+    if ($erroHandler) {
+        $erroHandler($db->link->error);
+        return false;
+    }
+    die($db->link->error);
 }
 
 function getId() {}

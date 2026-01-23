@@ -144,6 +144,7 @@ Htdocs/
 │       └── [tipo]/
 ```
 
+Leia os arquivos controlador.php, guardiao.php e carregador.php para entender como o sistema funciona. Eles estão localizados em shared/comum/php.
 
 # Progresso - Arquivos modificados
 

@@ -159,7 +159,7 @@ class Logger
             }
 
             file_put_contents(
-                CAMINHO . '/cache/sistema/acessos',
+                CAMINHO . 'cache/sistema/acessos',
                 date('d/m/Y H:i:s') . ' ' . $this->guardiao->getIp() . ' ' . $this->guardiao->getUrl() . $nota . "\n",
                 FILE_APPEND
             );
