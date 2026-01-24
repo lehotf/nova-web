@@ -10,13 +10,13 @@ class Cache
     /**
      * @var bool Define se o cache deve ser usado
      */
-    private $cacheAtivo = true;
+    private $cacheAtivo;
     private $guardiao;
 
     /**
      * @param bool $cacheAtivo Se true, o cache sera utilizado
      */
-    public function __construct($cacheAtivo = true, $guardiao)
+    public function __construct($cacheAtivo, $guardiao)
     {
         $this->cacheAtivo = (bool) $cacheAtivo;
         $this->diretorioCache = 'cache/html';
@@ -159,7 +159,7 @@ class Logger
             }
 
             file_put_contents(
-                CAMINHO . 'cache/sistema/acessos',
+                'cache/sistema/acessos',
                 date('d/m/Y H:i:s') . ' ' . $this->guardiao->getIp() . ' ' . $this->guardiao->getUrl() . $nota . "\n",
                 FILE_APPEND
             );
@@ -192,7 +192,9 @@ class Controlador
 
         if ($conteudo !== false) {
             $this->logger->acesso();
-            die($conteudo);
+            echo $conteudo;
+            $this->guardiao->tempo->stop();
+            die();
         }
     }
 }

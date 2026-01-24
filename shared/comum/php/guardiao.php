@@ -7,16 +7,18 @@ class Guardiao
     const MAX_ACESSOS = 5;
     private $ip;
     private $url;
+    public $tempo;
 
     public function __construct()
     {
+        $this->tempo = new contadorDeTempo();
         $this->ip = $this->resolverIp();
 
         if ($this->ipEmListaNegra()) {
             $this->pnf();
-        }
-        $this->registrarAcesso();
+        }        
         $this->url = $this->resolverUrl();
+        $this->registrarAcesso();
 
     }
 
@@ -28,56 +30,6 @@ class Guardiao
     public function getUrl()
     {
         return $this->url;
-    }
-
-    public function exibirRelatorio()
-    {
-        $info = apcu_cache_info(true);
-        $entradas = isset($info['cache_list']) ? $info['cache_list'] : [];
-
-        $negra = [];
-        $branca = [];
-        $acessos = [];
-
-        foreach ($entradas as $item) {
-            if (!isset($item['info'])) {
-                continue;
-            }
-            $chave = $item['info'];
-            if (strpos($chave, 'negra_') === 0) {
-                $negra[] = $chave;
-            } elseif (strpos($chave, 'branca_') === 0) {
-                $branca[] = $chave;
-            } elseif (strpos($chave, 'acesso_') === 0) {
-                $acessos[] = $chave;
-            }
-        }
-
-        echo 'Relatório do Guardião<BR>';
-        echo 'IP atual: ' . $this->ip . '<BR>';
-        echo 'URL atual: ' . $this->url . '<BR>';
-        echo 'Lista negra: ' . count($negra) . '<BR>';
-        echo 'Lista branca: ' . count($branca) . '<BR>';
-        echo 'Acessos (janela 5s): ' . count($acessos) . '<BR>';
-        echo 'IP atual na negra: ' . ($this->ipEmListaNegra() ? 'sim' : 'nao') . '<BR>';
-        echo 'IP atual na branca: ' . ($this->ipEmListaBranca() ? 'sim' : 'nao') . '<BR>';
-        $dadosAcesso = apcu_fetch($this->chaveListaAcessos());
-        if (is_array($dadosAcesso)) {
-            $inicio = isset($dadosAcesso['inicio']) ? $dadosAcesso['inicio'] : 0;
-            $quantidade = isset($dadosAcesso['quantidade']) ? (int) $dadosAcesso['quantidade'] : 0;
-            $agora = time();
-            $restante = ($inicio > 0) ? max(0, self::TTL_ACESSOS - ($agora - $inicio)) : 0;
-            echo 'Acessos IP atual: ' . $quantidade . '<BR>';
-            echo 'Janela iniciada em: ' . ($inicio ? date('d/m/Y H:i:s', $inicio) : 'n/d') . '<BR>';
-            echo 'Tempo restante da janela: ' . $restante . 's<BR>';
-        } else {
-            echo 'Acessos IP atual: 0<BR>';
-            echo 'Janela iniciada em: n/d<BR>';
-            echo 'Tempo restante da janela: 0s<BR>';
-        }
-        echo 'Chaves negra: ' . implode(', ', $negra) . '<BR>';
-        echo 'Chaves branca: ' . implode(', ', $branca) . '<BR>';
-        echo 'Chaves acessos: ' . implode(', ', $acessos) . '<BR>';
     }
 
     public function ipEmListaNegra()
@@ -133,12 +85,6 @@ class Guardiao
 
     public function pnf()
     {
-        if (DEBUG) {
-            echo "DEBUG: PNF<BR>";            
-            echo "URL: " . $this->url;
-            $this->exibirRelatorio();
-            die();
-        }
 
         if ($this->ipEmListaNegra()) {
             $this->adicionarListaNegra(); #Apenas para renovar o TTL
@@ -234,4 +180,35 @@ class Guardiao
         return $url;
     }
 
+}
+
+
+class contadorDeTempo
+{
+    private $time_start;
+    private $time_end;
+    private $tempo_total;
+
+    public function __construct()
+    {
+        $this->time_start = microtime(true);
+    }
+
+    private function registra_fim()
+    {
+        $this->time_end    = microtime(true);        
+        $this->tempo_total = number_format(($this->time_end - $this->time_start) * 1000, 2, ',', ".");        
+    }
+
+    public function stop()
+    {
+        $this->registra_fim();
+        echo "<div id=\"tempo\">$this->tempo_total ms</div>";
+    }
+
+    public function get_time()
+    {
+        $this->registra_fim();
+        return "<div id=\"tempo\">$this->tempo_total ms</div>";
+    }
 }

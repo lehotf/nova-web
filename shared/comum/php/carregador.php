@@ -9,7 +9,6 @@ class Carregador
     private $cache;
     private $urlBase;
     private $urlSemBarra;
-    private $tipoSite;
 
     /**
      * Converte um nome lógico de asset em path real do arquivo fonte.
@@ -141,7 +140,7 @@ class Carregador
             }
         }
 
-        $texto = file_get_contents(CAMINHO . '/cache/template/' . $tipo . '.html');
+        $texto = file_get_contents($_SERVER['DOCUMENT_ROOT'] . '/cache/template/' . $tipo . '.html');
 
         $param['url'] = DNS_SITE . $this->urlBase;
         $funcao       = function ($matches) use ($param) {
@@ -195,7 +194,7 @@ class Carregador
 
     public function localizaPath($comando)
     {
-        $caminho = CAMINHO . '/site/php/path/';
+        $caminho = $_SERVER['DOCUMENT_ROOT'] . '/site/php/path/';
 
         // Tenta primeiro o comando direto
         if (file_exists($caminho . $comando . '.php')) {
@@ -226,7 +225,7 @@ class Carregador
 
     public function localizaPathComum($comando)
     {
-        $caminho = CAMINHO . '/comum/php/path/';
+        $caminho = $_SERVER['DOCUMENT_ROOT'] . '/comum/php/path/';
 
         // Tenta primeiro o comando direto
         if (file_exists($caminho . $comando . '.php')) {

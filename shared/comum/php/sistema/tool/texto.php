@@ -151,7 +151,7 @@ function converte_callback_comando($match)
         case 'img':
             global $amp;
             if ($amp) {
-                $imgsize = getimagesize(CAMINHO . '/cache/img/upload/a/' . $texto . '.jpg');
+                $imgsize = getimagesize($_SERVER['DOCUMENT_ROOT'] . '/cache/img/upload/a/' . $texto . '.jpg');
                 return '<div class="img_container"><amp-img width="' . $imgsize[0] . '" height="' . $imgsize[1] . '" layout="responsive" src="/cache/img/upload/a/' . $texto . '.jpg"></amp-img></div>';
             } else {
                 return '<div class="img_container"><img src="/cache/img/upload/a/' . $texto . '.jpg"></div>';
