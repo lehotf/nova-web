@@ -3,7 +3,7 @@
 class observador
 {
     private $db;
-    private $guardiao;
+    public $guardiao;
     public $input;
     public $dados;
     private $instrucao;

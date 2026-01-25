@@ -53,6 +53,7 @@ class autenticador
         $login = $this->db->protege($login);
         $result = $this->link->query("SELECT id, nome, senha, autorizacao, idioma from usuario where login = '$login'");
         if (!$result) {
+            $this->o->guardiao->adicionarListaNegra();
             $this->o->erro($this->link->error, 500);
         }
 
@@ -86,6 +87,7 @@ class autenticador
             if (session_status() === PHP_SESSION_ACTIVE) {
                 $_SESSION['autorizacao'] = 0;
             }
+            $this->o->guardiao->adicionarListaNegra();
             return false;
         }
     }

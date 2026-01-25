@@ -3,23 +3,23 @@
 class Guardiao
 {
     const TTL = 30;
-    const TTL_ACESSOS = 5;
-    const MAX_ACESSOS = 5;
     private $ip;
     private $url;
     public $tempo;
+    public $logger;
+    private $emListaNegra = null;
+    private $emListaBranca = null;
 
     public function __construct()
     {
         $this->tempo = new contadorDeTempo();
         $this->ip = $this->resolverIp();
+        $this->url = $this->resolverUrl();
+        $this->logger = new Logger($this);
 
         if ($this->ipEmListaNegra()) {
             $this->pnf();
-        }        
-        $this->url = $this->resolverUrl();
-        $this->registrarAcesso();
-
+        }                
     }
 
     public function getIp()
@@ -34,33 +34,67 @@ class Guardiao
 
     public function ipEmListaNegra()
     {
-        $chave = $this->chaveListaNegra();
-        if (apcu_exists($chave)) {            
-            return true;
+        if ($this->emListaNegra !== null) {
+            return $this->emListaNegra;
         }
 
-        return false;
+        $arquivo = $this->arquivoListaNegra();
+        if (!is_file($arquivo)) {
+            $this->emListaNegra = false;
+            return false;
+        }
+
+        $agora = time();
+        $modificacao = @filemtime($arquivo);
+
+        if (($agora - $modificacao) > self::TTL) {
+            @unlink($arquivo);
+            $this->emListaNegra = false;
+            return false;
+        }
+
+        touch($arquivo);
+        $this->emListaNegra = true;
+        return true;
     }
 
     public function adicionarListaNegra()
-    {
-        return apcu_store($this->chaveListaNegra(), true, self::TTL);
+    {        
+        touch($this->arquivoListaNegra());
+        $this->emListaNegra = true;
     }
 
     public function ipEmListaBranca()
     {
-        $chave = $this->chaveListaBranca();
-        if (apcu_exists($chave)) {            
-            return true;
+        if ($this->emListaBranca !== null) {
+            return $this->emListaBranca;
         }
 
-        return false;
+        $arquivo = $this->arquivoListaBranca();
+        if (!is_file($arquivo)) {
+            $this->emListaBranca = false;
+            return false;
+        }
+
+        $agora = time();
+        $modificacao = @filemtime($arquivo);
+
+        if (($agora - $modificacao) > 300) {
+            @unlink($arquivo);
+            $this->emListaBranca = false;
+            return false;
+        }
+
+        touch($arquivo);
+        $this->emListaBranca = true;
+        return true;
     }
 
 
     public function adicionarListaBranca()
-    {        
-        return apcu_store($this->chaveListaBranca(), true, self::TTL);
+    {
+        touch($this->arquivoListaBranca());
+        $this->emListaBranca = true;
     }
 
     public function validarGooglebot()
@@ -86,26 +120,25 @@ class Guardiao
     public function pnf()
     {
 
+        $this->logger->acesso_negado('PNF');
+        http_response_code(404);
+
         if ($this->ipEmListaNegra()) {
-            $this->adicionarListaNegra(); #Apenas para renovar o TTL
-            http_response_code(404);
+            $this->adicionarListaNegra(); #Apenas para renovar o TTL                        
             die();
         }
 
         if ($this->ipEmListaBranca()) {
-            $this->adicionarListaBranca(); #Apenas para renovar o TTL
-            http_response_code(404);
+            $this->adicionarListaBranca(); #Apenas para renovar o TTL                        
             die();
         }
 
         if ($this->validarGooglebot()) {
-            $this->adicionarListaBranca(); 
-            http_response_code(404);
+            $this->adicionarListaBranca();                         
             die();
-        }
-
-        $this->adicionarListaNegra();
-        http_response_code(404);
+        } 
+        
+        $this->adicionarListaNegra();                
         die();
     }
 
@@ -123,44 +156,20 @@ class Guardiao
         return $_SERVER['REMOTE_ADDR'] ?? '';
     }
 
-    private function chaveListaNegra()
+
+    private function arquivoListaNegra()
     {
-        return 'negra_' . $this->ip;
+        return $_SERVER['DOCUMENT_ROOT'] . '/log/lista_negra/' . $this->nomeArquivoIp();
     }
 
-    private function chaveListaBranca()
+    private function arquivoListaBranca()
     {
-        return 'branca_' . $this->ip;
+        return $_SERVER['DOCUMENT_ROOT'] . '/log/lista_branca/' . $this->nomeArquivoIp();
     }
 
-    private function chaveListaAcessos()
+    private function nomeArquivoIp()
     {
-        return 'acesso_' . $this->ip;
-    }
-
-    private function registrarAcesso()
-    {
-        $chave = $this->chaveListaAcessos();
-        $agora = time();
-
-        if (apcu_exists($chave)) {
-            $dados = apcu_fetch($chave);
-            if (!is_array($dados)) {
-                $dados = ['inicio' => $agora, 'quantidade' => 0];
-            }
-            $dados['quantidade'] = (int) $dados['quantidade'] + 1;
-        } else {
-            $dados = ['inicio' => $agora, 'quantidade' => 1];
-        }
-
-        apcu_store($chave, $dados, self::TTL_ACESSOS);
-
-        $linha = date('d/m/Y H:i:s') . ' ' . $this->ip . ' ' . ($this->url ?? '') . ' qtd=' . $dados['quantidade'] . ' inicio=' . $dados['inicio'] . "\n";
-        file_put_contents('cache/sistema/guardiao_debug', $linha, FILE_APPEND);
-
-        if ($dados['quantidade'] >= self::MAX_ACESSOS) {
-            $this->pnf();
-        }
+        return preg_replace('/[^a-zA-Z0-9._-]/', '_', $this->ip);
     }
 
     private function resolverUrl()
@@ -210,5 +219,56 @@ class contadorDeTempo
     {
         $this->registra_fim();
         return "<div id=\"tempo\">$this->tempo_total ms</div>";
+    }
+}
+
+
+
+class Logger
+{
+    /**
+     * @var Guardiao
+     */
+    private $guardiao;
+
+    public function __construct($guardiao)
+    {
+        $this->guardiao = $guardiao;
+    }
+
+    // Grava direto (primeiro acesso ou fallback)
+    public function acesso_negado($nota = null)
+    {
+        if (DEBUG) {
+            return;
+        }
+
+        $nota = $nota ? " [$nota]" : '';
+        $linha = date('d/m/Y H:i:s') . ' ' . $this->guardiao->getIp() . ' ' . $this->guardiao->getUrl() . $nota . "\n";
+
+        file_put_contents(
+            $_SERVER['DOCUMENT_ROOT'].'/cache/sistema/acessos_negados',
+            $linha,
+            FILE_APPEND
+        );
+    }
+
+    // Método normal de acesso (pode otimizar também se quiser)
+    public function acesso($nota = null)
+    {
+        if (DEBUG) {
+            return;
+        }
+
+        $nota = $nota ? " [$nota]" : '';
+        if ($this->guardiao->ipEmListaBranca()) {
+            $nota .= ' (BP)';
+        }
+
+        file_put_contents(
+            $_SERVER['DOCUMENT_ROOT'].'/cache/sistema/acessos',
+            date('d/m/Y H:i:s') . ' ' . $this->guardiao->getIp() . ' ' . $this->guardiao->getUrl() . $nota . "\n",
+            FILE_APPEND
+        );
     }
 }

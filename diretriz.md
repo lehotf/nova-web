@@ -44,7 +44,10 @@ RewriteRule (.*) index.php
 - O `Guardiao` responde `PNF` (404) e decide blacklist/whitelist: primeiro verifica lista negra, depois lista branca, depois valida Googlebot, e so entao adiciona na lista negra.
 - O `Guardiao` deve ser criado e checado antes de carregar configs e outros arquivos do site.
 - Nao repetir verificacoes de blacklist em outras classes; o `Guardiao` faz isso uma unica vez no inicio.
-- O `Guardiao` registra acessos (TTL 5s) e, ao atingir o limite (5 acessos), chama `PNF` para aplicar a logica completa de bloqueio.
+- Em falha de login, o `autenticador` deve usar o `Guardiao` para adicionar o IP na lista negra.
+- A lista negra deve usar TTL fixo de 30s.
+- Lista negra e lista branca devem ser persistidas via arquivos em `$_SERVER['DOCUMENT_ROOT']/log/lista_negra` e `$_SERVER['DOCUMENT_ROOT']/log/lista_branca` usando apenas `touch`.
+- Ao verificar, usar apenas `mtime` para expirar (se passou do TTL, apagar) e renovar (se dentro do TTL, dar `touch`).
 
 ## Linguagem e nomes
 - Nomes de classes, variaveis e funcoes em portugues.
