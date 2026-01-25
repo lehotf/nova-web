@@ -44,38 +44,39 @@ class observador
         return $valor;
     }
 
-    public function get($campo, $padrao = null)
+    public function numero($campo, $min = 0, $max = 0)
     {
-        return array_key_exists($campo, $this->dados) ? $this->dados[$campo] : $padrao;
+        if (!$this->dados || !array_key_exists($campo, $this->dados)) {
+            $numero = 0;
+        } else {
+            $numero = is_numeric($this->dados[$campo]) ? $this->dados[$campo] + 0 : 0;
+        }
+
+        if ($min !== 0 && $numero < $min) {
+            $this->erro($campo . ' menor que ' . $min);
+        }
+
+        if ($max !== 0 && $numero > $max) {
+            $this->erro($campo . ' maior que ' . $max);
+        }
+
+        return $numero;
     }
 
-    public function obrigatorio($campo)
+    public function texto($campo)
     {
-        if (!array_key_exists($campo, $this->dados) || $this->dados[$campo] === '') {
-            $this->erro($campo . ': elemento vazio');
+        if (!$this->dados || !array_key_exists($campo, $this->dados)) {
+            $texto = '';
+        } else {
+            $texto = is_string($this->dados[$campo]) ? $this->dados[$campo] : '';
         }
-        return $this->dados[$campo];
+
+        return $texto;
     }
 
     private function nomeValido($nome)
     {
         return preg_match('/^[a-zA-Z0-9_]+$/', $nome);
-    }
-
-    private function valorSql($valor)
-    {
-        if (is_null($valor)) {
-            return 'NULL';
-        }
-        if (is_bool($valor)) {
-            return $valor ? '1' : '0';
-        }
-        if (is_array($valor)) {
-            $valor = json_encode($valor);
-        }
-
-        $valor = $this->db->protege((string)$valor);
-        return "'" . $valor . "'";
     }
 
     public function salva($tabela, $dados = null, $campoId = 'id')
@@ -96,14 +97,14 @@ class observador
                 if (!$this->nomeValido($campo)) {
                     continue;
                 }
-                $sets[] = "`$campo`=" . $this->valorSql($valor);
+                $sets[] = "`$campo`='" . $valor . "'";
             }
 
             if (!$sets) {
                 return $id;
             }
 
-            $sql = "UPDATE `$tabela` SET " . implode(',', $sets) . " WHERE `$campoId`=" . $this->valorSql($id);
+            $sql = "UPDATE `$tabela` SET " . implode(',', $sets) . " WHERE `$campoId`='" . $id . "'";
             $this->query($sql);
             return $id;
         }
@@ -115,7 +116,7 @@ class observador
                 continue;
             }
             $campos[] = "`$campo`";
-            $valores[] = $this->valorSql($valor);
+            $valores[] = "'" . $valor . "'";
         }
 
         if (!$campos) {
