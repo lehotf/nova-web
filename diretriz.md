@@ -66,6 +66,8 @@ RewriteRule (.*) index.php
 - Sempre revisar o que foi feito e adequar antes de seguir.
 - IMPORTANTE: Sempre que surgir uma nova regra durante a conversa, que não esteja contida neste arquivo, adicionar o topico correspondente em `diretriz.md`.
 - Nao e necessario verificar a existencia de uma constante global.
+- No Observador, o Guardiao deve ser instanciado no construtor para mitigar abusos por repetidas requisicoes em endpoints XHR.
+- No Observador, `valida()` define tipos e `salva()` deve respeitar a instrucao (`tipo` e `salva`) para manter o comportamento da versao antiga.
 - Estamos implementando a migração da versão antiga em `Htdocs2` para a versão nova em `Htdocs`.
   - `Htdocs2` é a referência para o trabalho realizado em `Htdocs`.
   - Os diretórios em `Htdocs` estão sendo preenchidos gradativamente conforme os arquivos são adaptados.
