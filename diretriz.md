@@ -3,6 +3,7 @@
 ## Escopo e organizacao
 - Trabalhar apenas dentro de `Htdocs`.
 - `Htdocs2` serve apenas para consulta e comparacao, é a versão antiga do site.
+- Se um arquivo nao existir em `Htdocs`, procurar o equivalente em `Htdocs2` para entender a logica anterior.
 - Vários sites serão publicados em um mesmo servidor compartilhado com diretórios diferentes. Exemplo: `eupenso.com`, `calculatudo.com`, `quemoleza.com`.
 - Codigo compartilhado entre todos os sites fica em `shared/comum`.
 - Codigo compartilhado por tipo de site fica em `shared/sites/<tipo>`.
@@ -22,7 +23,7 @@ RewriteRule (.*) index.php
 ## Configuracao
 - Cada site terá um unico arquivo `config.php` dentro do seu diretorio `config`(ex.: `eupenso.com/config/config.php`).
 - O `config.php` do site deve conter apenas dados especificos daquele site (ex.: IDs, titulo, descricao, flags).
-- As configuracoes comuns a todos os sites ficam em `shared/comum/config/config.php`.
+- As configuracoes comuns a todos os sites ficam em `shared/comum/config/` (na estrutura antiga havia `config.php`; atualmente existe `shared/comum/config/ad.php`).
 - O carregamento de configuracao acontece no `index.php` do site, incluindo o config comum e o config do site via `comum/`.
 - O `index.php` nao deve ter valores hardcoded por dominio; toda especificidade vem do `config.php` do site.
 - Configuracoes que podem variar por site (ex.: `CACHE_ATIVO`) devem ficar no `config.php` do site, nao no comum.
@@ -69,6 +70,7 @@ RewriteRule (.*) index.php
 - Sempre revisar o que foi feito e adequar antes de seguir.
 - IMPORTANTE: Sempre que surgir uma nova regra durante a conversa, que não esteja contida neste arquivo, adicionar o topico correspondente em `diretriz.md`.
 - Nao e necessario verificar a existencia de uma constante global.
+- Em `cacheTemplates.php`, manter o arquivo minimalista: sem fallback por `$_GET` e sem criar variaveis para `DEBUG` (usar a constante diretamente).
 - No Observador, o Guardiao deve ser instanciado no construtor para mitigar abusos por repetidas requisicoes em endpoints XHR.
 - No Observador, `valida()` define tipos e `salva()` deve respeitar a instrucao (`tipo` e `salva`) para manter o comportamento da versao antiga.
 - Estamos implementando a migração da versão antiga em `Htdocs2` para a versão nova em `Htdocs`.
@@ -120,6 +122,24 @@ Responsável por;
 2 - Encaminhar o conteúdo para o objeto cache para geração do cache.
 3 - Encaminhar para o Guardião, caso não localize o conteúdo solicitado no banco de dados. Assim, o guardião retornará 404 e decidirá se adiciona o IP em lista negra ou branca.
 
+# Templates e cache de HTML
+
+- Templates fonte ficam em `shared/comum/php/template` (ex.: `index.html`, `artigo.html`, `_artigo.html`, `_adm.html`).
+- Os templates sao pre-processados e gerados em `cache/template`.
+- Prefixo `_` no template indica instrucao de cabeçalho (ex.: `_noRoot`) e define se o template entra ou nao no root.
+- `Carregador::prepara()` carrega o HTML ja gerado em `cache/template` e faz substituicoes de tokens do tipo `[chave]`.
+- A pagina root (casca) era `root.html`/`amp.html` na versao antiga; na versao nova, ainda precisamos definir/portar esses arquivos.
+
+# Gerador de templates (cacheTemplates)
+
+- Ponto de entrada: `shared/comum/php/sistema/gerador/cacheTemplates.php`.
+- Core: `shared/comum/php/sistema/gerador/cacheTemplatesCore.php`.
+- Funcao: gerar arquivos em `cache/template` a partir dos templates de `shared/comum/php/template` e, se existir, `site/php/template`.
+- Remove bloco `<!--start-->...<!--end-->` (analytics) durante a geracao.
+- Em modo `DEBUG` falso, substitui referencias `comum/site/estatico` por `cache`.
+- Gera versao AMP adicionando sufixo `_amp.html`.
+- Regra atual: manter `cacheTemplates.php` minimalista (sem GET e sem variavel local para DEBUG).
+
 
 # Estrutura de Diretorios
 
@@ -133,7 +153,7 @@ Htdocs/
 ├── shared/
 │   ├── comum/              # Código comum a todos os sites
 │   │   ├── config/
-│   │   │   └── config.php  # Configurações globais
+│   │   │   └── ad.php      # Configuracoes comuns (atual)
 │   │   ├── estatico/       # Arquivos estáticos compartilhados
 │   │   │   ├── css/        # Arquivos CSS
 │   │   │   ├── fonts/      # Arquivos de fontes
@@ -142,14 +162,25 @@ Htdocs/
 │   │   └── php/            # Classes e scripts PHP comuns
 │   │       ├── controlador.php (classes: Cache, Logger, Controlador)
 │   │       ├── guardiao.php (classes: Guardiao)
-│   │       ├── path/       # Caminhos do site
-│   │       ├── xhr/        # Arquivos que respondem solicitações XHR
-│   │       └── template/   # Arquivos do template para respostas HTML
+│   │       ├── montador/   # Montagem de conteudo (ex.: MontaArtigo)
+│   │       ├── sistema/    # Ferramentas internas (ex.: gerador de templates)
+│   │       └── template/   # Templates fonte (HTML)
 │   └── sites/              # Código específico por tipo de site
 │       └── [tipo]/
 ```
 
-Leia os arquivos controlador.php, guardiao.php e carregador.php para entender como o sistema funciona. Eles estão localizados em shared/comum/php.
+Leia os arquivos `shared/comum/php/controlador.php`, `shared/comum/php/guardiao.php` e `shared/comum/php/carregador.php` para entender o fluxo do sistema.
+
+# Arquivos-chave (localizacao e papel)
+
+- `shared/comum/php/controlador.php`: Cache (HTML), Logger e orquestracao geral.
+- `shared/comum/php/guardiao.php`: IP/URL, listas negra/branca e PNF.
+- `shared/comum/php/carregador.php`: AMP, cache de template e roteamento para `site/php/path/*`.
+- `shared/sites/artigos/php/path/artigo.php`: consulta artigo no BD e delega para `MontaArtigo`.
+- `shared/comum/php/montador/montaArtigo.php`: monta dados do artigo e escolhe template `artigo` ou `_artigo`.
+- `shared/comum/php/montador/pesquisa.php`: auxiliares de links/tags, usados por artigos/root.
+- `shared/comum/php/sistema/gerador/cacheTemplates.php`: executa geracao do cache de templates.
+- `shared/comum/php/sistema/gerador/cacheTemplatesCore.php`: logica de compactacao, root e geracao AMP.
 
 # Progresso - Arquivos modificados
 
@@ -157,39 +188,23 @@ Htdocs
   ├── shared/comum/php/carregador.php (objetos: Carregador)
   ├── shared/comum/php/controlador.php (objetos: Cache, Logger, Controlador)
   ├── shared/comum/php/guardiao.php (objetos: Guardiao)
-  └── shared/sites/artigos/php/path/artigo.php
+  ├── shared/sites/artigos/php/path/artigo.php
+  ├── shared/comum/php/sistema/gerador/cacheTemplates.php (atualizado para nova estrutura)
+  └── shared/comum/php/sistema/gerador/cacheTemplatesCore.php (atualizado para nova estrutura)
 
+# Em execucao
 
+Sessao #Em Execucao:
+- Objetivo: revisar e simplificar o gerador de templates para a nova estrutura (fonte em `shared/comum/php/template`, cache em `cache/template`).
+- Ajustes feitos: reescrita de `cacheTemplates.php` e `cacheTemplatesCore.php` para o novo layout (sem `config_externo.php`, sem `core/template`, sem `root_config.php`/`root_script.php`).
+- Observacao: `root.html` e `amp.html` ainda nao existem em `Htdocs`. Na geracao atual, o root usa fallback para `index.html` (que hoje e apenas `[conteudo]`). Precisamos decidir se vamos portar `root.html`/`amp.html` da versao antiga (`Htdocs2/shared/comum/config/`) ou criar novos.
+- O template de artigo atual usa `MontaArtigo` e carrega `artigo.html`/`_artigo.html` via `Carregador::prepara()`.
 
-# Próximo passo:
+Notas tecnicas do fluxo atual:
+- `Carregador::executaPadrao()` chama `site/php/path/PADRAO.php`.
+- Para artigos, `PADRAO = 'artigo'` e o arquivo fica em `shared/sites/artigos/php/path/artigo.php`.
+- Esse arquivo monta o artigo usando `MontaArtigo` e injeta no template via `prepara()`.
 
-Vamos analisar a possibilidade de aprimorar a estrutura de templates.
-
-O diretório cache/template contém os templates de arquivos que podem ser utilizados para responder solicitações HTML. O conteúdo gerado através dos arquivos PHP são colocados dentro destes templates para evitar a necessidade de repetir código em todos os arquivos PHP. Além de facilitar a mudança de estilos e estrutura de arquivos HTML.
-
-A linha 257 do arquivo carregador.php é a seguinte:
-
-    require 'site/php/path/' . PADRAO . '.php';
-
-A constante PADRAO é preenchida  na linha 7 do aruivo config/config.php:
-
-    define('PADRAO', 'artigo');
-
-Ou seja, quando o sistema recebe uma requisição e não identifica existencia de cache para esta requisição, será executado o arquivo PADRAO para aquele site. O arquivo padrão para sites de publicações de artigos é artigo.php.
-
-Portanto, será executado 'site/php/path/artigo.php'
-
-lembrando que "site" é um symlink para shared/sites/artigos/
-
-
-O arquivo artigo.php é executado DENTRO de private function executaPadrao($comando), do objeto carregador. 
-
-Mas esta versão do artigo.php corresponde a versão utilizada antes da modificação que estamos fazendo. Portanto, certamente haverá necessidade de ajustes.
-
-Nosso papel, hoje, é:
-
-1 - Ajustar artigo.php para funcionar com a nova estrutura do site
-2 - Verificar se a lógica de template pode ser melhorada para ficar mais eficiente e minimalista
 
 # Sugestões de Mudanças
 
