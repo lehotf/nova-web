@@ -1,6 +1,6 @@
 <?php
 
-class Guardiao
+class guardiao
 {
     const TTL = 30;
     private $ip;
@@ -12,10 +12,10 @@ class Guardiao
 
     public function __construct()
     {
-        $this->tempo = new contadorDeTempo();
+        $this->tempo = new contador_de_tempo();
         $this->ip = $this->resolverIp();
         $this->url = $this->resolverUrl();
-        $this->logger = new Logger($this);
+        $this->logger = new logger($this);
 
         if ($this->ipEmListaNegra()) {
             $this->pnf();
@@ -192,7 +192,7 @@ class Guardiao
 }
 
 
-class contadorDeTempo
+class contador_de_tempo
 {
     private $time_start;
     private $time_end;
@@ -224,7 +224,7 @@ class contadorDeTempo
 
 
 
-class Logger
+class logger
 {
     /**
      * @var Guardiao

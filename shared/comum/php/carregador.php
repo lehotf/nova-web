@@ -1,6 +1,6 @@
 <?php
 
-class Carregador
+class carregador
 {
     public $amp;
     public $comando;
@@ -65,16 +65,14 @@ class Carregador
 /**
  * [__construct description]
  * @param Guardiao $guardiao Objeto guardiao que é passado durante a criação
- * @param Logger $logger Objeto logger que é passado durante a criação
  * @param Cache $cache Objeto cache que é passado durante a criação
  * 1- Verifica se a página é AMP
  * 2- Identifica qual o comando dado pelo usuário
  * 3- Executa o comando
  */
-    public function __construct($guardiao, $logger, $cache)
+    public function __construct($guardiao, $cache)
     {
         $this->guardiao = $guardiao;
-        $this->logger = $logger;
         $this->cache = $cache;
         $this->urlBase = $this->guardiao->getUrl();
         $this->verificaAMP();
@@ -117,7 +115,7 @@ class Carregador
         }
 
         if ($this->cache->getCache() && ! DEBUG) {
-            $this->logger->acesso('cache criado');
+            $this->guardiao->logger->acesso('cache criado');
             if (! $this->amp) {
                 $param['javascript'] = isset($param['javascript']) ? $param['javascript'] . adsense('pagelevel') : adsense('pagelevel');
             }
@@ -276,11 +274,8 @@ class Carregador
 
     private function executaPadrao($comando)
     {
-        require 'comum/php/db.php';
-        require 'comum/config/ad.php';
         $db = new database('localhost', BD_LOGIN, BD_SENHA, BD);
-        
-        
+            
         if ($comando == 'root') {
             require 'site/php/path/root.php';
         } else {

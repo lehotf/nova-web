@@ -11,13 +11,11 @@ class observador
 
     public function __construct($guardiao = null)
     {
-        require $_SERVER['DOCUMENT_ROOT'] . '/comum/php/guardiao.php';
-        require $_SERVER['DOCUMENT_ROOT'] . '/comum/php/db.php';
 
         if ($guardiao) {
             $this->guardiao = $guardiao;
         } else {
-            $this->guardiao = new Guardiao();
+            $this->guardiao = new guardiao();
         }
 
         $this->db = new database('localhost', BD_LOGIN, BD_SENHA, BD);
@@ -270,8 +268,7 @@ class observador
     }
 
     public function acesso($acesso)
-    {
-        require $_SERVER['DOCUMENT_ROOT'] . '/comum/php/autenticador.php';
+    {        
         $this->autenticador = new autenticador($this);
         $this->autenticador->acesso($acesso);
     }

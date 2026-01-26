@@ -1,6 +1,6 @@
 <?php
 
-class Cache
+class cache
 {
     /**
      * @var string Diretorio base do cache HTML do site
@@ -96,22 +96,18 @@ class Cache
 }
 
 
-class Controlador
+class controlador
 {
     private $guardiao;
     private $cache;
-    private $logger;
 
     public function __construct($guardiao)
     {
         $this->guardiao = $guardiao;
-        $this->cache = new Cache(CACHE_ATIVO, $this->guardiao);
-        $this->logger = new Logger($this->guardiao);
-        $this->verificaCache();
+        $this->cache = new cache(CACHE_ATIVO, $this->guardiao);        
+        $this->verificaCache();        
 
-        require 'comum/php/carregador.php';
-
-        $c = new Carregador($this->guardiao, $this->logger, $this->cache);
+        $c = new carregador($this->guardiao, $this->cache);
     }
 
 
@@ -120,7 +116,7 @@ class Controlador
         $conteudo = $this->cache->buscar();
 
         if ($conteudo !== false) {
-            $this->logger->acesso();
+            $this->guardiao->logger->acesso();
             echo $conteudo;
             $this->guardiao->tempo->stop();
             die();
