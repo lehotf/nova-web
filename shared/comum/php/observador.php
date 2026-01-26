@@ -4,16 +4,22 @@ class observador
 {
     private $db;
     public $guardiao;
+    public $autenticador;
     public $input;
     public $dados;
     private $instrucao;
 
-    public function __construct()
+    public function __construct($guardiao = null)
     {
         require $_SERVER['DOCUMENT_ROOT'] . '/comum/php/guardiao.php';
         require $_SERVER['DOCUMENT_ROOT'] . '/comum/php/db.php';
 
-        $this->guardiao = new Guardiao();
+        if ($guardiao) {
+            $this->guardiao = $guardiao;
+        } else {
+            $this->guardiao = new Guardiao();
+        }
+
         $this->db = new database('localhost', BD_LOGIN, BD_SENHA, BD);
         $this->input = $this->carregar_json();
         $this->dados = $this->sanitiza($this->input);
@@ -240,7 +246,7 @@ class observador
         if ($resultado) {
             return $resultado;
         }
-        $this->erro($this->db->link->error, 500);
+        $this->erro($this->db->link->error);
     }
 
     public function responde($dados = null, $status = 'ok', $msg = null, $codigo = 200)
@@ -258,15 +264,15 @@ class observador
         die(json_encode($resp));
     }
 
-    public function erro($msg, $codigo = 400)
+    public function erro($msg)
     {
-        $this->responde(null, 'erro', $msg, $codigo);
+        $this->responde(null, 'erro', $msg);
     }
 
     public function acesso($acesso)
     {
         require $_SERVER['DOCUMENT_ROOT'] . '/comum/php/autenticador.php';
-        $a = new autenticador($this);
-        $a->acesso($acesso);
+        $this->autenticador = new autenticador($this);
+        $this->autenticador->acesso($acesso);
     }
 }

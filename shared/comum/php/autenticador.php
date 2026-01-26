@@ -8,11 +8,8 @@ class autenticador
 
     public function __construct($observador)
     {
-        require $_SERVER['DOCUMENT_ROOT'] . '/comum/php/db.php';
         $this->db = new database('localhost', BD_LOGIN, BD_SENHA, BD);
-
         $this->o = $observador;
-
         $this->link = $this->db->link;
     }
 
@@ -25,17 +22,15 @@ class autenticador
      * @param string e $acesso
      */
     public function acesso($acesso)
-    {
-        if (($_SERVER['SERVER_ADDR'] == $_SERVER['REMOTE_ADDR']) || ($_SERVER['REMOTE_ADDR'] == '35.247.231.234')) {
-            return true;
-        }
-
+    {       
         if (session_status() !== PHP_SESSION_ACTIVE) {
             $this->o->erro('Acesso Negado');
         }
 
         if (!isset($_SESSION['autorizacao'])) {
-            $this->o->erro('Acesso Negado');
+           if (!$this->cookie()) {
+               $this->o->erro('Acesso Negado');
+           }
         }
 
         if ($_SESSION['autorizacao'] < $acesso) {
