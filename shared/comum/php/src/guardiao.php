@@ -4,18 +4,18 @@ class guardiao
 {
     const TTL = 30;
     private $ip;
-    private $url;
-    public $tempo;
-    public $logger;
+    private $url;    
+    private $logger;
     private $emListaNegra = null;
     private $emListaBranca = null;
 
-    public function __construct()
+    public function __construct($logger)
     {
-        $this->tempo = new contador_de_tempo();
+        $this->logger = $logger;
+        $this->logger->set($this);
+        
         $this->ip = $this->resolverIp();
-        $this->url = $this->resolverUrl();
-        $this->logger = new logger($this);
+        $this->url = $this->resolverUrl();        
 
         if ($this->ipEmListaNegra()) {
             $this->pnf();
@@ -119,7 +119,9 @@ class guardiao
 
     public function pnf()
     {
-
+        echo $this->url;
+        die();
+        
         $this->logger->acesso_negado('PNF');
         http_response_code(404);
 
@@ -227,11 +229,16 @@ class contador_de_tempo
 class logger
 {
     /**
-     * @var Guardiao
+     * @var guardiao
      */
     private $guardiao;
 
-    public function __construct($guardiao)
+    public function __construct()
+    {
+        
+    }
+
+    public function set($guardiao)
     {
         $this->guardiao = $guardiao;
     }

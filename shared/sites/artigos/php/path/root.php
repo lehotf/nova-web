@@ -1,6 +1,7 @@
 <?php
 
-require 'comum/php/montador/pesquisa.php';
+require 'comum/php/include/pesquisa.php';
+require 'comum/php/include/ad.php';
 
 
 $conteudo = modulo([

@@ -1,6 +1,6 @@
 <?php
 
-class MontaArtigo
+class monta_artigo
 {
     private $db;
     private $guardiao;

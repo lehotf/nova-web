@@ -12,10 +12,11 @@ function class_autoload($class)
         'contador_de_tempo' => 'guardiao.php',
         'logger'            => 'guardiao.php',
         'cache'             => 'controlador.php',
+        'monta_artigo'      => 'monta_artigo.php',
     ];
 
     if (isset($map[$class])) {
-        require $_SERVER['DOCUMENT_ROOT'] . '/comum/php/' . $map[$class];
+        require $_SERVER['DOCUMENT_ROOT'] . '/comum/php/src/' . $map[$class];
     }
 }
 

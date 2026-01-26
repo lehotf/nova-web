@@ -9,15 +9,8 @@ class observador
     public $dados;
     private $instrucao;
 
-    public function __construct($guardiao = null)
+    public function __construct()
     {
-
-        if ($guardiao) {
-            $this->guardiao = $guardiao;
-        } else {
-            $this->guardiao = new guardiao();
-        }
-
         $this->db = new database('localhost', BD_LOGIN, BD_SENHA, BD);
         $this->input = $this->carregar_json();
         $this->dados = $this->sanitiza($this->input);

@@ -99,11 +99,15 @@ class cache
 class controlador
 {
     private $guardiao;
+    private $logger;
     private $cache;
+    private $contador_de_tempo;
 
-    public function __construct($guardiao)
+    public function __construct($guardiao, $logger, $contador_de_tempo)
     {
         $this->guardiao = $guardiao;
+        $this->logger = $logger;
+        $this->contador_de_tempo = $contador_de_tempo;
         $this->cache = new cache(CACHE_ATIVO, $this->guardiao);        
         $this->verificaCache();        
 
@@ -116,9 +120,9 @@ class controlador
         $conteudo = $this->cache->buscar();
 
         if ($conteudo !== false) {
-            $this->guardiao->logger->acesso();
+            $this->logger->acesso();
             echo $conteudo;
-            $this->guardiao->tempo->stop();
+            $this->contador_de_tempo->stop();
             die();
         }
     }

@@ -1,9 +1,9 @@
 <?php
-define("THUMB_PATH", "/cache/img/upload/t/");
 
 function image($classe, $thumb, $duracao, $titulo, $thumb_titulo)
 {
     global $amp;
+    $thumb_path = "/cache/img/upload/t/";
     $duracao     = ($duracao != '00:00:00') ? '<div class="duracao">' . preg_replace('#^00.#', '', $duracao) . '</div>' : '';
     $imgTag      = $amp ? 'amp-img width="193" height="73" layout="responsive"' : 'img';
     $imgTagClose = $amp ? '</amp-img>' : '';
@@ -26,9 +26,9 @@ function image($classe, $thumb, $duracao, $titulo, $thumb_titulo)
         $img = '<div class="noimage' . $cor . '"><div>' . $titulo . '</div></div>';
     } else {
         if ($classe == 'c50') {
-            $img = '<' . $imgTag . ' class="img_fit" src="' . THUMB_PATH . $thumb . "g.jpg" . '">' . $imgTagClose;
+            $img = '<' . $imgTag . ' class="img_fit" src="' . $thumb_path . $thumb . "g.jpg" . '">' . $imgTagClose;
         } else {
-            $img = '<' . $imgTag . ' class="img_fit" src="' . THUMB_PATH . $thumb . ".jpg" . '">' . $imgTagClose;
+            $img = '<' . $imgTag . ' class="img_fit" src="' . $thumb_path . $thumb . ".jpg" . '">' . $imgTagClose;
         }
     }
     return '<div class="entry-image">' . $thumb_titulo . $duracao . $img . '</div>';
@@ -249,7 +249,7 @@ function pesquisaLink($db, $texto, $param = [])
     }
 
     if (!$links) {
-        return '<div class="divisor_fixo">' . t('NO_RESULT') . '</div>';
+        return '<div class="divisor_fixo"></div>';
     }
 
     return modulo(['classe' => 'c25', 'links' => $links]);

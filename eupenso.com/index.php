@@ -1,10 +1,11 @@
 <?php
-require 'comum/php/guardiao.php';
-
-
-require 'comum/php/controlador.php';
 require 'config/config.php';
+require 'comum/php/autoload.php';
 
-$guardiao = new Guardiao();
-$controlador = new Controlador($guardiao);
-$guardiao->tempo->stop();
+$contador_de_tempo = new contador_de_tempo();
+
+$logger = new logger();
+$guardiao = new guardiao($logger);
+$controlador = new controlador($guardiao, $logger, $contador_de_tempo);
+
+$contador_de_tempo->stop();
