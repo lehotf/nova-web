@@ -16,7 +16,7 @@ function class_autoload($class)
     ];
 
     if (isset($map[$class])) {
-        require $_SERVER['DOCUMENT_ROOT'] . '/comum/php/src/' . $map[$class];
+        require __DIR__ . '/src/' . $map[$class];
     }
 }
 

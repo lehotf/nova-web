@@ -6,6 +6,7 @@ class observador
     public $autenticador;
     public $input;
     public $dados;
+    public $r; #dados para resposta
     private $instrucao;
 
     public function __construct($conectar_db = true)
@@ -15,6 +16,7 @@ class observador
         }
         $this->input = $this->carregar_json();
         $this->dados = $this->sanitiza($this->input);
+        $this->r = [];
     }
 
     private function carregar_json()
@@ -241,24 +243,24 @@ class observador
         $this->erro($this->db->link->error);
     }
 
-    public function responde($dados = null, $status = 'ok', $msg = null, $codigo = 200)
+    public function envia($msg, $status = 'ok')
     {
         $resp = ['cabecalho' => ['status' => $status]];
         if ($msg !== null) {
             $resp['cabecalho']['msg'] = $msg;
         }
-        if ($dados !== null) {
-            $resp['dados'] = $dados;
+        if (!empty($this->r)) {
+            $resp['dados'] = $this->r;
         }
 
         header('Content-Type: application/json; charset=utf-8');
-        http_response_code($codigo);
+        http_response_code(200);
         die(json_encode($resp));
     }
 
     public function erro($msg)
     {
-        $this->responde(null, 'erro', $msg);
+        $this->envia($msg, 'erro');
     }
 
     public function acesso($acesso)
