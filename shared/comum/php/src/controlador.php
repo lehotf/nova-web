@@ -98,22 +98,52 @@ class cache
 
 class controlador
 {
-    private $guardiao;
-    private $logger;
-    private $cache;
-    private $contador_de_tempo;
+    public $guardiao;
+    public $logger;
+    public $cache;
+    public $contador_de_tempo;
+    public $autenticador;
+    public $observador;
+    public $db;
 
-    public function __construct($guardiao, $logger, $contador_de_tempo)
+    public function __construct(bool $guardiao = false, bool $logger = false, bool $autenticador = false, bool $observador = false, bool $db = false)
     {
-        $this->guardiao = $guardiao;
-        $this->logger = $logger;
-        $this->contador_de_tempo = $contador_de_tempo;
-        $this->cache = new cache(CACHE_ATIVO, $this->guardiao);        
-        $this->verificaCache();        
+        if ($db) {
+            $this->db = new database('localhost', BD_LOGIN, BD_SENHA, BD);
+        }
 
-        $c = new carregador($this->guardiao, $this->cache, $this->logger);
+        if ($logger) {
+            $this->logger = new logger();
+        }
+
+        if ($guardiao) {            
+            if (!$this->logger) {
+                $this->logger = new logger();
+            }
+            $this->guardiao = new guardiao($this->logger);
+        }
+
+        if ($observador) {
+            $this->observador = new observador($db);
+        }
+
+        if ($autenticador) {
+            if (!$this->observador) {
+                $this->observador = new observador($db);
+            }
+            $this->autenticador = new autenticador($this->observador);
+        }
     }
 
+
+    public function carrega_pagina($contador_de_tempo)
+    {
+        $this->contador_de_tempo = $contador_de_tempo;
+        $this->cache = new cache(CACHE_ATIVO, $this->guardiao);        
+        $this->verificaCache();
+
+        $c = new carregador($this->guardiao, $this->cache, $this->logger);        
+    }   
 
     private function verificaCache()
     {

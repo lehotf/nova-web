@@ -8,7 +8,7 @@ class autenticador
 
     public function __construct($observador)
     {
-        $this->db = new database('localhost', BD_LOGIN, BD_SENHA, BD);
+        $this->db = $observador->db;
         $this->o = $observador;
         $this->link = $this->db->link;
     }

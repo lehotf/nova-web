@@ -21,7 +21,7 @@ define('SEARCH','013594555885008672798:pvaspepxciw');
 define('AMP', true);
 
 #MUDAR
-define('CACHE_ATIVO', true);
+define('CACHE_ATIVO', false);
 define('DEBUG', false);
 
 #APAGAR

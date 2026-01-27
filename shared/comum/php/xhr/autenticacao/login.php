@@ -1,13 +1,10 @@
 <?php
 require $_SERVER['DOCUMENT_ROOT'] . '/comum/php/autoload.php';
 
-$guardiao = new guardiao();
-$o = new observador();
-$a = new autenticador();
+$c = new controlador(guardiao: true, logger: true, autenticador: true, observador: true);
 
 function lockout($ip)
-{
-    global $tempo;
+{    
     $lockout_file = $_SERVER['DOCUMENT_ROOT'] . '/log/login/' . $ip;
     $tempo_limite = 15;
 
@@ -15,7 +12,7 @@ function lockout($ip)
         $tempo = time() - filemtime($lockout_file);
         touch($lockout_file);
         if ($tempo < $tempo_limite) {
-            file_put_contents($_SERVER['DOCUMENT_ROOT'] . '/cache/sistema/acessos', date('d/m/Y H:i:s') . ' ' . $ip . ' ' . $_SERVER['REQUEST_URI'] . ' - Tentativa de login' . "\n", FILE_APPEND);
+            $c->logger->acesso('Tentativa de login bloqueada');
             return true;
         }
     } else {
@@ -24,16 +21,17 @@ function lockout($ip)
     return false;
 }
 
-if (lockout($guardiao->getIp())) {
-	$o->erro("Acesso Negado (".$tempo.")");
+if (lockout($c->guardiao->getIp())) {
+	$c->observador->erro("Acesso Negado (".$tempo.")");
 } else {
-    $login = $o->texto("login");
-    $senha = $o->texto("senha");
+    $login = $c->observador->texto("login");
+    $senha = $c->observador->texto("senha");
 
-    if ($a->login($login, $senha)) {
-        $o->query("SELECT m, eval FROM script WHERE (autorizacao <= " . $_SESSION["autorizacao"] . ") order by ordem, m", false);
-        $o->envia("Autenticado");
+    if ($c->autenticador->login($login, $senha)) {
+        $c->observador->query("SELECT m, eval FROM script WHERE (autorizacao <= " . $_SESSION["autorizacao"] . ") order by ordem, m", false);
+        $c->observador->envia("Autenticado");
     } else {
-        $o->envia("Acesso Negado");
+        $c->guardiao->adicionarListaNegra();
+        $c->observador->envia("Acesso Negado");
     }
 }

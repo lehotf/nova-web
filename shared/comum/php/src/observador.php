@@ -2,17 +2,16 @@
 
 class observador
 {
-    private $db;
-    public $autenticador;
+    public $db;
     public $input;
     public $dados;
     public $r; #dados para resposta
     private $instrucao;
 
-    public function __construct($conectar_db = true)
+    public function __construct($db = null)
     {
-        if ($conectar_db) {
-            $this->db = new database('localhost', BD_LOGIN, BD_SENHA, BD);
+        if ($db) {
+            $this->db = $db;
         }
         $this->input = $this->carregar_json();
         $this->dados = $this->sanitiza($this->input);
@@ -274,11 +273,5 @@ class observador
     public function erro($msg)
     {
         $this->envia($msg, 'erro');
-    }
-
-    public function acesso($acesso)
-    {        
-        $this->autenticador = new autenticador($this);
-        $this->autenticador->acesso($acesso);
     }
 }
