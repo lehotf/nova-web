@@ -1,7 +1,6 @@
 <?php
-require $_SERVER['DOCUMENT_ROOT'] . '/config/config.php';
-require $_SERVER['DOCUMENT_ROOT'] . '/comum/php/observador.php';
-require_once 'cacheTemplatesCore.php';
+require $_SERVER['DOCUMENT_ROOT'] . '/comum/php/autoload.php';
+require 'cacheTemplatesCore.php';
 
 $o = new observador();
 $o->acesso(2);
@@ -16,4 +15,4 @@ foreach (templateDirs() as $dir) {
 }
 
 $msg = $lista ? "Arquivos recriados ($lista)" : 'Nenhum arquivo precisou ser recriado';
-$o->responde(['lista' => $lista], 'ok', $msg);
+$o->envia($msg, 'ok');
