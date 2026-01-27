@@ -111,7 +111,7 @@ class controlador
         $this->cache = new cache(CACHE_ATIVO, $this->guardiao);        
         $this->verificaCache();        
 
-        $c = new carregador($this->guardiao, $this->cache);
+        $c = new carregador($this->guardiao, $this->cache, $this->logger);
     }
 
 

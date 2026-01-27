@@ -9,8 +9,26 @@ class carregador
     private $cache;
     private $urlBase;
     private $urlSemBarra;
+/**
+ * [__construct description]
+ * @param Guardiao $guardiao Objeto guardiao que é passado durante a criação
+ * @param Cache $cache Objeto cache que é passado durante a criação
+ * 1- Verifica se a página é AMP
+ * 2- Identifica qual o comando dado pelo usuário
+ * 3- Executa o comando
+ */
+    public function __construct($guardiao, $cache, $logger)
+    {
+        $this->guardiao = $guardiao;
+        $this->cache = $cache;
+        $this->logger = $logger;
+        $this->urlBase = $this->guardiao->getUrl();
+        $this->verificaAMP();
+        $comando = $this->identificaComando();
+        $this->executaPadrao($comando);
+    }
 
-    /**
+  /**
      * Converte um nome lógico de asset em path real do arquivo fonte.
      */
     private function minPathExtend($arquivo, $tipo)
@@ -63,24 +81,6 @@ class carregador
         }
     }
 /**
- * [__construct description]
- * @param Guardiao $guardiao Objeto guardiao que é passado durante a criação
- * @param Cache $cache Objeto cache que é passado durante a criação
- * 1- Verifica se a página é AMP
- * 2- Identifica qual o comando dado pelo usuário
- * 3- Executa o comando
- */
-    public function __construct($guardiao, $cache)
-    {
-        $this->guardiao = $guardiao;
-        $this->cache = $cache;
-        $this->urlBase = $this->guardiao->getUrl();
-        $this->verificaAMP();
-        $comando = $this->identificaComando();
-        $this->executaPadrao($comando);
-    }
-
-/**
  * [getAlternativeLink description]
  * @return string Retorna o link alternativo, referente a página AMP ou a página canonical
  */
@@ -115,7 +115,7 @@ class carregador
         }
 
         if ($this->cache->getCache() && ! DEBUG) {
-            $this->guardiao->logger->acesso('cache criado');
+            $this->logger->acesso('cache criado');
             if (! $this->amp) {
                 $param['javascript'] = isset($param['javascript']) ? $param['javascript'] . adsense('pagelevel') : adsense('pagelevel');
             }

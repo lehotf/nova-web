@@ -1,6 +1,8 @@
 <?php
 // Configuracao especifica do site
 
+date_default_timezone_set('America/Sao_Paulo');
+
 define('NOME_SITE', 'Eu Penso');
 define('SITE', $_SERVER['SERVER_NAME']);
 define('DESCRICAO_SITE', 'Uma conversa sobre os fatos sociais e politicos.');
@@ -8,7 +10,6 @@ define('PADRAO', 'artigo');
 define('BD', 'eupens16_eupenso');
 define('BD_LOGIN', 'eupens16_site');
 define('DNS_SITE', 'https://' . SITE);
-date_default_timezone_set('America/Sao_Paulo');
 define('BD_SENHA', 'segredo');
 define('ANALYTICS', 'UA-78519801-1');
 define('YOUTUBE_CHANNEL', 'eupenso');

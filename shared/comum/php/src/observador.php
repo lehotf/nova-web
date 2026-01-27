@@ -3,15 +3,16 @@
 class observador
 {
     private $db;
-    public $guardiao;
     public $autenticador;
     public $input;
     public $dados;
     private $instrucao;
 
-    public function __construct()
+    public function __construct($conectar_db = true)
     {
-        $this->db = new database('localhost', BD_LOGIN, BD_SENHA, BD);
+        if ($conectar_db) {
+            $this->db = new database('localhost', BD_LOGIN, BD_SENHA, BD);
+        }
         $this->input = $this->carregar_json();
         $this->dados = $this->sanitiza($this->input);
     }
