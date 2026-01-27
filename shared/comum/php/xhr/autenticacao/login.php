@@ -1,31 +1,30 @@
 <?php
-require $_SERVER['DOCUMENT_ROOT'] . '/config/config.php';
-require $_SERVER['DOCUMENT_ROOT'] . '/comum/php/observador.php';
-require $_SERVER['DOCUMENT_ROOT'] . '/comum/php/autenticador.php';
+require $_SERVER['DOCUMENT_ROOT'] . '/comum/php/autoload.php';
 
+$guardiao = new guardiao();
 $o = new observador();
+$a = new autenticador();
 
-define('LOCKOUT_FILE', $_SERVER['DOCUMENT_ROOT'] . '/log/login/' . $o->guardiao->getIp());
-define('TEMPO_LIMITE', 15);
-
-function lockout()
+function lockout($ip)
 {
     global $tempo;
+    $lockout_file = $_SERVER['DOCUMENT_ROOT'] . '/log/login/' . $ip;
+    $tempo_limite = 15;
 
-    if (file_exists(LOCKOUT_FILE)) {
-        $tempo = time() - filemtime(LOCKOUT_FILE);
-        touch(LOCKOUT_FILE);
-        if ($tempo < TEMPO_LIMITE) {
-            file_put_contents($_SERVER['DOCUMENT_ROOT'] . '/cache/sistema/acessos', date('d/m/Y H:i:s') . ' ' . USER_IP . ' ' . $_SERVER['REQUEST_URI'] . ' - Tentativa de login' . "\n", FILE_APPEND);
+    if (file_exists($lockout_file)) {
+        $tempo = time() - filemtime($lockout_file);
+        touch($lockout_file);
+        if ($tempo < $tempo_limite) {
+            file_put_contents($_SERVER['DOCUMENT_ROOT'] . '/cache/sistema/acessos', date('d/m/Y H:i:s') . ' ' . $ip . ' ' . $_SERVER['REQUEST_URI'] . ' - Tentativa de login' . "\n", FILE_APPEND);
             return true;
         }
     } else {
-        touch(LOCKOUT_FILE);
+        touch($lockout_file);
     }
     return false;
 }
 
-if (lockout()) {
+if (lockout($guardiao->getIp())) {
 	$o->erro("Acesso Negado (".$tempo.")");
 } else {
     $login = $o->texto("login");
@@ -33,8 +32,8 @@ if (lockout()) {
 
     if ($a->login($login, $senha)) {
         $o->query("SELECT m, eval FROM script WHERE (autorizacao <= " . $_SESSION["autorizacao"] . ") order by ordem, m", false);
-        $o->responde("Autenticado");
+        $o->envia("Autenticado");
     } else {
-        $o->responde("Acesso Negado");
+        $o->envia("Acesso Negado");
     }
 }

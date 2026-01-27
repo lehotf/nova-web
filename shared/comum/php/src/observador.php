@@ -234,16 +234,29 @@ class observador
         return $this->db->link->insert_id;
     }
 
-    public function query($query)
+    public function query($query, $campoItem = true)
     {
+        if ($campoItem) {
+            $campo = 'item';
+        } else {
+            preg_match('#from ([^ ]*)#', strtolower($query), $matches);
+            $campo = $matches[1] ?? 'item';
+        }
+
         $resultado = $this->db->link->query($query);
         if ($resultado) {
+            if ($resultado instanceof mysqli_result && $resultado->num_rows) {
+                $this->r[$campo] = [];
+                while ($row = $resultado->fetch_array(MYSQLI_ASSOC)) {
+                    $this->r[$campo][] = $row;
+                }
+            }
             return $resultado;
         }
         $this->erro($this->db->link->error);
     }
 
-    public function envia($msg, $status = 'ok')
+    public function envia($msg = null, $status = 'ok')
     {
         $resp = ['cabecalho' => ['status' => $status]];
         if ($msg !== null) {

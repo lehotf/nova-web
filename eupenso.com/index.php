@@ -1,6 +1,5 @@
 <?php
 require 'comum/php/autoload.php';
-require 'config/config.php';
 
 $contador_de_tempo = new contador_de_tempo();
 $logger = new logger();

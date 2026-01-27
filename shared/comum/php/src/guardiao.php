@@ -9,9 +9,14 @@ class guardiao
     private $emListaNegra = null;
     private $emListaBranca = null;
 
-    public function __construct($logger)
+    public function __construct($logger = null)
     {
-        $this->logger = $logger;
+        if ($logger) {
+            $this->logger = $logger;
+        } else {
+            $this->logger = new logger();            
+        }
+        
         $this->logger->set($this);
         
         $this->ip = $this->resolverIp();

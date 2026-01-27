@@ -1,4 +1,5 @@
 <?php
+require $_SERVER['DOCUMENT_ROOT'] . '/config/config.php';
 
 function class_autoload($class)
 {
