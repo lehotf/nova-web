@@ -1,13 +1,14 @@
 <?php
 require $_SERVER['DOCUMENT_ROOT'] . '/comum/php/autoload.php';
 
-$o = new observador();
-$o->acesso(2);
+$c = new controlador(observador: true, autenticador: true, db: true);
 
-if ($o->autenticador->cookie()) {
+$c->autenticador->acesso(2);
+
+if ($c->autenticador->cookie()) {
     $autorizacao = isset($_SESSION['autorizacao']) ? (int) $_SESSION['autorizacao'] : 0;
-    $o->query("SELECT m, eval FROM script WHERE (autorizacao <= $autorizacao) ORDER BY ordem, m", false);
-    $o->envia('ok', 'Autenticado');
+    $c->observador->query("SELECT m, eval FROM script WHERE (autorizacao <= $autorizacao) ORDER BY ordem, m", false);
+    $c->observador->envia('ok', 'Autenticado');
 }
 
-$o->erro('Acesso Negado');
+$c->observador->erro('Acesso Negado');

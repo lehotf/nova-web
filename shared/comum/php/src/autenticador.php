@@ -2,15 +2,15 @@
 class autenticador
 {
 
-    private $o;
+    private $observador;
     private $db;
     private $link;
 
     public function __construct($observador)
-    {
-        $this->db = $observador->db;
-        $this->o = $observador;
-        $this->link = $this->db->link;
+    {        
+        $this->observador = $observador;     
+        $this->db = $observador->db;   
+        $this->link = $observador->db->link;   
     }
 
     /**
@@ -24,20 +24,21 @@ class autenticador
     public function acesso($acesso)
     {       
         if (session_status() !== PHP_SESSION_ACTIVE) {
-            $this->o->erro('Acesso Negado');
+            $this->observador->erro('Acesso Negado');
         }
 
         if (!isset($_SESSION['autorizacao'])) {
            if (!$this->cookie()) {
-               $this->o->erro('Acesso Negado');
+               $this->observador->erro('Acesso Negado');
            }
         }
 
         if ($_SESSION['autorizacao'] < $acesso) {
-            $this->o->erro('Acesso Negado');
+            $this->observador->erro('Acesso Negado');
         }
 
     }
+
 
     /**
      *
@@ -48,8 +49,8 @@ class autenticador
         $login = $this->db->protege($login);
         $result = $this->link->query("SELECT id, nome, senha, autorizacao, idioma from usuario where login = '$login'");
         if (!$result) {
-            $this->o->guardiao->adicionarListaNegra();
-            $this->o->erro($this->link->error, 500);
+            $this->observador->guardiao->adicionarListaNegra();
+            $this->observador->erro($this->link->error);
         }
 
         $bd_senha = '';
@@ -71,9 +72,9 @@ class autenticador
             $_SESSION['idioma'] = $idioma;
             setcookie('login', $login, time() + 2592000, '/');
             setcookie('token', $senha, time() + 2592000, '/');
-            if ($this->o) {
-                $this->o->dados['nome'] = $nome;
-                $this->o->dados['idioma'] = $idioma;
+            if ($this->observador) {
+                $this->observador->dados['nome'] = $nome;
+                $this->observador->dados['idioma'] = $idioma;
             }
 
             return true;
@@ -82,7 +83,7 @@ class autenticador
             if (session_status() === PHP_SESSION_ACTIVE) {
                 $_SESSION['autorizacao'] = 0;
             }
-            $this->o->guardiao->adicionarListaNegra();
+            $this->observador->guardiao->adicionarListaNegra();
             return false;
         }
     }
@@ -94,7 +95,7 @@ class autenticador
          * and open the template in the editor.
          */
         if (!isset($_COOKIE['token'])) {
-            $this->o->erro('Você não está autenticado');
+            $this->observador->erro('Você não está autenticado');
         }
 
         $login = $this->db->protege($_COOKIE['login']);

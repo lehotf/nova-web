@@ -106,31 +106,22 @@ class controlador
     public $observador;
     public $db;
 
-    public function __construct(bool $guardiao = false, bool $logger = false, bool $autenticador = false, bool $observador = false, bool $db = false)
+    public function __construct(bool $guardiao = false, bool $logger = false, bool $autenticador = false, bool $observador = false)
     {
-        if ($db) {
-            $this->db = new database('localhost', BD_LOGIN, BD_SENHA, BD);
-        }
-
-        if ($logger) {
+        if ($logger || $guardiao) {
             $this->logger = new logger();
         }
 
-        if ($guardiao) {            
-            if (!$this->logger) {
-                $this->logger = new logger();
-            }
+        if ($guardiao) {                        
             $this->guardiao = new guardiao($this->logger);
         }
 
-        if ($observador) {
-            $this->observador = new observador($db);
+        if ($observador || $autenticador) {
+            $this->db = new database('localhost', BD_LOGIN, BD_SENHA, BD);
+            $this->observador = new observador($this->db);
         }
 
         if ($autenticador) {
-            if (!$this->observador) {
-                $this->observador = new observador($db);
-            }
             $this->autenticador = new autenticador($this->observador);
         }
     }

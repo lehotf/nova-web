@@ -8,11 +8,9 @@ class observador
     public $r; #dados para resposta
     private $instrucao;
 
-    public function __construct($db = null)
+    public function __construct($db)
     {
-        if ($db) {
-            $this->db = $db;
-        }
+        $this->db = $db;
         $this->input = $this->carregar_json();
         $this->dados = $this->sanitiza($this->input);
         $this->r = [];
