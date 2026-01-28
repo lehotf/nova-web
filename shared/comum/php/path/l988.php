@@ -1,5 +1,4 @@
 <?php
-require $_SERVER['DOCUMENT_ROOT'] . '/comum/php/autenticador.php';
 $a = new autenticador($this->guardiao);
 $a->acesso(2);
 
