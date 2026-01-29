@@ -3,7 +3,6 @@
 $dados = prepare_select($db, "id, artigo, titulo, subtitulo, thumb, duracao, datePublished, dateModified, amp, keywords from links where path = ?", 's', $comando);
 
 if ($dados) {
-    require 'comum/php/include/pesquisa.php';
     require 'comum/php/include/ad.php';    
     require 'comum/php/include/texto.php';
 

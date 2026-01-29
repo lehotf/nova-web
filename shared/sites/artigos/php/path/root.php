@@ -1,10 +1,10 @@
 <?php
 
-require 'comum/php/include/pesquisa.php';
 require 'comum/php/include/ad.php';
 
+$montador = new monta_artigo($db, $this->guardiao, $this->cache, $this->amp);
 
-$conteudo = modulo([
+$conteudo = $montador->modulo([
     'classe' => 'c50',
     'links'  => v_select($db, 'links.id, CONCAT(links.basepath,links.path) as path, links.thumb_titulo_html, links.duracao, links.thumb, links.titulo, links.subtitulo from links_destaques inner join links on links_destaques.linkID = links.id where links_destaques.id = 100 or links_destaques.id = 200'),
 ]);
@@ -13,16 +13,15 @@ $conteudo = modulo([
 Lembrando que root indica que o link poderá aparecer na página principal e nas subsequentes. Publicado, é pre-requisito para ser visto, mas, também, para gerar linha no sitemap.
 Ou seja, o link pode ser publicado, mas não ser root. Significa que o artigo aparecerá nos buscadores e na busca do site, mas não aparecerá, naturalmente, na paginação do root.
 */
-$conteudo .= listaItem($db, ['max' => MAX_IN_ROOT, 'root' => true]);
+$conteudo .= $montador->listaItem($db, ['max' => MAX_IN_ROOT, 'root' => true]);
 
-global $next_page;
-if ($next_page) {
+if ($montador->next_page) {
     $conteudo .= '<div class="divisor_fixo pagebar centered"><a href="/p/1'.($this->amp ? '/amp' : '').'#content" class="nextpage">TODOS OS ARTIGOS</a></div>';
 }
 
 $conteudo .= '<div class="divisor">' . adsense('article') . '</div>';
 
-$conteudo .= showTextLinks($db, 7);
+$conteudo .= $montador->showTextLinks($db, 7);
 
 
 //$conteudo .= '<div><div class="c50 divisor_fixo">'.ADD_FEED.'</div><div class="c50 divisor_fixo">'.ADD_FEED.'</div></div>';

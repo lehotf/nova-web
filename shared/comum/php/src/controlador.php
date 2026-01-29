@@ -122,7 +122,7 @@ class controlador
         }
 
         if ($autenticador) {
-            $this->autenticador = new autenticador($this->observador);
+            $this->autenticador = new autenticador($this->db, $this->observador);
         }
     }
 

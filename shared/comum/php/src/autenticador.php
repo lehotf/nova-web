@@ -4,13 +4,11 @@ class autenticador
 
     private $observador;
     private $db;
-    private $link;
 
-    public function __construct($observador)
-    {        
-        $this->observador = $observador;     
-        $this->db = $observador->db;   
-        $this->link = $observador->db->link;   
+    public function __construct($db, $observador = null)
+    {
+        $this->db = $db;
+        $this->observador = $observador;
     }
 
     /**
@@ -22,22 +20,18 @@ class autenticador
      * @param string e $acesso
      */
     public function acesso($acesso)
-    {       
-        if (session_status() !== PHP_SESSION_ACTIVE) {
-            $this->observador->erro('Acesso Negado');
-        }
+    {               
 
-        if (!isset($_SESSION['autorizacao'])) {
-           if (!$this->cookie()) {
-               $this->observador->erro('Acesso Negado');
-           }
+        if ((session_status() !== PHP_SESSION_ACTIVE) || !isset($_SESSION['autorizacao'])) {
+           $this->cookie();           
         }
 
         if ($_SESSION['autorizacao'] < $acesso) {
-            $this->observador->erro('Acesso Negado');
+            $this->acesso_negado();
         }
 
     }
+
 
 
     /**
@@ -47,21 +41,21 @@ class autenticador
     public function login($login, $senha)
     {
         $login = $this->db->protege($login);
-        $result = $this->link->query("SELECT id, nome, senha, autorizacao, idioma from usuario where login = '$login'");
-        if (!$result) {
+        $result = $this->db->link->query("SELECT id, nome, senha, autorizacao, idioma from usuario where login = '$login'");
+        
+        if (!$result || $result->num_rows === 0) {
             $this->observador->guardiao->adicionarListaNegra();
-            $this->observador->erro($this->link->error);
+            return false;
         }
 
-        $bd_senha = '';
-        while ($row = $result->fetch_array(MYSQLI_ASSOC)) {
-            $nome = $row['nome'];
-            $bd_senha = $row['senha'];
-            $id = $row['id'];
-            $autorizacao = $row['autorizacao'];
-            $idioma = $row['idioma'];
-        }
+        $row = $result->fetch_array(MYSQLI_ASSOC);
 
+        $nome = $row['nome'];
+        $bd_senha = $row['senha'];
+        $id = $row['id'];
+        $autorizacao = $row['autorizacao'];
+        $idioma = $row['idioma'];
+        
         if ((md5($bd_senha . md5($_SERVER['REMOTE_ADDR']))) == ($senha)) {
             if (session_status() !== PHP_SESSION_ACTIVE) {
                 session_start();
@@ -90,18 +84,28 @@ class autenticador
 
     public function cookie()
     {
-        /*
-         * To change this template, choose Tools | Templates
-         * and open the template in the editor.
-         */
+    
         if (!isset($_COOKIE['token'])) {
-            $this->observador->erro('Você não está autenticado');
+            $this->acesso_negado();
         }
 
         $login = $this->db->protege($_COOKIE['login']);
         $token = $this->db->protege($_COOKIE['token']);
 
-        return $this->login($login, $token);
+        if (!$this->login($login, $token)) {
+            $this->acesso_negado();
+        }
+    }
+
+
+    public function acesso_negado()
+    {
+            if (!$this->observador) {
+                http_response_code(404);
+                die();
+            }
+
+            $this->observador->erro('Você não está autenticado');
     }
 
 }
