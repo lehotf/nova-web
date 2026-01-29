@@ -51,87 +51,86 @@ class database
 
         return -1;
     }
-}
+    public function prepare_select($query, $type, $param)
+    {
+        $statement = $this->link->prepare("select " . $query);
+        if (!$statement) {
+            return false;
+        }
+        $params = is_array($param) ? $param : [$param];
+        $statement->bind_param($type, ...$params);
+        $statement->execute();
+        $result = $statement->get_result();
 
-function prepare_select($db, $query, $type, $param)
-{
-    $statement = $db->link->prepare("select " . $query);
-    if (!$statement) {
-        return false;
-    }
-    $params = is_array($param) ? $param : [$param];
-    $statement->bind_param($type, ...$params);
-    $statement->execute();
-    $result = $statement->get_result();
-
-    if (($result) && ($result->num_rows)) {
-        return $result->fetch_array(MYSQLI_ASSOC);
-    } else {
-        return false;
-    }
-}
-
-function select($db, $query)
-{
-    $result = $db->link->query("select " . $query) or die($db->link->error);
-
-    if ($result) {
-        if ($result->num_rows) {
+        if (($result) && ($result->num_rows)) {
             return $result->fetch_array(MYSQLI_ASSOC);
+        } else {
+            return false;
         }
-        return false;
     }
-}
 
-function v_select($db, $query)
-{
-    $result = $db->link->query("select " . $query) or die($db->link->error);
+    public function select($query)
+    {
+        $result = $this->link->query("select " . $query) or die($this->link->error);
 
-    if ($result) {
-        if ($result->num_rows) {
-            $vetor = [];
-            foreach ($result as $linha) {
-                $vetor[] = $linha;
+        if ($result) {
+            if ($result->num_rows) {
+                return $result->fetch_array(MYSQLI_ASSOC);
             }
-            return $vetor;
+            return false;
+        }
+    }
+
+    public function v_select($query)
+    {
+        $result = $this->link->query("select " . $query) or die($this->link->error);
+
+        if ($result) {
+            if ($result->num_rows) {
+                $vetor = [];
+                foreach ($result as $linha) {
+                    $vetor[] = $linha;
+                }
+                return $vetor;
+            }
+            return false;
         }
         return false;
     }
-    return false;
-}
 
-function f_select($db, $query, $function)
-{
-    $result = $db->link->query("select " . $query) or die($db->link->error);
+    public function f_select($query, $function)
+    {
+        $result = $this->link->query("select " . $query) or die($this->link->error);
 
-    if ($result) {
-        if ($result->num_rows) {
-            foreach ($result as $linha) {
-                $function($linha);
+        if ($result) {
+            if ($result->num_rows) {
+                foreach ($result as $linha) {
+                    $function($linha);
+                }
             }
         }
     }
-}
 
-function query($db, $query)
-{
-    return $db->link->query($query) or die($db->link->error);
-}
-
-function queryXHR($db, $query, $erroHandler = null)
-{
-    $resultado = $db->link->query($query);
-    if ($resultado) {
-        return $resultado;
+    public function query($query)
+    {
+        return $this->link->query($query) or die($this->link->error);
     }
-    if ($erroHandler) {
-        $erroHandler($db->link->error);
-        return false;
-    }
-    die($db->link->error);
-}
 
-function getId() {}
+    public function queryXHR($query, $erroHandler = null)
+    {
+        $resultado = $this->link->query($query);
+        if ($resultado) {
+            return $resultado;
+        }
+        if ($erroHandler) {
+            $erroHandler($this->link->error);
+            return false;
+        }
+        die($this->link->error);
+    }
+
+    public function getId() {}
+}
 
 function url_amigavel($url)
 {

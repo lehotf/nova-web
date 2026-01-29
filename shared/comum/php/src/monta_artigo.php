@@ -22,69 +22,9 @@ class monta_artigo
         $this->legenda = '';
         $this->cor = null;
         $this->next_page = null;
-    }
+    }    
 
-    public function montar($dados)
-    {
-        if (!$dados) {
-            return null;
-        }
-
-        $artigo_html = $this->montaArtigoHtml($dados['artigo']);
-
-        if ($this->nocache) {
-            $pagina = '_artigo';
-            $add    = '';
-        } else {
-            $pagina = 'artigo';
-            $add    = '';
-        }
-
-        $amp_script = $this->montaAmpScript($dados['duracao']);
-        $modulos = $this->montaModulos();
-
-        $image = $this->thumbImage($dados['thumb']);
-
-        $subtitulo = $this->normalizaSubtitulo($dados['subtitulo']);
-        $description = $subtitulo . ' ' . $dados['keywords'];
-
-        $structured = $this->structured(
-            $dados['titulo'],
-            $dados['datePublished'],
-            $dados['dateModified'],
-            $image,
-            $description,
-            $this->guardiao->getUrl()
-        );
-
-        $timestamp = $this->montaTimestamp($dados['datePublished'], $dados['dateModified']);
-        $contato = $this->montaContato();
-        $sidebar = $this->montaSidebar();
-
-        $dados_preparados = [
-            'structured'  => $structured,
-            'amp_script'  => $amp_script,
-            'titulo'      => $dados['titulo'],
-            'subtitulo'   => $subtitulo,
-            'timestamp'   => $timestamp,
-            'description' => $description,
-            'image'       => $image,
-            'artigo'      => $artigo_html . $this->showTags() . $contato,
-            'modulos'     => $add . $modulos,            
-            'sidebar'     => $sidebar,
-        ];
-
-        if ($dados['amp'] == 0) {
-            $dados_preparados['alternative_link'] = '';
-        }
-
-        return [
-            'pagina' => $pagina,
-            'dados'  => $dados_preparados,
-        ];
-    }
-
-    private function montaArtigoHtml($texto)
+    public function montaArtigoHtml($texto)
     {
         if ($this->amp) {
             return converte($texto, false, true);
@@ -93,7 +33,7 @@ class monta_artigo
         return converte($texto);
     }
 
-    private function montaAmpScript($duracao)
+    public function montaAmpScript($duracao)
     {
         if (! $this->amp) {
             return '';
@@ -106,12 +46,12 @@ class monta_artigo
         return '';
     }
 
-    private function montaModulos()
+    public function montaModulos()
     {
         return '<div class="interesse">Talvez seja de seu interesse</div>' . $this->showRelatedLinks($this->db, $this->guardiao->getUrl());
     }
 
-    private function normalizaSubtitulo($subtitulo)
+    public function normalizaSubtitulo($subtitulo)
     {
         if (strpos('.?!', substr($subtitulo, -1)) === false) {
             $subtitulo .= '.';
@@ -120,7 +60,7 @@ class monta_artigo
         return $subtitulo;
     }
 
-    private function montaTimestamp($datePublished, $dateModified)
+    public function montaTimestamp($datePublished, $dateModified)
     {
         $timestamp = '<span>Publicado em ' . DateTime::createFromFormat('Y-m-d H:i:s', $datePublished)->format('d/m/Y') . '</span>';
 
@@ -131,12 +71,12 @@ class monta_artigo
         return $timestamp;
     }
 
-    private function montaContato()
+    public function montaContato()
     {
         return '<div class="contato"><b>Contato:</b> Caso você tenha identificado algum erro ou imprecisão no conteúdo acima, por gentileza, considere informar <a target="_blank" href="https://docs.google.com/forms/d/e/1FAIpQLScX2d2cqz6DoJQga6S988u9Ci895meVc5zNehAXcevhvfOpiw/viewform?entry.278388629=' . SITE . $this->guardiao->getUrl() . '">clicando aqui</a>. Você poderá utilizar o mesmo link caso queira entrar em contato por qualquer outro motivo.</div>';
     }
 
-    private function montaSidebar()
+    public function montaSidebar()
     {
         return '<div class="divisor_fixo"><div id="arranhaceu">' . adsense('arranhaceu') . '</div></div><div class="divisor sticky20">' . file_get_contents($_SERVER['DOCUMENT_ROOT'] . '/cache/elementos/ultimos' . ($this->amp ? '_amp' : '')) . '</div>';
     }
@@ -205,7 +145,7 @@ class monta_artigo
         for ($z = 1; $z < count($tags); $z++) {
             $strWhere .= " and (path = '" . url_amigavel($tags[$z]) . "')";
         }
-        $tags = v_select($db, "nome, id from tags where $strWhere");
+        $tags = $db->v_select("nome, id from tags where $strWhere");
         if (count($tags) == 1) {
             $this->legenda = $tags[0]['nome'];
         }
@@ -260,9 +200,9 @@ class monta_artigo
         }
 
         if (count($tagsID) > 1) {
-            return $this->removeItemDuplicado(v_select($db, "id, CONCAT(links.basepath,links.path) as path, links.thumb_titulo_html, links.thumb, links.duracao, links.titulo, links.subtitulo from links_tags inner join links on links.id = links_tags.linkID where (links.publicado = 1 and links.search = 1 $tagWhere$root$remove) order by ${order}links.datePublished desc, links.id DESC LIMIT $offset, " . (2 * $max)), $max);
+            return $this->removeItemDuplicado($db->v_select("id, CONCAT(links.basepath,links.path) as path, links.thumb_titulo_html, links.thumb, links.duracao, links.titulo, links.subtitulo from links_tags inner join links on links.id = links_tags.linkID where (links.publicado = 1 and links.search = 1 $tagWhere$root$remove) order by ${order}links.datePublished desc, links.id DESC LIMIT $offset, " . (2 * $max)), $max);
         } else {
-            return v_select($db, "id, CONCAT(links.basepath,links.path) as path, links.thumb_titulo_html, links.thumb, links.duracao, links.titulo, links.subtitulo from links_tags inner join links on links.id = links_tags.linkID where (links.publicado = 1 and links.search = 1 $tagWhere$root$remove) order by ${order}links.datePublished desc, links.id DESC LIMIT $offset, $max");
+            return $db->v_select("id, CONCAT(links.basepath,links.path) as path, links.thumb_titulo_html, links.thumb, links.duracao, links.titulo, links.subtitulo from links_tags inner join links on links.id = links_tags.linkID where (links.publicado = 1 and links.search = 1 $tagWhere$root$remove) order by ${order}links.datePublished desc, links.id DESC LIMIT $offset, $max");
         }
     }
 
@@ -279,7 +219,7 @@ class monta_artigo
             $remove = '';
         }
 
-        $links = v_select($db, "id, CONCAT(links.basepath,links.path) as path, links.thumb_titulo_html, links.thumb, links.duracao, links.titulo, links.subtitulo from links where (links.publicado = 1 and links.search = 1 $root$remove) order by ${order}links.datePublished desc, links.id DESC LIMIT $offset, $max");
+        $links = $db->v_select("id, CONCAT(links.basepath,links.path) as path, links.thumb_titulo_html, links.thumb, links.duracao, links.titulo, links.subtitulo from links where (links.publicado = 1 and links.search = 1 $root$remove) order by ${order}links.datePublished desc, links.id DESC LIMIT $offset, $max");
 
         if (count($links) == $max) {
             $this->next_page = $offset + $max + 1;
@@ -333,7 +273,7 @@ class monta_artigo
 
     public function showTextLinks($db, $max)
     {
-        $links = v_select($db, "id, CONCAT(links.basepath,links.path) as path, links.thumb_titulo_html, links.titulo, links.subtitulo from links where (links.publicado = 1 and links.search = 1 and id NOT IN (" . $this->removedLinks . ")) order by links.datePublished desc, links.id DESC LIMIT $max");
+        $links = $db->v_select("id, CONCAT(links.basepath,links.path) as path, links.thumb_titulo_html, links.titulo, links.subtitulo from links where (links.publicado = 1 and links.search = 1 and id NOT IN (" . $this->removedLinks . ")) order by links.datePublished desc, links.id DESC LIMIT $max");
 
         $texto = '<div class="divisor"><div class="textLink">';
 
@@ -363,7 +303,7 @@ class monta_artigo
         $max    = $param['max'] ? $param['max'] : '24';
         $offset = isset($param['offset']) ? $param['offset'] : 0;
 
-        $links = v_select($db, "id, CONCAT(links.basepath,links.path) as path, links.thumb_titulo_html, links.thumb, links.duracao, links.titulo, links.subtitulo from links where (links.publicado = 1 and links.search = 1 and (links.titulo like '%$texto%' or links.subtitulo like '%$texto%')) order by links.datePublished desc, links.id DESC LIMIT $offset, $max");
+        $links = $db->v_select("id, CONCAT(links.basepath,links.path) as path, links.thumb_titulo_html, links.thumb, links.duracao, links.titulo, links.subtitulo from links where (links.publicado = 1 and links.search = 1 and (links.titulo like '%$texto%' or links.subtitulo like '%$texto%')) order by links.datePublished desc, links.id DESC LIMIT $offset, $max");
         //$links2 = v_select("CONCAT(basepath,path) as path, thumb, titulo, subtitulo from links where (titulo like '%$texto%' and publicado = 1 and thumb = '') order by data desc, id DESC LIMIT $max");
 
         if (($links) && (count($links) == $max)) {
@@ -386,13 +326,13 @@ class monta_artigo
             $basepath = '/';
             $path     = str_replace('/', '', $path);
         }
-        $resultado = select($db, "id from links where basepath = '$basepath' and path = '$path'");
+        $resultado = $db->select("id from links where basepath = '$basepath' and path = '$path'");
         return $resultado ? $resultado['id'] : null;
     }
 
     public function getTagsFromLinkID($db, $linkID)
     {
-        return v_select($db, "tagID as id, tags.nome as nome, tags.path as path from links_tags inner join tags on links_tags.tagID = tags.id where linkID = $linkID order by nome");
+        return $db->v_select("tagID as id, tags.nome as nome, tags.path as path from links_tags inner join tags on links_tags.tagID = tags.id where linkID = $linkID order by nome");
     }
 
     public function showRelatedLinks($db, $path)
