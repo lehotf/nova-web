@@ -176,6 +176,8 @@ class observador
             unset($dados[$campoId]);
 
             $sets = [];
+            $tipos = '';
+            $params = [];
             foreach ($dados as $campo => $valor) {
                 if (!$this->nomeValido($campo)) {
                     continue;
@@ -190,20 +192,41 @@ class observador
                     continue;
                 }
 
-                $sets[] = "`$campo`=" . $this->tipoValor($campo, $valor);
+                $tipoCampo = $this->instrucao[$campo]['tipo'];
+                if ($tipoCampo === 'numero') {
+                    $valorNormalizado = is_numeric($valor) ? ($valor + 0) : 0;
+                    $tipos .= is_float($valorNormalizado) ? 'd' : 'i';
+                    $params[] = $valorNormalizado;
+                } else {
+                    $tipos .= 's';
+                    $params[] = (string) $valor;
+                }
+
+                $sets[] = "`$campo`=?";
             }
 
             if (!$sets) {
                 return $id;
             }
 
-            $sql = "UPDATE `$tabela` SET " . implode(',', $sets) . " WHERE `$campoId`=" . $id;
-            $this->query($sql);
+            $tipoId = $this->instrucao[$campoId]['tipo'] ?? (is_numeric($id) ? 'numero' : 'string');
+            if ($tipoId === 'numero') {
+                $idNormalizado = is_numeric($id) ? ($id + 0) : 0;
+                $tipos .= is_float($idNormalizado) ? 'd' : 'i';
+                $params[] = $idNormalizado;
+            } else {
+                $tipos .= 's';
+                $params[] = (string) $id;
+            }
+
+            $sql = "UPDATE `$tabela` SET " . implode(',', $sets) . " WHERE `$campoId`=?";
+            $this->query($sql, true, $tipos, $params);
             return $id;
         }
 
         $campos = [];
-        $valores = [];
+        $tipos = '';
+        $params = [];
         foreach ($dados as $campo => $valor) {
             if (!$this->nomeValido($campo)) {
                 continue;
@@ -219,15 +242,24 @@ class observador
             }
 
             $campos[] = "`$campo`";
-            $valores[] = $this->tipoValor($campo, $valor);
+            $tipoCampo = $this->instrucao[$campo]['tipo'];
+            if ($tipoCampo === 'numero') {
+                $valorNormalizado = is_numeric($valor) ? ($valor + 0) : 0;
+                $tipos .= is_float($valorNormalizado) ? 'd' : 'i';
+                $params[] = $valorNormalizado;
+            } else {
+                $tipos .= 's';
+                $params[] = (string) $valor;
+            }
         }
 
         if (!$campos) {
             return null;
         }
 
-        $sql = "INSERT INTO `$tabela` (" . implode(',', $campos) . ") VALUES (" . implode(',', $valores) . ")";
-        $this->query($sql);
+        $placeholders = implode(',', array_fill(0, count($campos), '?'));
+        $sql = "INSERT INTO `$tabela` (" . implode(',', $campos) . ") VALUES (" . $placeholders . ")";
+        $this->query($sql, true, $tipos, $params);
         return $this->db->link->insert_id;
     }
 
