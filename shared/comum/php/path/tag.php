@@ -7,7 +7,7 @@ if (isset($this->comando[1]) && ($this->comando[1] != 'amp')){
 	$pagina = 0;
 }
 
-$montador = new monta_artigo($db, $this->guardiao, $this->cache, $this->amp);
+$montador = new monta_artigo($db, $this->guardiao, $this->amp);
 $pesquisa = $montador->pesquisaTag($db, [$tag], ['max' => 24, 'offset' => $pagina * 24]);
 $conteudo = '<div class="folha_de_papel padding50"><h1 class="titulotag">' . $montador->legenda . '</h1></div>';
 

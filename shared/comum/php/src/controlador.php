@@ -108,11 +108,11 @@ class controlador
 
     public function __construct(bool $guardiao = false, bool $logger = false, bool $autenticador = false, bool $observador = false)
     {
-        if ($logger || $guardiao) {
+        if ($logger || $guardiao || $autenticador) {
             $this->logger = new logger();
         }
 
-        if ($guardiao) {                        
+        if ($guardiao || $autenticador) {                        
             $this->guardiao = new guardiao($this->logger);
         }
 
@@ -122,7 +122,7 @@ class controlador
         }
 
         if ($autenticador) {
-            $this->autenticador = new autenticador($this->db, $this->observador);
+            $this->autenticador = new autenticador($this->db, $this->observador, $this->guardiao);
         }
     }
 

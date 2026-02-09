@@ -10,7 +10,6 @@ class monta_artigo
     public $legenda;
     public $cor;
     public $next_page;
-    public $nocache;
 
     public function __construct($db, $guardiao, $amp)
     {
@@ -141,11 +140,22 @@ class monta_artigo
 
     public function getTagsID($db, $tags)
     {
-        $strWhere = "(path = '" . url_amigavel($tags[0]) . "')";
-        for ($z = 1; $z < count($tags); $z++) {
-            $strWhere .= " and (path = '" . url_amigavel($tags[$z]) . "')";
+        if (!$tags) {
+            return false;
         }
-        $tags = $db->v_select("nome, id from tags where $strWhere");
+
+        $tagsNormalizadas = [];
+        foreach ($tags as $tag) {
+            $tagsNormalizadas[] = url_amigavel($tag);
+        }
+
+        $strWhere = implode(' and ', array_fill(0, count($tagsNormalizadas), '(path = ?)'));
+        $tags = $db->v_select(
+            "nome, id from tags where $strWhere",
+            str_repeat('s', count($tagsNormalizadas)),
+            $tagsNormalizadas
+        );
+
         if (count($tags) == 1) {
             $this->legenda = $tags[0]['nome'];
         }
@@ -174,17 +184,22 @@ class monta_artigo
             die();
         }
 
-        $taglist = '';
-
+        $tagIds = [];
         foreach ($tagsID as $tag) {
-            if ($taglist != '') {
-                $taglist .= ',';
+            if (is_array($tag) && array_key_exists('id', $tag)) {
+                $tagIds[] = (int) $tag['id'];
+            } else {
+                $tagIds[] = (int) $tag;
             }
-            $taglist .= $tag['id'];
         }
 
-        if ($taglist) {
-            $tagWhere = "and (links_tags.tagID in (" . $taglist . "))";
+        $tipos = '';
+        $params = [];
+
+        if ($tagIds) {
+            $tagWhere = "and (links_tags.tagID in (" . implode(',', array_fill(0, count($tagIds), '?')) . "))";
+            $tipos .= str_repeat('i', count($tagIds));
+            $params = array_merge($params, $tagIds);
         } else {
             $tagWhere = '';
         }
@@ -193,16 +208,32 @@ class monta_artigo
             $order = $order . ',';
         }
 
-        if (strlen($this->removedLinks) > 0) {
-            $remove = ' and linkID NOT IN (' . $this->removedLinks . ')';
+        $removed = array_values(array_filter(array_map('intval', explode(',', (string) $this->removedLinks))));
+        if ($removed) {
+            $remove = ' and linkID NOT IN (' . implode(',', array_fill(0, count($removed), '?')) . ')';
+            $tipos .= str_repeat('i', count($removed));
+            $params = array_merge($params, $removed);
         } else {
             $remove = '';
         }
 
         if (count($tagsID) > 1) {
-            return $this->removeItemDuplicado($db->v_select("id, CONCAT(links.basepath,links.path) as path, links.thumb_titulo_html, links.thumb, links.duracao, links.titulo, links.subtitulo from links_tags inner join links on links.id = links_tags.linkID where (links.publicado = 1 and links.search = 1 $tagWhere$root$remove) order by ${order}links.datePublished desc, links.id DESC LIMIT $offset, " . (2 * $max)), $max);
+            $params2 = array_merge($params, [(int) $offset, (int) (2 * $max)]);
+            return $this->removeItemDuplicado(
+                $db->v_select(
+                    "id, CONCAT(links.basepath,links.path) as path, links.thumb_titulo_html, links.thumb, links.duracao, links.titulo, links.subtitulo from links_tags inner join links on links.id = links_tags.linkID where (links.publicado = 1 and links.search = 1 $tagWhere$root$remove) order by ${order}links.datePublished desc, links.id DESC LIMIT ?, ?",
+                    $tipos . 'ii',
+                    $params2
+                ),
+                $max
+            );
         } else {
-            return $db->v_select("id, CONCAT(links.basepath,links.path) as path, links.thumb_titulo_html, links.thumb, links.duracao, links.titulo, links.subtitulo from links_tags inner join links on links.id = links_tags.linkID where (links.publicado = 1 and links.search = 1 $tagWhere$root$remove) order by ${order}links.datePublished desc, links.id DESC LIMIT $offset, $max");
+            $params2 = array_merge($params, [(int) $offset, (int) $max]);
+            return $db->v_select(
+                "id, CONCAT(links.basepath,links.path) as path, links.thumb_titulo_html, links.thumb, links.duracao, links.titulo, links.subtitulo from links_tags inner join links on links.id = links_tags.linkID where (links.publicado = 1 and links.search = 1 $tagWhere$root$remove) order by ${order}links.datePublished desc, links.id DESC LIMIT ?, ?",
+                $tipos . 'ii',
+                $params2
+            );
         }
     }
 
@@ -213,13 +244,24 @@ class monta_artigo
         $offset = isset($param['offset']) ? $param['offset'] : 0;
         $order  = isset($param['order']) ? $param['order'] : null;
 
-        if (strlen($this->removedLinks) > 0) {
-            $remove = ' and id NOT IN (' . $this->removedLinks . ')';
+        $removed = array_values(array_filter(array_map('intval', explode(',', (string) $this->removedLinks))));
+        $tipos = '';
+        $params = [];
+
+        if ($removed) {
+            $remove = ' and id NOT IN (' . implode(',', array_fill(0, count($removed), '?')) . ')';
+            $tipos .= str_repeat('i', count($removed));
+            $params = array_merge($params, $removed);
         } else {
             $remove = '';
         }
 
-        $links = $db->v_select("id, CONCAT(links.basepath,links.path) as path, links.thumb_titulo_html, links.thumb, links.duracao, links.titulo, links.subtitulo from links where (links.publicado = 1 and links.search = 1 $root$remove) order by ${order}links.datePublished desc, links.id DESC LIMIT $offset, $max");
+        $params = array_merge($params, [(int) $offset, (int) $max]);
+        $links = $db->v_select(
+            "id, CONCAT(links.basepath,links.path) as path, links.thumb_titulo_html, links.thumb, links.duracao, links.titulo, links.subtitulo from links where (links.publicado = 1 and links.search = 1 $root$remove) order by ${order}links.datePublished desc, links.id DESC LIMIT ?, ?",
+            $tipos . 'ii',
+            $params
+        );
 
         if (count($links) == $max) {
             $this->next_page = $offset + $max + 1;
@@ -273,7 +315,24 @@ class monta_artigo
 
     public function showTextLinks($db, $max)
     {
-        $links = $db->v_select("id, CONCAT(links.basepath,links.path) as path, links.thumb_titulo_html, links.titulo, links.subtitulo from links where (links.publicado = 1 and links.search = 1 and id NOT IN (" . $this->removedLinks . ")) order by links.datePublished desc, links.id DESC LIMIT $max");
+        $removed = array_values(array_filter(array_map('intval', explode(',', (string) $this->removedLinks))));
+        $tipos = '';
+        $params = [];
+
+        if ($removed) {
+            $remove = ' and id NOT IN (' . implode(',', array_fill(0, count($removed), '?')) . ')';
+            $tipos .= str_repeat('i', count($removed));
+            $params = array_merge($params, $removed);
+        } else {
+            $remove = '';
+        }
+
+        $params[] = (int) $max;
+        $links = $db->v_select(
+            "id, CONCAT(links.basepath,links.path) as path, links.thumb_titulo_html, links.titulo, links.subtitulo from links where (links.publicado = 1 and links.search = 1 $remove) order by links.datePublished desc, links.id DESC LIMIT ?",
+            $tipos . 'i',
+            $params
+        );
 
         $texto = '<div class="divisor"><div class="textLink">';
 
@@ -303,7 +362,12 @@ class monta_artigo
         $max    = $param['max'] ? $param['max'] : '24';
         $offset = isset($param['offset']) ? $param['offset'] : 0;
 
-        $links = $db->v_select("id, CONCAT(links.basepath,links.path) as path, links.thumb_titulo_html, links.thumb, links.duracao, links.titulo, links.subtitulo from links where (links.publicado = 1 and links.search = 1 and (links.titulo like '%$texto%' or links.subtitulo like '%$texto%')) order by links.datePublished desc, links.id DESC LIMIT $offset, $max");
+        $busca = '%' . $texto . '%';
+        $links = $db->v_select(
+            "id, CONCAT(links.basepath,links.path) as path, links.thumb_titulo_html, links.thumb, links.duracao, links.titulo, links.subtitulo from links where (links.publicado = 1 and links.search = 1 and (links.titulo like ? or links.subtitulo like ?)) order by links.datePublished desc, links.id DESC LIMIT ?, ?",
+            'ssii',
+            [$busca, $busca, (int) $offset, (int) $max]
+        );
         //$links2 = v_select("CONCAT(basepath,path) as path, thumb, titulo, subtitulo from links where (titulo like '%$texto%' and publicado = 1 and thumb = '') order by data desc, id DESC LIMIT $max");
 
         if (($links) && (count($links) == $max)) {
@@ -326,13 +390,21 @@ class monta_artigo
             $basepath = '/';
             $path     = str_replace('/', '', $path);
         }
-        $resultado = $db->select("id from links where basepath = '$basepath' and path = '$path'");
+        $resultado = $db->select(
+            "id from links where basepath = ? and path = ?",
+            'ss',
+            [$basepath, $path]
+        );
         return $resultado ? $resultado['id'] : null;
     }
 
     public function getTagsFromLinkID($db, $linkID)
     {
-        return $db->v_select("tagID as id, tags.nome as nome, tags.path as path from links_tags inner join tags on links_tags.tagID = tags.id where linkID = $linkID order by nome");
+        return $db->v_select(
+            "tagID as id, tags.nome as nome, tags.path as path from links_tags inner join tags on links_tags.tagID = tags.id where linkID = ? order by nome",
+            'i',
+            [(int) $linkID]
+        );
     }
 
     public function showRelatedLinks($db, $path)

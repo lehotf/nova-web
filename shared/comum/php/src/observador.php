@@ -231,7 +231,7 @@ class observador
         return $this->db->link->insert_id;
     }
 
-    public function query($query, $campoItem = true)
+    public function query($query, $campoItem = true, $tipo = '', $param = null)
     {
         if ($campoItem) {
             $campo = 'item';
@@ -240,17 +240,15 @@ class observador
             $campo = $matches[1] ?? 'item';
         }
 
-        $resultado = $this->db->link->query($query);
-        if ($resultado) {
-            if ($resultado instanceof mysqli_result && $resultado->num_rows) {
-                $this->r[$campo] = [];
-                while ($row = $resultado->fetch_array(MYSQLI_ASSOC)) {
-                    $this->r[$campo][] = $row;
-                }
+        $resultado = $this->db->query($query, $tipo, $param);
+        if ($resultado instanceof mysqli_result && $resultado->num_rows) {
+            $this->r[$campo] = [];
+            while ($row = $resultado->fetch_array(MYSQLI_ASSOC)) {
+                $this->r[$campo][] = $row;
             }
-            return $resultado;
         }
-        $this->erro($this->db->link->error);
+
+        return $resultado;
     }
 
     public function envia($msg = null, $status = 'ok')

@@ -51,27 +51,56 @@ class database
 
         return -1;
     }
-    public function prepare_select($query, $type, $param)
+
+    private function normalizaParametro($param)
     {
-        $statement = $this->link->prepare("select " . $query);
+        if ($param === null) {
+            return [];
+        }
+
+        if (is_array($param)) {
+            return array_values($param);
+        }
+
+        return [$param];
+    }
+
+    private function preparaEExecuta($sql, $type = '', $param = null)
+    {
+        $statement = $this->link->prepare($sql);
         if (!$statement) {
             return false;
         }
-        $params = is_array($param) ? $param : [$param];
-        $statement->bind_param($type, ...$params);
-        $statement->execute();
-        $result = $statement->get_result();
 
-        if (($result) && ($result->num_rows)) {
-            return $result->fetch_array(MYSQLI_ASSOC);
-        } else {
+        if ($type !== '') {
+            $params = $this->normalizaParametro($param);
+            $bind = [$type];
+
+            foreach ($params as $chave => $valor) {
+                $bind[] = &$params[$chave];
+            }
+
+            $ok = call_user_func_array([$statement, 'bind_param'], $bind);
+            if (!$ok) {
+                return false;
+            }
+        }
+
+        if (!$statement->execute()) {
             return false;
         }
+
+        return $statement;
     }
 
-    public function select($query)
+    public function select($query, $type = '', $param = null)
     {
-        $result = $this->link->query("select " . $query) or die($this->link->error);
+        $statement = $this->preparaEExecuta("select " . $query, $type, $param);
+        if (!$statement) {
+            die($this->link->error);
+        }
+
+        $result = $statement->get_result();
 
         if ($result) {
             if ($result->num_rows) {
@@ -81,9 +110,14 @@ class database
         }
     }
 
-    public function v_select($query)
+    public function v_select($query, $type = '', $param = null)
     {
-        $result = $this->link->query("select " . $query) or die($this->link->error);
+        $statement = $this->preparaEExecuta("select " . $query, $type, $param);
+        if (!$statement) {
+            die($this->link->error);
+        }
+
+        $result = $statement->get_result();
 
         if ($result) {
             if ($result->num_rows) {
@@ -98,30 +132,44 @@ class database
         return false;
     }
 
-    public function f_select($query, $function)
+    public function f_select($query, $function, $type = '', $param = null)
     {
-        $result = $this->link->query("select " . $query) or die($this->link->error);
+        $statement = $this->preparaEExecuta("select " . $query, $type, $param);
+        if (!$statement) {
+            die($this->link->error);
+        }
 
-        if ($result) {
-            if ($result->num_rows) {
-                foreach ($result as $linha) {
-                    $function($linha);
-                }
+        $result = $statement->get_result();
+        if ($result && $result->num_rows) {
+            foreach ($result as $linha) {
+                $function($linha);
             }
         }
     }
 
-    public function query($query)
+    public function query($query, $type = '', $param = null)
     {
-        return $this->link->query($query) or die($this->link->error);
-    }
+        $statement = $this->preparaEExecuta($query, $type, $param);
+        if (!$statement) {
+            die($this->link->error);
+        }
 
-    public function queryXHR($query, $erroHandler = null)
-    {
-        $resultado = $this->link->query($query);
-        if ($resultado) {
+        $resultado = $statement->get_result();
+        if ($resultado instanceof mysqli_result) {
             return $resultado;
         }
+
+        return true;
+    }
+
+    public function queryXHR($query, $erroHandler = null, $type = '', $param = null)
+    {
+        $statement = $this->preparaEExecuta($query, $type, $param);
+        if ($statement) {
+            $resultado = $statement->get_result();
+            return $resultado instanceof mysqli_result ? $resultado : true;
+        }
+
         if ($erroHandler) {
             $erroHandler($this->link->error);
             return false;
@@ -129,7 +177,6 @@ class database
         die($this->link->error);
     }
 
-    public function getId() {}
 }
 
 function url_amigavel($url)

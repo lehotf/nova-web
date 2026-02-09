@@ -66,18 +66,14 @@ class carregador
  */
     public function verificaAMP(): void
     {
-        global $amp;
-
         if (basename($this->urlBase) == 'amp') {
-            $this->amp = true;
-            $amp = true;
+            $this->amp = true;            
             $this->urlBase = str_replace('/amp', '', $this->urlBase);
             if ($this->urlBase === '') {
                 $this->urlBase = '/';
             }
         } else {
-            $this->amp = false;
-            $amp = false;
+            $this->amp = false;            
         }
     }
 /**

@@ -1,20 +1,20 @@
 <?php
 
-$dados = $db->prepare_select("id, artigo, titulo, subtitulo, thumb, duracao, datePublished, dateModified, amp, keywords from links where path = ?", 's', $comando);
+$dados = $db->select("id, artigo, titulo, subtitulo, thumb, duracao, datePublished, dateModified, amp, keywords from links where path = ?", 's', $comando);
 
 if ($dados) {
     require 'comum/php/include/ad.php';    
     require 'comum/php/include/texto.php';
 
-    $montador = new monta_artigo($db, $this->guardiao, $this->cache, $this->amp);
+    $montador = new monta_artigo($db, $this->guardiao, $this->amp);
 
     if (!$dados) {
         return null;
     }
 
-    $artigo_html = $this->montaArtigoHtml($dados['artigo']);
+    $artigo_html = $montador->montaArtigoHtml($dados['artigo']);
 
-    if ($this->nocache) {
+    if (!CACHE_ATIVO) {
         $pagina = '_artigo';
         $add    = '';
     } else {
@@ -22,15 +22,15 @@ if ($dados) {
         $add    = '';
     }
 
-    $amp_script = $this->montaAmpScript($dados['duracao']);
-    $modulos = $this->montaModulos();
+    $amp_script = $montador->montaAmpScript($dados['duracao']);
+    $modulos = $montador->montaModulos();
 
-    $image = $this->thumbImage($dados['thumb']);
+    $image = $montador->thumbImage($dados['thumb']);
 
-    $subtitulo = $this->normalizaSubtitulo($dados['subtitulo']);
+    $subtitulo = $montador->normalizaSubtitulo($dados['subtitulo']);
     $description = $subtitulo . ' ' . $dados['keywords'];
 
-    $structured = $this->structured(
+    $structured = $montador->structured(
         $dados['titulo'],
         $dados['datePublished'],
         $dados['dateModified'],
@@ -39,15 +39,10 @@ if ($dados) {
         $this->guardiao->getUrl()
         );
 
-    $timestamp = $this->montaTimestamp($dados['datePublished'], $dados['dateModified']);
-    $contato = $this->montaContato();
-    $sidebar = $this->montaSidebar();
+    $timestamp = $montador->montaTimestamp($dados['datePublished'], $dados['dateModified']);
+    $contato = $montador->montaContato();
+    $sidebar = $montador->montaSidebar();
         
-
-    if ($dados['amp'] == 0) {
-        $dados_preparados['alternative_link'] = '';
-    }
-
     $dados_preparados = [
         'structured'  => $structured,
         'amp_script'  => $amp_script,
@@ -56,16 +51,17 @@ if ($dados) {
         'timestamp'   => $timestamp,
         'description' => $description,
         'image'       => $image,
-        'artigo'      => $artigo_html . $this->showTags() . $contato,
+        'artigo'      => $artigo_html . $montador->showTags() . $contato,
         'modulos'     => $add . $modulos,            
         'sidebar'     => $sidebar,
     ];
 
+    if ($dados['amp'] == 0) {
+        $dados_preparados['alternative_link'] = '';
+    }
 
-    $this->prepara([
-        'pagina' => $pagina,
-        'dados'  => $dados_preparados,
-    ]);
+
+    $this->prepara($pagina, $dados_preparados);
 
 } else {
     $this->localizaPath($comando);

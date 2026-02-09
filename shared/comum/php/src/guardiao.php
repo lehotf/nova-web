@@ -118,10 +118,7 @@ class guardiao
     }
 
     public function pnf()
-    {
-        echo $this->url;
-        die();
-        
+    {        
         $this->logger->acesso_negado('PNF');
         http_response_code(404);
 

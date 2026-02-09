@@ -2,11 +2,15 @@
 
 require 'comum/php/include/ad.php';
 
-$montador = new monta_artigo($db, $this->guardiao, $this->cache, $this->amp);
+$montador = new monta_artigo($db, $this->guardiao, $this->amp);
 
 $conteudo = $montador->modulo([
     'classe' => 'c50',
-    'links'  => v_select($db, 'links.id, CONCAT(links.basepath,links.path) as path, links.thumb_titulo_html, links.duracao, links.thumb, links.titulo, links.subtitulo from links_destaques inner join links on links_destaques.linkID = links.id where links_destaques.id = 100 or links_destaques.id = 200'),
+    'links'  => $db->v_select(
+        'links.id, CONCAT(links.basepath,links.path) as path, links.thumb_titulo_html, links.duracao, links.thumb, links.titulo, links.subtitulo from links_destaques inner join links on links_destaques.linkID = links.id where links_destaques.id in (?, ?)',
+        'ii',
+        [100, 200]
+    ),
 ]);
 
 /*

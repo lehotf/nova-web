@@ -4,11 +4,13 @@ class autenticador
 
     private $observador;
     private $db;
+    private $guardiao;
 
-    public function __construct($db, $observador = null)
+    public function __construct(database $db, observador $observador = null, guardiao $guardiao = null)
     {
         $this->db = $db;
         $this->observador = $observador;
+        $this->guardiao = $guardiao;
     }
 
     /**
@@ -40,15 +42,16 @@ class autenticador
      */
     public function login($login, $senha)
     {
-        $login = $this->db->protege($login);
-        $result = $this->db->link->query("SELECT id, nome, senha, autorizacao, idioma from usuario where login = '$login'");
-        
-        if (!$result || $result->num_rows === 0) {
-            $this->observador->guardiao->adicionarListaNegra();
+        $row = $this->db->select(
+            "id, nome, senha, autorizacao, idioma from usuario where login = ?",
+            's',
+            $login
+        );
+
+        if (!$row) {
+            $this->guardiao->adicionarListaNegra();
             return false;
         }
-
-        $row = $result->fetch_array(MYSQLI_ASSOC);
 
         $nome = $row['nome'];
         $bd_senha = $row['senha'];
@@ -77,7 +80,7 @@ class autenticador
             if (session_status() === PHP_SESSION_ACTIVE) {
                 $_SESSION['autorizacao'] = 0;
             }
-            $this->observador->guardiao->adicionarListaNegra();
+            $this->guardiao->adicionarListaNegra();
             return false;
         }
     }
@@ -89,8 +92,8 @@ class autenticador
             $this->acesso_negado();
         }
 
-        $login = $this->db->protege($_COOKIE['login']);
-        $token = $this->db->protege($_COOKIE['token']);
+        $login = $_COOKIE['login'];
+        $token = $_COOKIE['token'];
 
         if (!$this->login($login, $token)) {
             $this->acesso_negado();

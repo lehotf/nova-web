@@ -28,7 +28,12 @@ if (lockout($c->guardiao->getIp())) {
     $senha = $c->observador->texto("senha");
 
     if ($c->autenticador->login($login, $senha)) {
-        $c->observador->query("SELECT m, eval FROM script WHERE (autorizacao <= " . $_SESSION["autorizacao"] . ") order by ordem, m", false);
+        $c->observador->query(
+            "SELECT m, eval FROM script WHERE (autorizacao <= ?) order by ordem, m",
+            false,
+            'i',
+            [(int) $_SESSION["autorizacao"]]
+        );
         $c->observador->envia("Autenticado");
     } else {
         $c->guardiao->adicionarListaNegra();
