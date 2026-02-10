@@ -130,9 +130,8 @@ class controlador
     public function carrega_pagina($contador_de_tempo)
     {
         $this->contador_de_tempo = $contador_de_tempo;
-        $this->cache = new cache(CACHE_ATIVO, $this->guardiao);        
-        $this->verificaCache();
-
+        $this->cache = new cache(CACHE_ATIVO, $this->guardiao);                
+        $this->verificaCache();        
         $c = new carregador($this->guardiao, $this->cache, $this->logger);        
     }   
 

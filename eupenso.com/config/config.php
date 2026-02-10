@@ -23,6 +23,6 @@ define('AMP', true);
 #MUDAR
 define('CACHE_ATIVO', false);
 define('DEBUG', false);
+define('LOCALHOST',true);
 
 #APAGAR
-define('LOCALHOST',true);

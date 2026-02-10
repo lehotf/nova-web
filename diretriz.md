@@ -49,6 +49,7 @@ RewriteRule (.*) index.php
 - A lista negra deve usar TTL fixo de 30s.
 - Lista negra e lista branca devem ser persistidas via arquivos em `$_SERVER['DOCUMENT_ROOT']/log/lista_negra` e `$_SERVER['DOCUMENT_ROOT']/log/lista_branca` usando apenas `touch`.
 - Ao verificar, usar apenas `mtime` para expirar (se passou do TTL, apagar) e renovar (se dentro do TTL, dar `touch`).
+- Na rota de `tag`, considerar que o acesso valido vem dos botoes de tags existentes no site; quando nao houver conteudo esperado (ex.: URL alterada manualmente), acionar `pnf()` para bloqueio.
 
 ## Linguagem e nomes
 - Nomes de classes, variaveis e funcoes em portugues.
@@ -60,6 +61,8 @@ RewriteRule (.*) index.php
 - Manter a funcionalidade equivalente, mas com estrutura mais clara e segura.
 - Evitar variaveis e constantes redundantes; preferir caminhos relativos ao `index.php` (sem `__DIR__`) conforme padrão atual.
 - Nao inventar APIs ou callbacks sem combinacao previa; manter o fluxo direto e acordado.
+- Em rotas carregadas por `carregador` (arquivos em `site/php/path` e `comum/php/path`), preferir usar `$this->db` (propriedade do `carregador`) para reaproveitar a mesma conexao de banco durante o fluxo.
+- `Carregador::executaPadrao()` e o ponto central para inicializar recursos compartilhados do request (ex.: conexao de banco e include de `ad.php`).
 
 ## Constantes x variaveis
 - Usar `define()` (ou `const`) apenas para valores realmente globais e imutaveis.
@@ -73,11 +76,62 @@ RewriteRule (.*) index.php
 - Em `cacheTemplates.php`, manter o arquivo minimalista: sem fallback por `$_GET` e sem criar variaveis para `DEBUG` (usar a constante diretamente).
 - No Observador, o Guardiao deve ser instanciado no construtor para mitigar abusos por repetidas requisicoes em endpoints XHR.
 - No Observador, `valida()` define tipos e `salva()` deve respeitar a instrucao (`tipo` e `salva`) para manter o comportamento da versao antiga.
+- Em `shared/comum/php/path/p.php`, usar `monta_artigo` + `$this->db` (sem `pesquisa.php` legado e sem globals como `$next_page`).
 - Estamos implementando a migração da versão antiga em `Htdocs2` para a versão nova em `Htdocs`.
   - `Htdocs2` é a referência para o trabalho realizado em `Htdocs`.
   - Os diretórios em `Htdocs` estão sendo preenchidos gradativamente conforme os arquivos são adaptados.
   - A ausência de um arquivo em `Htdocs` não significa que ele foi eliminado; pode indicar apenas que ainda não foi adaptado.
   - À medida que houver necessidade de adaptar um arquivo, ele será inserido em `Htdocs` com sua versão atualizada.
+
+## Entendimento rapido do fluxo atual
+
+- Ponto de entrada do site: `index.php` do dominio.
+- Bootstrap atual:
+  - `index.php` inclui `comum/php/autoload.php`.
+  - `autoload.php` inclui `config/config.php` do site e registra autoload das classes em `shared/comum/php/src/`.
+- Ordem geral de execucao:
+  1. `controlador` cria `guardiao` (quando habilitado) logo no inicio.
+  2. `guardiao` sanitiza URL/IP e aplica bloqueio inicial (lista negra/PNF).
+  3. `controlador->carrega_pagina()` cria `cache` e tenta servir HTML cacheado.
+  4. Sem cache, instancia `carregador`.
+  5. `carregador` identifica comando/AMP e chama `executaPadrao()`.
+- Papel de `Carregador::executaPadrao()`:
+  - inicializa a conexao de banco em `$this->db`;
+  - inclui `comum/php/include/ad.php`;
+  - carrega `site/php/path/root.php` ou `site/php/path/PADRAO.php`.
+- Contexto importante das rotas (`site/php/path/*` e `comum/php/path/*`):
+  - esses arquivos sao executados por `require` dentro de metodos da classe `carregador`;
+  - portanto, devem usar `$this->...` para acessar recursos compartilhados (ex.: `$this->db`, `$this->guardiao`, `$this->amp`, `$this->cache`, `$this->comando`).
+- Roteamento de fallback para nao-artigo:
+  - `shared/sites/artigos/php/path/artigo.php` consulta o artigo por `path`;
+  - se nao encontrar, chama `$this->localizaPath($comando)`;
+  - `localizaPath()` tenta `site/php/path/*` e depois `localizaPathComum()` em `comum/php/path/*`;
+  - por isso `tag.php` e `p.php` em `comum/php/path` continuam relevantes no fluxo.
+- Fonte de verdade dos links de listagem de artigos:
+  - links dos cards/modulos sao montados por `CONCAT(links.basepath, links.path)` nas queries do `monta_artigo`.
+  - ao investigar link incorreto, validar primeiro os campos `basepath` e `path` do registro efetivo retornado pela query.
+- Regra de migracao de rotas antigas (`Htdocs2` -> `Htdocs`):
+  - remover dependencia de `comum/php/core/montador/pesquisa.php`;
+  - usar classe `monta_artigo` em `shared/comum/php/src/monta_artigo.php`;
+  - trocar globals legados (`$next_page`, etc.) por propriedades do objeto (`$montador->next_page`).
+- Conversao de texto dos artigos:
+  - parser em `shared/comum/php/include/texto.php`;
+  - entrada no formato `comando[param]`;
+  - dispatch por mapa de handlers para funcoes nomeadas `comando_*`;
+  - manter handlers/funcoes em ordem alfabetica para leitura/manutencao.
+
+## Checklist de diagnostico (economia de tempo)
+
+- Antes de concluir que o problema e backend, validar no navegador:
+  - `location.href`, `location.host`, `document.baseURI`;
+  - no link clicado: `getAttribute('href')` (valor bruto) vs `.href` (resolvido).
+- Se existir divergencia entre `href` bruto e resolvido, investigar cliente/host/base antes do PHP.
+- Para diferenciar backend vs cliente em redirect:
+  - testar no servidor com `curl -I -H 'Host: <dominio>' 'http://127.0.0.1/<rota>'`.
+  - se `curl` retorna `200` e navegador sobe para `https`, o desvio e do cliente (cache/politica/browser), nao da aplicacao.
+- Em ambiente local com dominios de teste (ex.: prefixo `x`), lembrar:
+  - link relativo sempre resolve para o host atual;
+  - comportamento de navegador pode variar por URL especifica cacheada.
 
 # As classes Principais
 
@@ -132,13 +186,20 @@ Responsável por;
 
 # Gerador de templates (cacheTemplates)
 
-- Ponto de entrada: `shared/comum/php/sistema/gerador/cacheTemplates.php`.
-- Core: `shared/comum/php/sistema/gerador/cacheTemplatesCore.php`.
+- Ponto de entrada: `shared/comum/php/xhr/gerador/cacheTemplates.php`.
+- Core: `shared/comum/php/xhr/gerador/cacheTemplatesCore.php`.
 - Funcao: gerar arquivos em `cache/template` a partir dos templates de `shared/comum/php/template` e, se existir, `site/php/template`.
 - Remove bloco `<!--start-->...<!--end-->` (analytics) durante a geracao.
 - Em modo `DEBUG` falso, substitui referencias `comum/site/estatico` por `cache`.
 - Gera versao AMP adicionando sufixo `_amp.html`.
 - Regra atual: manter `cacheTemplates.php` minimalista (sem GET e sem variavel local para DEBUG).
+
+# Conversao de texto (artigos)
+
+- O parser de comandos do artigo esta em `shared/comum/php/include/texto.php`.
+- A funcao `converte_callback_comando()` usa mapa de handlers apontando para funcoes nomeadas no padrao `comando_*`.
+- Manter handlers e funcoes `comando_*` em ordem alfabetica para facilitar manutencao.
+- Comandos de link externo (`comando_link`) devem manter `target="_blank"` com `rel="noopener noreferrer"`.
 
 
 # Estrutura de Diretorios
@@ -160,37 +221,37 @@ Htdocs/
 │   │   │   ├── html/       # Arquivos HTML
 │   │   │   └── js/         # Arquivos JS
 │   │   └── php/            # Classes e scripts PHP comuns
-│   │       ├── controlador.php (classes: Cache, Logger, Controlador)
-│   │       ├── guardiao.php (classes: Guardiao)
-│   │       ├── montador/   # Montagem de conteudo (ex.: MontaArtigo)
-│   │       ├── sistema/    # Ferramentas internas (ex.: gerador de templates)
+│   │       ├── src/        # Classes principais (controlador, guardiao, carregador, etc.)
+│   │       ├── include/    # Includes compartilhados (ex.: pesquisa.php)
+│   │       ├── path/       # Rotas comuns
+│   │       ├── xhr/        # Endpoints/ferramentas internas (ex.: gerador de templates)
 │   │       └── template/   # Templates fonte (HTML)
 │   └── sites/              # Código específico por tipo de site
 │       └── [tipo]/
 ```
 
-Leia os arquivos `shared/comum/php/controlador.php`, `shared/comum/php/guardiao.php` e `shared/comum/php/carregador.php` para entender o fluxo do sistema.
+Leia os arquivos `shared/comum/php/src/controlador.php`, `shared/comum/php/src/guardiao.php` e `shared/comum/php/src/carregador.php` para entender o fluxo do sistema.
 
 # Arquivos-chave (localizacao e papel)
 
-- `shared/comum/php/controlador.php`: Cache (HTML), Logger e orquestracao geral.
-- `shared/comum/php/guardiao.php`: IP/URL, listas negra/branca e PNF.
-- `shared/comum/php/carregador.php`: AMP, cache de template e roteamento para `site/php/path/*`.
+- `shared/comum/php/src/controlador.php`: Cache (HTML), Logger e orquestracao geral.
+- `shared/comum/php/src/guardiao.php`: IP/URL, listas negra/branca e PNF.
+- `shared/comum/php/src/carregador.php`: AMP, cache de template e roteamento para `site/php/path/*`.
 - `shared/sites/artigos/php/path/artigo.php`: consulta artigo no BD e delega para `MontaArtigo`.
-- `shared/comum/php/montador/montaArtigo.php`: monta dados do artigo e escolhe template `artigo` ou `_artigo`.
-- `shared/comum/php/montador/pesquisa.php`: auxiliares de links/tags, usados por artigos/root.
-- `shared/comum/php/sistema/gerador/cacheTemplates.php`: executa geracao do cache de templates.
-- `shared/comum/php/sistema/gerador/cacheTemplatesCore.php`: logica de compactacao, root e geracao AMP.
+- `shared/comum/php/src/monta_artigo.php`: monta dados do artigo e escolhe template `artigo` ou `_artigo`.
+- `shared/comum/php/include/pesquisa.php`: auxiliares de links/tags, usados por artigos/root.
+- `shared/comum/php/xhr/gerador/cacheTemplates.php`: executa geracao do cache de templates.
+- `shared/comum/php/xhr/gerador/cacheTemplatesCore.php`: logica de compactacao, root e geracao AMP.
 
 # Progresso - Arquivos modificados
 
 Htdocs
-  ├── shared/comum/php/carregador.php (objetos: Carregador)
-  ├── shared/comum/php/controlador.php (objetos: Cache, Logger, Controlador)
-  ├── shared/comum/php/guardiao.php (objetos: Guardiao)
+  ├── shared/comum/php/src/carregador.php (objetos: Carregador)
+  ├── shared/comum/php/src/controlador.php (objetos: Cache, Logger, Controlador)
+  ├── shared/comum/php/src/guardiao.php (objetos: Guardiao)
   ├── shared/sites/artigos/php/path/artigo.php
-  ├── shared/comum/php/sistema/gerador/cacheTemplates.php (atualizado para nova estrutura)
-  └── shared/comum/php/sistema/gerador/cacheTemplatesCore.php (atualizado para nova estrutura)
+  ├── shared/comum/php/xhr/gerador/cacheTemplates.php (atualizado para nova estrutura)
+  └── shared/comum/php/xhr/gerador/cacheTemplatesCore.php (atualizado para nova estrutura)
 
 # Em execucao
 
@@ -204,11 +265,3 @@ Notas tecnicas do fluxo atual:
 - `Carregador::executaPadrao()` chama `site/php/path/PADRAO.php`.
 - Para artigos, `PADRAO = 'artigo'` e o arquivo fica em `shared/sites/artigos/php/path/artigo.php`.
 - Esse arquivo monta o artigo usando `MontaArtigo` e injeta no template via `prepara()`.
-
-
-# Sugestões de Mudanças
-
-1 - Alterar os objetos/funções de artigo.php para a nova formatação (com os novos objetos que são diferentes dos objetos da versão anterior)
-2 - Criar a classe Montador para centralizar a lógica de montagem de artigos. Ele terá funções para montar o artigo, o sidebar, o modulos, etc.
-3 - Reduzir uso de variávies globais no montador. Passar variáveis por parâmetro no executaPadrao.
-4 - Verificar se /comum/php/core/montador/pesquisa.php apenas contém arquivos necessários para montagem de artigo. Caso contrário, mover o conteúdo de pesquisa.php para pesquisa_artigo.php

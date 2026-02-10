@@ -87,114 +87,205 @@ function converte($texto, $interno = false, $isAmp = false)
 
 function converte_callback_comando($match)
 {
-
     $texto = $match[2];
+    $comando = $match[1];
 
-    switch ($match[1]) {
-        case '':
-            $link = explode(',', $texto);
-            if (count($link) > 1) {
-                return '<a href="/' . url_amigavel(trim($link[0])) . '">' . trim($link[1]) . '</a>';
-            } else {
-                return '<a href="/' . url_amigavel($texto) . '">' . $texto . '</a>';
-            }
+    $handlers = [
+        '' => 'comando_padrao',
+        'a' => 'comando_a',
+        'add' => 'comando_add',
+        'alerta' => 'comando_alerta',
+        'aspas' => 'comando_aspas',
+        'at' => 'comando_at',
+        'at2' => 'comando_at2',
+        'atencao' => 'comando_atencao',
+        'b' => 'comando_b',
+        'bl' => 'comando_bl',
+        'code' => 'comando_code',
+        'colchete' => 'comando_colchete',
+        'd' => 'comando_d',
+        'duvida' => 'comando_duvida',
+        'enum' => 'comando_enum',
+        'img' => 'comando_img',
+        'link' => 'comando_link',
+        'mono' => 'comando_mono',
+        'nota' => 'comando_nota',
+        'tabela' => 'comando_tabela',
+        't' => 'comando_t',
+        't2' => 'comando_t2',
+        'u' => 'comando_u',
+        'v' => 'comando_v',
+        'video' => 'comando_video',
+        'z' => 'comando_z',
+    ];
 
-        case 'link':
-            $link = explode(',', $texto);
-            if (count($link) > 1) {
-                return '<a href="' . trim($link[0]) . '" target="_blank">' . trim($link[1]) . '</a>';
-            } else {
-                return '<a href="' . $texto . '" target="_blank">' . str_replace('http://', '', $texto) . '</a>';
-            }
-        case 'a':
-            return '<span class="amarelo">' . $texto . '</span>';
-        case 'd':
-            return '<span class="destaque">' . $texto . '</span>:';
-        case 'mono':
-            return '<span class="monospace">' . $texto . '</span>';
-        case 'z':
-            return '<span class="azul">' . $texto . '</span>';
-        case 'v':
-            return '<span class="verde">' . $texto . '</span>';
-        case 'b':
-            return "<b>$texto</b>";
-        case 'u':
-            return '<span class="underline">' . $texto . '</span>';
-        case 't':
-            global $codigo;
-            $codigo[0]++;
-            $codigo[1] = 0;
-            adiciona_vetor_indice($texto, $codigo);
-            return "<h2 id=\"titulo" . $codigo[0] . '.' . $codigo[1] . "\">$texto</h2>";
-        case 't2':
-            global $codigo;
-            /**
-            if ($codigo[0] == 0) {
-            if ($codigo[1] == 0){
-            inicia_primeiro_bloco();
-            }else{
-            inicia_bloco();
-            }
-            }**/
-            if ($codigo[0] == 0) {
-                $codigo[0] = 1;
-            }
-
-            $codigo[1]++;
-            adiciona_vetor_indice($texto, $codigo);
-            return "<h3 id=\"titulo" . $codigo[0] . '.' . $codigo[1] . "\">$texto</h3>";
-
-        case 'at':
-            return "<h2>$texto</h2>";
-        case 'at2':
-            return "<h3>$texto</h3>";
-        case 'img':
-            global $amp;
-            if ($amp) {
-                $imgsize = getimagesize($_SERVER['DOCUMENT_ROOT'] . '/cache/img/upload/a/' . $texto . '.jpg');
-                return '<div class="img_container"><amp-img width="' . $imgsize[0] . '" height="' . $imgsize[1] . '" layout="responsive" src="/cache/img/upload/a/' . $texto . '.jpg"></amp-img></div>';
-            } else {
-                return '<div class="img_container"><img src="/cache/img/upload/a/' . $texto . '.jpg"></div>';
-            }
-
-        case 'video':
-            global $amp;
-            $video = explode(',', $texto);
-
-            if (count($video) > 1) {
-                return '<div class="videoWrapper"><iframe allowfullscreen="" frameborder="0" src="https://www.' . trim($video[1]) . '.com/embed/' . trim($video[0]) . '"></iframe></div>';
-            } else {
-                if ($amp) {
-                    return '<amp-youtube data-videoid="' . $texto . '" layout="responsive" width="480" height="270"></amp-youtube>';
-                } else {
-                    return '<div class="videoWrapper"><iframe allowfullscreen="" frameborder="0" src="https://www.youtube.com/embed/' . $texto . '"></iframe></div>';
-                }
-            }
-
-        case 'add':
-            return '<div class="add_article">' . adsense('article') . '</div>';
-        case 'colchete':
-            return '[' . $texto . ']';
-        case 'tabela':
-            return tabela($texto);
-        case 'duvida':
-            return '<div class="duvida"><span>Dúvida:</span>' . coloca_linha_local($texto, true) . '</div>';
-        case 'alerta':
-            return '<blockquote class="blv">' . coloca_linha_local($texto, true) . '</blockquote>';
-        case 'aspas':
-        case 'bl':
-            return '<blockquote>' . coloca_linha_local($texto) . '</blockquote>';
-        case 'nota':
-            return '<div class="nota"><span>Nota:</span>' . coloca_linha_local($texto, true) . '</div>';
-        case 'atencao':
-            return '<div class="atencao"><span>Atenção:</span>' . coloca_linha_local($texto, true) . '</div>';
-        case 'code':
-            return '<pre>' . coloca_linha_local($texto) . '</pre>';
-        case 'enum':
-            return '<div class="enum">' . coloca_linha_local($texto) . '</div>';
-        default:
-            return $match[1] . "[$texto]";
+    if (isset($handlers[$comando])) {
+        $funcao = $handlers[$comando];
+        return $funcao($texto);
     }
+
+    return $comando . "[$texto]";
+}
+
+function comando_a($texto)
+{
+    return '<span class="amarelo">' . $texto . '</span>';
+}
+
+function comando_add($texto)
+{
+    return '<div class="add_article">' . adsense('article') . '</div>';
+}
+
+function comando_alerta($texto)
+{
+    return '<blockquote class="blv">' . coloca_linha_local($texto, true) . '</blockquote>';
+}
+
+function comando_aspas($texto)
+{
+    return '<blockquote>' . coloca_linha_local($texto) . '</blockquote>';
+}
+
+function comando_at($texto)
+{
+    return "<h2>$texto</h2>";
+}
+
+function comando_at2($texto)
+{
+    return "<h3>$texto</h3>";
+}
+
+function comando_atencao($texto)
+{
+    return '<div class="atencao"><span>Atenção:</span>' . coloca_linha_local($texto, true) . '</div>';
+}
+
+function comando_b($texto)
+{
+    return "<b>$texto</b>";
+}
+
+function comando_bl($texto)
+{
+    return comando_aspas($texto);
+}
+
+function comando_code($texto)
+{
+    return '<pre>' . coloca_linha_local($texto) . '</pre>';
+}
+
+function comando_colchete($texto)
+{
+    return '[' . $texto . ']';
+}
+
+function comando_d($texto)
+{
+    return '<span class="destaque">' . $texto . '</span>:';
+}
+
+function comando_duvida($texto)
+{
+    return '<div class="duvida"><span>Dúvida:</span>' . coloca_linha_local($texto, true) . '</div>';
+}
+
+function comando_enum($texto)
+{
+    return '<div class="enum">' . coloca_linha_local($texto) . '</div>';
+}
+
+function comando_img($texto)
+{
+    global $amp;
+    if ($amp) {
+        $imgsize = getimagesize($_SERVER['DOCUMENT_ROOT'] . '/cache/img/upload/a/' . $texto . '.jpg');
+        return '<div class="img_container"><amp-img width="' . $imgsize[0] . '" height="' . $imgsize[1] . '" layout="responsive" src="/cache/img/upload/a/' . $texto . '.jpg"></amp-img></div>';
+    }
+    return '<div class="img_container"><img src="/cache/img/upload/a/' . $texto . '.jpg"></div>';
+}
+
+function comando_link($texto)
+{
+    $link = explode(',', $texto);
+    if (count($link) > 1) {
+        return '<a href="' . trim($link[0]) . '" target="_blank" rel="noopener noreferrer">' . trim($link[1]) . '</a>';
+    }
+    return '<a href="' . $texto . '" target="_blank" rel="noopener noreferrer">' . str_replace('http://', '', $texto) . '</a>';
+}
+
+function comando_mono($texto)
+{
+    return '<span class="monospace">' . $texto . '</span>';
+}
+
+function comando_nota($texto)
+{
+    return '<div class="nota"><span>Nota:</span>' . coloca_linha_local($texto, true) . '</div>';
+}
+
+function comando_padrao($texto)
+{
+    $link = explode(',', $texto);
+    if (count($link) > 1) {
+        return '<a href="/' . url_amigavel(trim($link[0])) . '">' . trim($link[1]) . '</a>';
+    }
+    return '<a href="/' . url_amigavel($texto) . '">' . $texto . '</a>';
+}
+
+function comando_t($texto)
+{
+    global $codigo;
+    $codigo[0]++;
+    $codigo[1] = 0;
+    adiciona_vetor_indice($texto, $codigo);
+    return "<h2 id=\"titulo" . $codigo[0] . '.' . $codigo[1] . "\">$texto</h2>";
+}
+
+function comando_t2($texto)
+{
+    global $codigo;
+    if ($codigo[0] == 0) {
+        $codigo[0] = 1;
+    }
+    $codigo[1]++;
+    adiciona_vetor_indice($texto, $codigo);
+    return "<h3 id=\"titulo" . $codigo[0] . '.' . $codigo[1] . "\">$texto</h3>";
+}
+
+function comando_tabela($texto)
+{
+    return tabela($texto);
+}
+
+function comando_u($texto)
+{
+    return '<span class="underline">' . $texto . '</span>';
+}
+
+function comando_v($texto)
+{
+    return '<span class="verde">' . $texto . '</span>';
+}
+
+function comando_video($texto)
+{
+    global $amp;
+    $video = explode(',', $texto);
+    if (count($video) > 1) {
+        return '<div class="videoWrapper"><iframe allowfullscreen="" frameborder="0" src="https://www.' . trim($video[1]) . '.com/embed/' . trim($video[0]) . '"></iframe></div>';
+    }
+    if ($amp) {
+        return '<amp-youtube data-videoid="' . $texto . '" layout="responsive" width="480" height="270"></amp-youtube>';
+    }
+    return '<div class="videoWrapper"><iframe allowfullscreen="" frameborder="0" src="https://www.youtube.com/embed/' . $texto . '"></iframe></div>';
+}
+
+function comando_z($texto)
+{
+    return '<span class="azul">' . $texto . '</span>';
 }
 
 function monta_indice()

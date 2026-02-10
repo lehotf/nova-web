@@ -1,12 +1,10 @@
 <?php
+$dados = $this->db->select("id, artigo, titulo, subtitulo, thumb, duracao, datePublished, dateModified, amp, keywords from links where path = ?", 's', $comando);
 
-$dados = $db->select("id, artigo, titulo, subtitulo, thumb, duracao, datePublished, dateModified, amp, keywords from links where path = ?", 's', $comando);
-
-if ($dados) {
-    require 'comum/php/include/ad.php';    
+if ($dados) {        
     require 'comum/php/include/texto.php';
 
-    $montador = new monta_artigo($db, $this->guardiao, $this->amp);
+    $montador = new monta_artigo($this->db, $this->guardiao, $this->amp);
 
     if (!$dados) {
         return null;
@@ -19,7 +17,7 @@ if ($dados) {
         $add    = '';
     } else {
         $pagina = 'artigo';
-        $add    = '';
+        $add    = '<div class="divisor">' . adsense('article') . '</div>';
     }
 
     $amp_script = $montador->montaAmpScript($dados['duracao']);
@@ -63,6 +61,6 @@ if ($dados) {
 
     $this->prepara($pagina, $dados_preparados);
 
-} else {
+} else {    
     $this->localizaPath($comando);
 }

@@ -10,7 +10,7 @@ class guardiao
     private $emListaBranca = null;
 
     public function __construct($logger)
-    {
+    {        
         $this->logger = $logger;
         $this->logger->set($this);                        
         

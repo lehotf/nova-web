@@ -9,6 +9,7 @@ class carregador
     private $cache;
     private $urlBase;
     private $urlSemBarra;
+    private $db;
 /**
  * [__construct description]
  * @param Guardiao $guardiao Objeto guardiao que é passado durante a criação
@@ -188,10 +189,10 @@ class carregador
 
     public function localizaPath($comando)
     {
-        $caminho = $_SERVER['DOCUMENT_ROOT'] . '/site/php/path/';
+        $caminho = $_SERVER['DOCUMENT_ROOT'] . '/site/php/path/';        
 
         // Tenta primeiro o comando direto
-        if (file_exists($caminho . $comando . '.php')) {
+        if (file_exists($caminho . $comando . '.php')) {            
             require $caminho . $comando . '.php';
             return;
         }
@@ -222,7 +223,7 @@ class carregador
         $caminho = $_SERVER['DOCUMENT_ROOT'] . '/comum/php/path/';
 
         // Tenta primeiro o comando direto
-        if (file_exists($caminho . $comando . '.php')) {
+        if (file_exists($caminho . $comando . '.php')) {            
             require $caminho . $comando . '.php';
             return;
         }
@@ -269,9 +270,10 @@ class carregador
     }
 
     private function executaPadrao($comando)
-    {
-        $db = new database('localhost', BD_LOGIN, BD_SENHA, BD);
-            
+    {        
+        $this->db = new database('localhost', BD_LOGIN, BD_SENHA, BD);
+        require 'comum/php/include/ad.php';
+        
         if ($comando == 'root') {
             require 'site/php/path/root.php';
         } else {

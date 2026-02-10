@@ -1,9 +1,21 @@
-## 1 - Atualização do sistema de login para compatibilizar com a nova arquitetura
-- Atualizamos o arquivo cookie.php em `shared/comum/php/sistema/autenticacao/cookie.php`
-- Atualizamos o arquivo autenticador.php em `shared/comum/php/sistema/autenticacao/autenticador.php`
-- Atualizamos o arquivo controlador.php em `shared/comum/php/sistema/autenticacao/controlador.php`
+## 2026-02-10
 
-
-## 2 - Verificar o comportamento da variável "amp" e "next_page" no montador de páginas
-
-## 3 - Verificar quem está o responsável por verificar se a página é "amp" e armazenar a informação
+- Leitura e alinhamento de fluxo atual:
+  - `shared/comum/php/src/controlador.php`
+  - `shared/comum/php/src/guardiao.php`
+  - `shared/comum/php/src/carregador.php`
+- Correcao de caminhos no `diretriz.md` para estrutura real (`php/src`, `php/include`, `php/xhr/gerador`).
+- Revisao de `shared/comum/php/path/tag.php`:
+  - mantido no formato atual, sem validacoes extras, conforme regra de negocio combinada.
+  - adicionada diretriz de rota `tag` no `diretriz.md` (quando URL manipulada sem conteudo esperado, acionar `pnf()`).
+- Adaptacao de `shared/comum/php/path/p.php` para estrutura nova:
+  - removido acoplamento com `pesquisa.php` legado.
+  - uso de `monta_artigo` + `$this->db`.
+  - uso de `$montador->next_page` no lugar de global legado.
+- Evolucao do parser em `shared/comum/php/include/texto.php`:
+  - migracao de `switch/case` para mapa de handlers.
+  - migracao para funcoes nomeadas `comando_*`.
+  - ordenacao alfabetica dos handlers e das funcoes `comando_*`.
+  - `comando_link` atualizado para `target="_blank"` com `rel="noopener noreferrer"`.
+- Diagnostico de navegacao:
+  - problema de abertura em `https` isolado em URL especifica foi identificado como comportamento de cliente (browser/cache/redirect local), sem evidencia de redirecionamento no backend para essa rota.
