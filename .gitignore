@@ -7,3 +7,6 @@ sitemap.txt
 **/config/index.php
 **/cache/
 **/nogit
+/*.com/site
+/*.com/log
+/*.com/comum
