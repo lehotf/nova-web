@@ -2,8 +2,9 @@
 require $_SERVER['DOCUMENT_ROOT'] . '/comum/php/autoload.php';
 require 'cacheTemplatesCore.php';
 
-$o = new observador();
-$o->acesso(2);
+$c = new controlador(observador: true, autenticador: true);
+$c->autenticador->acesso(2);
+$o = $c->observador;
 
 $forcar = $o->numero('forcar');
 

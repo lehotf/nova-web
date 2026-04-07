@@ -59,7 +59,11 @@ class guardiao
     }
 
     public function adicionarListaNegra()
-    {        
+    {
+        if ($this->ip === '127.0.0.1') {
+            return;
+        }
+
         touch($this->arquivoListaNegra());
         $this->emListaNegra = true;
     }

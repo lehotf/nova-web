@@ -1,0 +1,380 @@
+:root {
+    --color-bg-primary: #000000;
+    --color-bg-secondary: #292929;
+    --color-bg-tertiary: #060606;
+    --color-surface: rgba(255, 255, 255, 0.05);
+    --color-surface-hover: rgb(255 255 255 / 18%);
+    --color-text-primary: #d0d0d0;
+    --color-text-secondary: #b4b4b4;
+    --color-accent: hsl(250, 80%, 65%);
+    --color-success: hsl(150deg 100% 22.91%);
+    --color-danger: hsl(0, 75%, 60%);
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
+    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.4);
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --spacing-xs: 0.5rem;
+    --spacing-sm: 0.75rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 1.5rem;
+    --spacing-xl: 2rem;
+    --transition-fast: 150ms ease;
+    --transition-normal: 250ms ease;
+    --transition-slow: 400ms ease;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--color-bg-primary);
+    color: var(--color-text-primary);
+    min-height: 100vh;
+    line-height: 1.6;
+    overflow-x: hidden;
+}
+
+/* ── Layout principal ── */
+.main-content {
+    grid-template-columns: 560px 1fr;
+    gap: 0;
+    flex: 1;
+}
+
+/* ── Sidebar ── */
+.sidebar {
+    backdrop-filter: blur(20px);
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    height: 100vh;
+}
+
+.sidebar-header {
+    margin-bottom: var(--spacing-lg);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: var(--spacing-md);
+}
+
+.sidebar-top-row {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+/* ── Search ── */
+.search-input {
+    width: 100%;
+    padding: var(--spacing-sm);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: var(--radius-sm);
+    background: var(--color-bg-tertiary);
+    color: var(--color-text-primary);
+    font-size: 0.95rem;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 3px rgba(138, 99, 255, 0.1);
+}
+
+/* ── Lista de artigos ── */
+.model-list {
+    margin-top: var(--spacing-lg);
+    overflow-y: auto;
+    flex: 1;
+    padding-right: 6px;
+}
+
+.model-name {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    text-align: left;
+    background: transparent;
+    border: 0;
+    color: #d3d3d3;
+    padding: 8px 10px;
+    border-radius: var(--radius-sm);
+    font-size: 18px;
+    cursor: pointer;
+    transition: background var(--transition-normal), color var(--transition-normal);
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.model-name:hover,
+.model-name.active {
+    background: rgba(255, 255, 255, 0.08);
+    color: #ffffff;
+}
+
+.badge-rascunho {
+    font-size: 0.72rem;
+    color: hsl(35, 90%, 55%);
+    margin-left: 6px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    flex-shrink: 0;
+}
+
+.empty-message {
+    color: #a1a1a1;
+    font-size: 0.92rem;
+    padding: 8px 2px;
+}
+
+/* ── Editor placeholder ── */
+.editor-placeholder {
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    min-height: 400px;
+    text-align: center;
+}
+
+.editor-placeholder svg {
+    width: 5rem;
+    height: 5rem;
+    margin-bottom: var(--spacing-lg);
+    opacity: 0.2;
+}
+
+.editor-placeholder h2 {
+    font-size: 1.5rem;
+    margin-bottom: var(--spacing-sm);
+    color: #bfbfbf;
+}
+
+.editor-placeholder p {
+    font-size: 1rem;
+}
+
+/* ── Formulário ── */
+.full-width {
+    width: 100%;
+}
+
+/* form-row usa grid de 2 colunas iguais por padrão */
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+/* Linha 1: Título (50%) | URL (35%) | Data (15%) */
+.form-row-3col {
+    display: grid;
+    grid-template-columns: 50fr 35fr 15fr;
+    gap: 16px;
+}
+
+/* Linha 2: duas colunas iguais */
+.form-row-2col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.form-row.single-col {
+    grid-template-columns: 1fr;
+}
+
+.form-group textarea {
+    resize: vertical;
+    font-family: Courier, monospace;
+    font-size: 20px;
+    min-height: 240px;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-start;
+    gap: var(--spacing-sm);
+    margin-top: auto;
+}
+
+/* ── Coluna direita: flags + botão salvar ── */
+.form-group-flags-column {
+    width: 200px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.flags-options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+    justify-content: flex-start;
+}
+
+/* Flag-option: visual idêntico ao priority-option do original */
+.flag-option {
+    position: relative;
+    display: flex;
+    align-items: center;
+    padding: 10px 12px 10px 20px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.flag-option::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: rgba(255, 255, 255, 0.1);
+    transition: background var(--transition-normal);
+}
+
+.flag-option:hover {
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.flag-option input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.flag-label {
+    font-size: 0.875rem;
+    color: #858585;
+    transition: all var(--transition-normal);
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* Estado marcado: barra larga + texto aceso */
+.flag-option:has(input:checked) {
+    background: #2b2b2b;
+}
+
+.flag-option:has(input:checked)::before {
+    background: var(--color-accent);
+}
+
+.flag-option:has(input:checked) .flag-label {
+    color: var(--color-accent);
+    font-weight: 600;
+}
+
+/* Botão salvar no fundo */
+.form-group-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: auto;
+}
+
+/* Espaçador: empurra as flags para baixo do label, alinhando com o textarea */
+.flags-spacer-label {
+    display: block;
+    font-size: 12px;
+    margin-bottom: 4px;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+/* ── Modais ── */
+.modal {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(2px);
+}
+
+.modal-content {
+    position: relative;
+    z-index: 1;
+    width: min(460px, calc(100% - 32px));
+    background: #1b1b1b;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: var(--radius-md);
+    padding: 22px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+}
+
+.modal-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.08);
+    color: #d2d2d2;
+    margin-bottom: 12px;
+}
+
+.modal-icon svg {
+    width: 24px;
+    height: 24px;
+}
+
+.modal-title {
+    margin: 0 0 8px;
+    color: #ececec;
+    font-size: 1.2rem;
+}
+
+.modal-message {
+    margin: 0 0 14px;
+    color: #bbbbbb;
+    font-size: 0.95rem;
+    line-height: 1.45;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+/* ── Launcher color overrides ── */
+.launcher-item-artigos {
+    color: #4fa3ff;
+}
+
+/* ── Responsive ── */
+@media (max-width: 1024px) {
+    .main-content {
+        grid-template-columns: 1fr;
+        grid-template-rows: 240px 1fr;
+    }
+
+    .sidebar {
+        padding: var(--spacing-md);
+    }
+
+    .editor {
+        padding: var(--spacing-md);
+        height: auto;
+    }
+}

@@ -1,0 +1,107 @@
+:root {
+    --launcher-width: 74px;
+    --launcher-bg: #1b2638;
+    --launcher-border: rgb(255 255 255 / 40%);
+    --launcher-item: rgba(255, 255, 255, 0.08);
+    --launcher-item-hover: rgba(255, 255, 255, 0.16);
+    --launcher-item-active: rgb(255 255 255 / 0%);
+    --launcher-icon: #d4d4d4;
+}
+
+body.has-launcher {
+    overflow-x: hidden;
+}
+
+body.has-launcher .container {
+    margin-left: var(--launcher-width);
+    width: calc(100% - var(--launcher-width));
+}
+
+.app-launcher {
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 5000;
+    width: var(--launcher-width);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 10px;
+    background: var(--launcher-bg);
+    box-shadow: 0 12px 32px rgba(10, 25, 46, 0.35);
+    backdrop-filter: blur(10px);
+}
+
+.launcher-item {
+    position: relative;
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--launcher-icon);
+    background: var(--launcher-item);
+    border: 1px solid transparent;
+    text-decoration: none;
+    transition: background 180ms ease, transform 180ms ease, border-color 180ms ease;
+}
+
+.launcher-item:hover {
+    background: var(--launcher-item-hover);
+    transform: translateY(-1px);
+}
+
+.launcher-item.active {
+    background: var(--launcher-item-active);
+    border-color: var(--launcher-border);
+}
+
+.launcher-item svg {
+    width: 22px;
+    height: 22px;
+}
+
+.launcher-item::before {
+    content: attr(data-tooltip);
+    position: absolute;
+    left: calc(100% + 10px);
+    top: 50%;
+    transform: translate(-4px, -50%);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 5100;
+    padding: 8px 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(126, 160, 225, 0.45);
+    background: linear-gradient(140deg, rgba(22, 33, 52, 0.96), rgba(16, 24, 39, 0.96));
+    color: #e9f1ff;
+    font-size: 0.82rem;
+    font-weight: 500;
+    white-space: nowrap;
+    box-shadow: 0 10px 24px rgba(4, 10, 22, 0.45);
+    transition: opacity 160ms ease, transform 180ms ease;
+}
+
+.launcher-item:hover::before,
+.launcher-item:focus-visible::before {
+    opacity: 1;
+    transform: translate(0, -50%);
+    transition-delay: 260ms;
+}
+
+.launcher-item-artigos { color: #4fa3ff; }
+.launcher-item-links   { color: #a78bfa; }
+.launcher-item-tags    { color: #34d399; }
+
+@media (max-width: 740px) {
+    :root { --launcher-width: 60px; }
+    .app-launcher { padding: 10px 6px; }
+    .launcher-item { width: 42px; height: 42px; border-radius: 12px; }
+}
+
+@media (hover: none), (pointer: coarse) {
+    .launcher-item::before { display: none; }
+}
