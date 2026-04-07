@@ -5,7 +5,7 @@
  */
 
 // Configurações
-$BASE_DIR = dirname(__DIR__);
+$BASE_DIR = $_SERVER['DOCUMENT_ROOT'];
 $SHARED_DIR = $BASE_DIR . '/shared';
 
 // Sites que usam estrutura completa de artigos
