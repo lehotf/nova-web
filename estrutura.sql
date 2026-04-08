@@ -29,7 +29,6 @@ SET time_zone = "+00:00";
 
 CREATE TABLE `links` (
   `id` int(11) NOT NULL,
-  `basepath` varchar(25) NOT NULL,
   `thumb_titulo` text NOT NULL,
   `thumb_titulo_html` text NOT NULL,
   `path` text NOT NULL,

@@ -1,0 +1,18 @@
+.searchbox {
+	display: none;
+}
+
+#realsearch input{
+    background-color:#FFF;
+  
+}
+
+#realsearch input[type=text]{
+	font-size: 20px;
+	width:calc(100% - 45px);
+
+}
+#realsearch .gs-title {
+  font-size: 18px;
+}
+

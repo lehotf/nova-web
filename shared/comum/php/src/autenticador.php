@@ -43,7 +43,7 @@ class autenticador
     public function login($login, $senha)
     {
         $row = $this->db->select(
-            "id, nome, senha, autorizacao, idioma from usuario where login = ?",
+            "id, nome, senha, autorizacao from usuario where login = ?",
             's',
             $login
         );
@@ -57,7 +57,6 @@ class autenticador
         $bd_senha = $row['senha'];
         $id = $row['id'];
         $autorizacao = $row['autorizacao'];
-        $idioma = $row['idioma'];
         
         if ((md5($bd_senha . md5($_SERVER['REMOTE_ADDR']))) == ($senha)) {
             if (session_status() !== PHP_SESSION_ACTIVE) {
@@ -66,12 +65,10 @@ class autenticador
             $_SESSION['nome'] = $nome;
             $_SESSION['autorizacao'] = $autorizacao;
             $_SESSION['id'] = $id;
-            $_SESSION['idioma'] = $idioma;
             setcookie('login', $login, time() + 2592000, '/');
             setcookie('token', $senha, time() + 2592000, '/');
             if ($this->observador) {
                 $this->observador->dados['nome'] = $nome;
-                $this->observador->dados['idioma'] = $idioma;
             }
 
             return true;

@@ -1,5 +1,5 @@
 <?php
-$dados = $this->db->select("id, artigo, titulo, subtitulo, thumb, duracao, datePublished, dateModified, amp, keywords from links where path = ?", 's', $comando);
+$dados = $this->db->select("id, artigo, titulo, subtitulo, thumb, duracao, datePublished, dateModified, amp, keywords from links where path = ?", 's', ltrim($comando, '/'));
 
 if ($dados) {        
     require 'comum/php/include/texto.php';

@@ -108,8 +108,8 @@ RewriteRule (.*) index.php
   - `localizaPath()` tenta `site/php/path/*` e depois `localizaPathComum()` em `comum/php/path/*`;
   - por isso `tag.php` e `p.php` em `comum/php/path` continuam relevantes no fluxo.
 - Fonte de verdade dos links de listagem de artigos:
-  - links dos cards/modulos sao montados por `CONCAT(links.basepath, links.path)` nas queries do `monta_artigo`.
-  - ao investigar link incorreto, validar primeiro os campos `basepath` e `path` do registro efetivo retornado pela query.
+  - links dos cards/modulos sao montados a partir de `links.path`, prefixando `/` quando necessario nas queries do `monta_artigo`.
+  - ao investigar link incorreto, validar primeiro o valor persistido em `path` e a normalizacao aplicada na query/saida.
 - Regra de migracao de rotas antigas (`Htdocs2` -> `Htdocs`):
   - remover dependencia de `comum/php/core/montador/pesquisa.php`;
   - usar classe `monta_artigo` em `shared/comum/php/src/monta_artigo.php`;

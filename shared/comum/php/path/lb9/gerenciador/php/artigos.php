@@ -8,7 +8,7 @@
  * POST (JSON) acao=atualizar        → { sucesso, id }
  *
  * Tabela: links
- * Campos: id, basepath, thumb_titulo, thumb_titulo_html, path, titulo, subtitulo,
+ * Campos: id, thumb_titulo, thumb_titulo_html, path, titulo, subtitulo,
  *         datePublished, dateModified, thumb, publicado, root, ultimos, search,
  *         amp, duracao, keywords, artigo
  */
@@ -65,7 +65,9 @@ function listar(database $db): void
 
     if ($termo !== '') {
         $like = '%' . $termo . '%';
-        $sql  = "SELECT id, titulo, subtitulo, path, keywords,
+        $sql  = "SELECT id, titulo, subtitulo,
+                        CASE WHEN LEFT(path, 1) = '/' THEN path ELSE CONCAT('/', path) END AS path,
+                        keywords,
                         publicado, ultimos, root, search, amp, datePublished
                  FROM links
                  WHERE titulo LIKE ? OR subtitulo LIKE ?
@@ -73,7 +75,9 @@ function listar(database $db): void
                  LIMIT {$limit}";
         $resultado = $db->query($sql, 'ss', [$like, $like]);
     } else {
-        $sql = "SELECT id, titulo, subtitulo, path, keywords,
+        $sql = "SELECT id, titulo, subtitulo,
+                       CASE WHEN LEFT(path, 1) = '/' THEN path ELSE CONCAT('/', path) END AS path,
+                       keywords,
                        publicado, ultimos, root, search, amp, datePublished
                 FROM links
                 ORDER BY datePublished DESC
@@ -102,7 +106,9 @@ function obter(database $db): void
         return;
     }
 
-    $sql = "SELECT id, titulo, subtitulo, path, keywords,
+    $sql = "SELECT id, titulo, subtitulo,
+                   CASE WHEN LEFT(path, 1) = '/' THEN path ELSE CONCAT('/', path) END AS path,
+                   keywords,
                    artigo AS conteudo,
                    publicado, ultimos, root, search, amp, datePublished
             FROM links
@@ -125,7 +131,7 @@ function inserir(database $db, array $data): void
 {
     $titulo    = trim($data['titulo']    ?? '');
     $subtitulo = trim($data['subtitulo'] ?? '');
-    $path      = trim($data['path']      ?? '');
+    $path      = normalizePath($data['path'] ?? '');
     $keywords  = trim($data['keywords']  ?? '');
     $conteudo  = $data['conteudo']       ?? '';
     $dataPub   = validarData($data['data'] ?? '');
@@ -141,11 +147,11 @@ function inserir(database $db, array $data): void
     }
 
     $sql = "INSERT INTO links
-                (titulo, thumb_titulo, thumb_titulo_html, subtitulo, path, basepath,
+                (titulo, thumb_titulo, thumb_titulo_html, subtitulo, path,
                  keywords, artigo, datePublished, dateModified, thumb, duracao,
                  publicado, ultimos, root, search, amp)
             VALUES
-                (?, ?, ?, ?, ?, '/',
+                (?, ?, ?, ?, ?,
                  ?, ?, ?, NOW(), 0, '00:00:00',
                  ?, ?, ?, ?, ?)";
 
@@ -168,7 +174,7 @@ function atualizar(database $db, array $data): void
     $id        = (int) ($data['id']        ?? 0);
     $titulo    = trim($data['titulo']    ?? '');
     $subtitulo = trim($data['subtitulo'] ?? '');
-    $path      = trim($data['path']      ?? '');
+    $path      = normalizePath($data['path'] ?? '');
     $keywords  = trim($data['keywords']  ?? '');
     $conteudo  = $data['conteudo']       ?? '';
     $dataPub   = validarData($data['data'] ?? '');
@@ -237,4 +243,9 @@ function validarData(string $v): ?string
         if ($d && $d->format('Y-m-d') === $v) return $v;
     }
     return null;
+}
+
+function normalizePath(string $path): string
+{
+    return ltrim(trim($path), '/');
 }

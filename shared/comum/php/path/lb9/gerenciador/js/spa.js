@@ -7,6 +7,12 @@
             template: document.getElementById('spaArtigosTemplate'),
             constructor: getModuleClass('ArtigosApp'),
             instance: null
+        },
+        admin: {
+            view: document.getElementById('spaAdminView'),
+            template: document.getElementById('spaAdminTemplate'),
+            constructor: getModuleClass('AdminApp'),
+            instance: null
         }
     };
 

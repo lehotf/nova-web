@@ -15,12 +15,14 @@ require $_SERVER['DOCUMENT_ROOT'] . '/comum/php/autoload.php';
     <link rel="stylesheet" href="css/launcher.css">
     <link rel="stylesheet" href="css/comum.css">
     <link rel="stylesheet" href="css/styles.css">
+    <script src="/comum/estatico/js/send.js"></script>
 </head>
 <body class="has-launcher" data-module="artigos">
 
     <nav id="appLauncher" class="app-launcher" aria-label="Navegação entre módulos"></nav>
 
     <section id="spaArtigosView" class="hidden"></section>
+    <section id="spaAdminView" class="hidden"></section>
 
     <template id="spaArtigosTemplate">
         <div class="container">
@@ -181,10 +183,55 @@ require $_SERVER['DOCUMENT_ROOT'] . '/comum/php/autoload.php';
         </div>
     </template>
 
+    <template id="spaAdminTemplate">
+        <div class="container">
+            <main class="main-content">
+                <aside class="sidebar">
+                    <div class="sidebar-header">
+                        <div class="sidebar-top-row">
+                            <input id="adminSearch" class="search-input" type="text" placeholder="Pesquisar configuração...">
+                        </div>
+                    </div>
+                    <div id="adminOptionList" class="model-list admin-option-list">
+                        <button class="model-name admin-option active" data-option="geral">Geral</button>
+                    </div>
+                </aside>
+
+                <section class="editor admin-editor">
+                    <div class="admin-panel-shell">
+                        <div class="task-form admin-form">
+                            <div class="form-grid">
+                                <div class="admin-action-card">
+                                    <div>
+                                        <div id="toggleCacheLabel" class="admin-action-title">Cache desativado</div>
+                                        <div id="toggleCacheHint" class="admin-action-description">Estado atual lido diretamente do arquivo de configuração.</div>
+                                    </div>
+                                    <button type="button" id="toggleCacheBtn" class="btn btn-secondary">Ativar cache</button>
+                                </div>
+
+                                <div class="admin-actions-grid">
+                                    <button type="button" class="btn btn-secondary admin-command-btn" data-command="rebuild_all">Reconstruir TUDO</button>
+                                    <button type="button" class="btn btn-secondary admin-command-btn" data-command="cache_templates">Cache Templates</button>
+                                    <button type="button" class="btn btn-secondary admin-command-btn" data-command="ultimos_links">Últimos Links</button>
+                                    <button type="button" class="btn btn-secondary admin-command-btn" data-command="compact_assets">Compactar JS/CSS</button>
+                                    <button type="button" class="btn btn-secondary admin-command-btn" data-command="sitemap">Sitemap</button>
+                                    <button type="button" class="btn btn-secondary admin-command-btn" data-command="clear_cache">Limpar Cache</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </div>
+
+        <div id="adminToastContainer" class="toast-container"></div>
+    </template>
+
     <script src="js/launcher.js"></script>
     <script src="js/utils.js"></script>
     <script src="js/app-modules.js"></script>
     <script src="js/artigos.js"></script>
+    <script src="js/admin.js"></script>
     <script src="js/spa.js"></script>
 
 </body>

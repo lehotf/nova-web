@@ -1,5 +1,15 @@
 <?php
 
+function public_link_path_sql($column = 'links.path')
+{
+    return "CASE WHEN LEFT($column, 1) = '/' THEN $column ELSE CONCAT('/', $column) END";
+}
+
+function normalize_link_path($path)
+{
+    return ltrim((string) $path, '/');
+}
+
 function image($classe, $thumb, $duracao, $titulo, $thumb_titulo)
 {
     global $amp;
@@ -131,9 +141,9 @@ function getLinksFromTagsID($db, $tagsID, $offset, $max, $root, $order = '')
     }
 
     if (count($tagsID) > 1) {
-        return removeItemDuplicado(v_select($db, "id, CONCAT(links.basepath,links.path) as path, links.thumb_titulo_html, links.thumb, links.duracao, links.titulo, links.subtitulo from links_tags inner join links on links.id = links_tags.linkID where (links.publicado = 1 and links.search = 1 $tagWhere$root$remove) order by ${order}links.datePublished desc, links.id DESC LIMIT $offset, " . (2 * $max)), $max);
+        return removeItemDuplicado(v_select($db, "id, " . public_link_path_sql('links.path') . " as path, links.thumb_titulo_html, links.thumb, links.duracao, links.titulo, links.subtitulo from links_tags inner join links on links.id = links_tags.linkID where (links.publicado = 1 and links.search = 1 $tagWhere$root$remove) order by ${order}links.datePublished desc, links.id DESC LIMIT $offset, " . (2 * $max)), $max);
     } else {
-        return v_select($db, "id, CONCAT(links.basepath,links.path) as path, links.thumb_titulo_html, links.thumb, links.duracao, links.titulo, links.subtitulo from links_tags inner join links on links.id = links_tags.linkID where (links.publicado = 1 and links.search = 1 $tagWhere$root$remove) order by ${order}links.datePublished desc, links.id DESC LIMIT $offset, $max");
+        return v_select($db, "id, " . public_link_path_sql('links.path') . " as path, links.thumb_titulo_html, links.thumb, links.duracao, links.titulo, links.subtitulo from links_tags inner join links on links.id = links_tags.linkID where (links.publicado = 1 and links.search = 1 $tagWhere$root$remove) order by ${order}links.datePublished desc, links.id DESC LIMIT $offset, $max");
     }
 
 }
@@ -152,7 +162,7 @@ function listaItem($db, $param = [])
         $remove = '';
     }
 
-    $links = v_select($db, "id, CONCAT(links.basepath,links.path) as path, links.thumb_titulo_html, links.thumb, links.duracao, links.titulo, links.subtitulo from links where (links.publicado = 1 and links.search = 1 $root$remove) order by ${order}links.datePublished desc, links.id DESC LIMIT $offset, $max");
+    $links = v_select($db, "id, " . public_link_path_sql('links.path') . " as path, links.thumb_titulo_html, links.thumb, links.duracao, links.titulo, links.subtitulo from links where (links.publicado = 1 and links.search = 1 $root$remove) order by ${order}links.datePublished desc, links.id DESC LIMIT $offset, $max");
 
     if (count($links) == $max) {
         $GLOBALS['next_page'] = $offset + $max + 1;
@@ -209,7 +219,7 @@ function showTextLinks($db, $max)
 {
     global $removedLinks;
 
-    $links = v_select($db, "id, CONCAT(links.basepath,links.path) as path, links.thumb_titulo_html, links.titulo, links.subtitulo from links where (links.publicado = 1 and links.search = 1 and id NOT IN (" . $removedLinks . ")) order by links.datePublished desc, links.id DESC LIMIT $max");
+    $links = v_select($db, "id, " . public_link_path_sql('links.path') . " as path, links.thumb_titulo_html, links.titulo, links.subtitulo from links where (links.publicado = 1 and links.search = 1 and id NOT IN (" . $removedLinks . ")) order by links.datePublished desc, links.id DESC LIMIT $max");
 
     $texto = '<div class="divisor"><div class="textLink">';
 
@@ -241,8 +251,8 @@ function pesquisaLink($db, $texto, $param = [])
     $max    = $param['max'] ? $param['max'] : '24';
     $offset = isset($param['offset']) ? $param['offset'] : 0;
 
-    $links = v_select($db, "id, CONCAT(links.basepath,links.path) as path, links.thumb_titulo_html, links.thumb, links.duracao, links.titulo, links.subtitulo from links where (links.publicado = 1 and links.search = 1 and (links.titulo like '%$texto%' or links.subtitulo like '%$texto%')) order by links.datePublished desc, links.id DESC LIMIT $offset, $max");
-    //$links2 = v_select("CONCAT(basepath,path) as path, thumb, titulo, subtitulo from links where (titulo like '%$texto%' and publicado = 1 and thumb = '') order by data desc, id DESC LIMIT $max");
+    $links = v_select($db, "id, " . public_link_path_sql('links.path') . " as path, links.thumb_titulo_html, links.thumb, links.duracao, links.titulo, links.subtitulo from links where (links.publicado = 1 and links.search = 1 and (links.titulo like '%$texto%' or links.subtitulo like '%$texto%')) order by links.datePublished desc, links.id DESC LIMIT $offset, $max");
+    //$links2 = v_select("path, thumb, titulo, subtitulo from links where (titulo like '%$texto%' and publicado = 1 and thumb = '') order by data desc, id DESC LIMIT $max");
 
     if (($links) && (count($links) == $max)) {
         $GLOBALS['next_page'] = $offset + $max + 1;
@@ -256,15 +266,9 @@ function pesquisaLink($db, $texto, $param = [])
 }
 
 function getLinkIDFromPath($db, $path)
-{
-    if (preg_match('/(\/\w+\/)([^\/]+)/', $path, $m)) {
-        $basepath = $m[1];
-        $path     = $m[2];
-    } else {
-        $basepath = '/';
-        $path     = str_replace('/', '', $path);
-    }
-    $resultado = select($db, "id from links where basepath = '$basepath' and path = '$path'");
+{    
+    $path = normalize_link_path($path);
+    $resultado = select($db, "id from links where path = '$path'");
     return $resultado ? $resultado['id'] : null;
 }
 

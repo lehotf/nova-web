@@ -21,7 +21,17 @@ class monta_artigo
         $this->legenda = '';
         $this->cor = null;
         $this->next_page = null;
-    }    
+    }
+
+    private function publicPathSql($column = 'links.path')
+    {
+        return "CASE WHEN LEFT($column, 1) = '/' THEN $column ELSE CONCAT('/', $column) END";
+    }
+
+    private function normalizeStoredPath($path)
+    {
+        return ltrim((string) $path, '/');
+    }
 
     public function montaArtigoHtml($texto)
     {
@@ -221,7 +231,7 @@ class monta_artigo
             $params2 = array_merge($params, [(int) $offset, (int) (2 * $max)]);
             return $this->removeItemDuplicado(
                 $db->v_select(
-                    "id, CONCAT(links.basepath,links.path) as path, links.thumb_titulo_html, links.thumb, links.duracao, links.titulo, links.subtitulo from links_tags inner join links on links.id = links_tags.linkID where (links.publicado = 1 and links.search = 1 $tagWhere$root$remove) order by ${order}links.datePublished desc, links.id DESC LIMIT ?, ?",
+                    "id, " . $this->publicPathSql('links.path') . " as path, links.thumb_titulo_html, links.thumb, links.duracao, links.titulo, links.subtitulo from links_tags inner join links on links.id = links_tags.linkID where (links.publicado = 1 and links.search = 1 $tagWhere$root$remove) order by ${order}links.datePublished desc, links.id DESC LIMIT ?, ?",
                     $tipos . 'ii',
                     $params2
                 ),
@@ -230,7 +240,7 @@ class monta_artigo
         } else {
             $params2 = array_merge($params, [(int) $offset, (int) $max]);
             return $db->v_select(
-                "id, CONCAT(links.basepath,links.path) as path, links.thumb_titulo_html, links.thumb, links.duracao, links.titulo, links.subtitulo from links_tags inner join links on links.id = links_tags.linkID where (links.publicado = 1 and links.search = 1 $tagWhere$root$remove) order by ${order}links.datePublished desc, links.id DESC LIMIT ?, ?",
+                "id, " . $this->publicPathSql('links.path') . " as path, links.thumb_titulo_html, links.thumb, links.duracao, links.titulo, links.subtitulo from links_tags inner join links on links.id = links_tags.linkID where (links.publicado = 1 and links.search = 1 $tagWhere$root$remove) order by ${order}links.datePublished desc, links.id DESC LIMIT ?, ?",
                 $tipos . 'ii',
                 $params2
             );
@@ -258,7 +268,7 @@ class monta_artigo
 
         $params = array_merge($params, [(int) $offset, (int) $max]);
         $links = $db->v_select(
-            "id, CONCAT(links.basepath,links.path) as path, links.thumb_titulo_html, links.thumb, links.duracao, links.titulo, links.subtitulo from links where (links.publicado = 1 and links.search = 1 $root$remove) order by ${order}links.datePublished desc, links.id DESC LIMIT ?, ?",
+            "id, " . $this->publicPathSql('links.path') . " as path, links.thumb_titulo_html, links.thumb, links.duracao, links.titulo, links.subtitulo from links where (links.publicado = 1 and links.search = 1 $root$remove) order by ${order}links.datePublished desc, links.id DESC LIMIT ?, ?",
             $tipos . 'ii',
             $params
         );
@@ -329,7 +339,7 @@ class monta_artigo
 
         $params[] = (int) $max;
         $links = $db->v_select(
-            "id, CONCAT(links.basepath,links.path) as path, links.thumb_titulo_html, links.titulo, links.subtitulo from links where (links.publicado = 1 and links.search = 1 $remove) order by links.datePublished desc, links.id DESC LIMIT ?",
+            "id, " . $this->publicPathSql('links.path') . " as path, links.thumb_titulo_html, links.titulo, links.subtitulo from links where (links.publicado = 1 and links.search = 1 $remove) order by links.datePublished desc, links.id DESC LIMIT ?",
             $tipos . 'i',
             $params
         );
@@ -364,11 +374,11 @@ class monta_artigo
 
         $busca = '%' . $texto . '%';
         $links = $db->v_select(
-            "id, CONCAT(links.basepath,links.path) as path, links.thumb_titulo_html, links.thumb, links.duracao, links.titulo, links.subtitulo from links where (links.publicado = 1 and links.search = 1 and (links.titulo like ? or links.subtitulo like ?)) order by links.datePublished desc, links.id DESC LIMIT ?, ?",
+            "id, " . $this->publicPathSql('links.path') . " as path, links.thumb_titulo_html, links.thumb, links.duracao, links.titulo, links.subtitulo from links where (links.publicado = 1 and links.search = 1 and (links.titulo like ? or links.subtitulo like ?)) order by links.datePublished desc, links.id DESC LIMIT ?, ?",
             'ssii',
             [$busca, $busca, (int) $offset, (int) $max]
         );
-        //$links2 = v_select("CONCAT(basepath,path) as path, thumb, titulo, subtitulo from links where (titulo like '%$texto%' and publicado = 1 and thumb = '') order by data desc, id DESC LIMIT $max");
+        //$links2 = v_select("path, thumb, titulo, subtitulo from links where (titulo like '%$texto%' and publicado = 1 and thumb = '') order by data desc, id DESC LIMIT $max");
 
         if (($links) && (count($links) == $max)) {
             $this->next_page = $offset + $max + 1;
@@ -382,18 +392,11 @@ class monta_artigo
     }
 
     public function getLinkIDFromPath($db, $path)
-    {
-        if (preg_match('/(\/\w+\/)([^\/]+)/', $path, $m)) {
-            $basepath = $m[1];
-            $path     = $m[2];
-        } else {
-            $basepath = '/';
-            $path     = str_replace('/', '', $path);
-        }
+    {        
         $resultado = $db->select(
-            "id from links where basepath = ? and path = ?",
-            'ss',
-            [$basepath, $path]
+            "id from links where path = ?",
+            's',
+            $this->normalizeStoredPath($path)
         );
         return $resultado ? $resultado['id'] : null;
     }

@@ -115,6 +115,10 @@ body {
     color: #ffffff;
 }
 
+.admin-option-list {
+    margin-top: 0;
+}
+
 .badge-rascunho {
     font-size: 0.72rem;
     color: hsl(35, 90%, 55%);
@@ -155,6 +159,88 @@ body {
 
 .editor-placeholder p {
     font-size: 1rem;
+}
+
+.admin-panel-shell {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    padding: 28px;
+}
+
+.admin-panel-header h2 {
+    font-size: 1.5rem;
+    color: #fff;
+}
+
+.admin-panel-header p {
+    margin-top: 6px;
+    color: var(--color-text-secondary);
+}
+
+.admin-form {
+    display: block;
+}
+
+.admin-toggle-field {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.admin-toggle-field input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--color-accent);
+}
+
+.admin-toggle-description {
+    color: var(--color-text-secondary);
+    font-size: 0.9rem;
+}
+
+.admin-action-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 18px 20px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--radius-md);
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.admin-action-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #fff;
+}
+
+.admin-action-description {
+    margin-top: 4px;
+    color: var(--color-text-secondary);
+    font-size: 0.92rem;
+}
+
+.admin-form-buttons {
+    margin-top: 8px;
+    align-items: flex-start;
+}
+
+.admin-inline-status {
+    color: var(--color-text-secondary);
+    font-size: 0.92rem;
+}
+
+.admin-actions-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.admin-command-btn {
+    width: 100%;
+    justify-content: center;
 }
 
 /* ── Formulário ── */
@@ -362,6 +448,25 @@ body {
     color: #4fa3ff;
 }
 
+.launcher-item-admin {
+    color: #f2c46d;
+}
+
+.btn.btn-secondary {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.btn.btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.14);
+}
+
+.btn.btn-secondary.is-active {
+    border-color: rgba(72, 214, 125, 0.45);
+    color: #9ff0b8;
+}
+
 /* ── Responsive ── */
 @media (max-width: 1024px) {
     .main-content {
@@ -376,5 +481,18 @@ body {
     .editor {
         padding: var(--spacing-md);
         height: auto;
+    }
+
+    .admin-action-card {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .admin-panel-shell {
+        padding: var(--spacing-md);
+    }
+
+    .admin-actions-grid {
+        grid-template-columns: 1fr;
     }
 }
