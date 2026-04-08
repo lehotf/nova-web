@@ -1,5 +1,8 @@
 <?php
 
+define('TEMPLATE_BASE_DIR', $_SERVER['DOCUMENT_ROOT'] . '/comum/php/template');
+define('ROOT_TEMPLATE_DIR', $_SERVER['DOCUMENT_ROOT'] . '/config');
+
 $lista = '';
 $root = [];
 $mudouRoot = false;
@@ -13,30 +16,30 @@ function compacta($texto)
     return $texto;
 }
 
-function templateDirs()
-{
-    return [
-        $_SERVER['DOCUMENT_ROOT'] . '/site/php/template',
-        $_SERVER['DOCUMENT_ROOT'] . '/comum/php/template',
-    ];
-}
-
 function rootFiles($type)
 {
     if ($type === 'amp') {
-        return ['amp.html', 'index_amp.html', 'root.html', 'index.html'];
+        return ['amp.html', 'root.html'];
     }
 
-    return ['root.html', 'index.html'];
+    return ['root.html'];
 }
 
 function carregaTemplate($file)
 {
-    foreach (templateDirs() as $dir) {
-        $conteudo = @file_get_contents($dir . '/' . $file);
-        if ($conteudo !== false) {
-            return $conteudo;
-        }
+    $conteudo = @file_get_contents(TEMPLATE_BASE_DIR . '/' . $file);
+    if ($conteudo !== false) {
+        return $conteudo;
+    }
+
+    return false;
+}
+
+function carregaRootTemplate($file)
+{
+    $conteudo = @file_get_contents(ROOT_TEMPLATE_DIR . '/' . $file);
+    if ($conteudo !== false) {
+        return $conteudo;
     }
 
     return false;
@@ -44,11 +47,19 @@ function carregaTemplate($file)
 
 function templateMTime($file)
 {
-    foreach (templateDirs() as $dir) {
-        $time = @filemtime($dir . '/' . $file);
-        if ($time) {
-            return $time;
-        }
+    $time = @filemtime(TEMPLATE_BASE_DIR . '/' . $file);
+    if ($time) {
+        return $time;
+    }
+
+    return 0;
+}
+
+function rootTemplateMTime($file)
+{
+    $time = @filemtime(ROOT_TEMPLATE_DIR . '/' . $file);
+    if ($time) {
+        return $time;
     }
 
     return 0;
@@ -63,8 +74,12 @@ function substituiAssets($texto, $debug)
     return preg_replace('#(?:site|comum)\/estatico#', 'cache', $texto);
 }
 
-function removeAnalytics($texto)
+function removeConditionalBlocks($texto)
 {
+    if (!LOCALHOST) {
+        return $texto;
+    }
+
     return preg_replace('#<!--start-->[^!]*<!--end-->#', '', $texto);
 }
 
@@ -77,7 +92,7 @@ function rootTemplate($type, $debug)
 
     $arquivo = false;
     foreach (rootFiles($type) as $file) {
-        $arquivo = carregaTemplate($file);
+        $arquivo = carregaRootTemplate($file);
         if ($arquivo !== false) {
             break;
         }
@@ -88,8 +103,9 @@ function rootTemplate($type, $debug)
     }
 
     $arquivo = compacta($arquivo);
+    $arquivo = removeConditionalBlocks($arquivo);
     $arquivo = substituiAssets($arquivo, $debug);
-    $arquivo = removeAnalytics($arquivo);
+    $arquivo = resolveRootTerms($arquivo, $type, $debug);
 
     $root[$type] = $arquivo;
     return $arquivo;
@@ -104,7 +120,7 @@ function gera_root($debug, $forcar = false, $type = 'canonical')
 
     $rootTime = 0;
     foreach (rootFiles($type) as $file) {
-        $rootTime = max($rootTime, templateMTime($file));
+        $rootTime = max($rootTime, rootTemplateMTime($file));
     }
 
     $cacheTime = @filemtime($cacheFile);
@@ -179,9 +195,8 @@ function gera($file, $dir, $debug, $type = 'canonical')
     }
 
     $arquivo = compacta($arquivo);
+    $arquivo = removeConditionalBlocks($arquivo);
     $arquivo = substituiAssets($arquivo, $debug);
-    $arquivo = removeAnalytics($arquivo);
-
     if (!$parametro || array_search('noRoot', $parametro) === false) {
         $root = rootTemplate($type, $debug);
         $arquivo = str_replace('[conteudo]', $arquivo, $root);
@@ -189,4 +204,95 @@ function gera($file, $dir, $debug, $type = 'canonical')
 
     $lista = $lista ? ($lista . ', ' . $file) : $file;
     file_put_contents($destino, $arquivo);
+}
+
+function resolveRootTerms($arquivo, $type, $debug)
+{
+    $termo = [
+        'analytics' => LOCALHOST ? '' : ANALYTICS,
+        'css_root' => buildRootCss($debug, $type),
+        'js_root' => '',
+        'destaque_tags' => buildTagLinks('nome, path FROM tags where destaque = 1 order by nome LIMIT 6', $type),
+        'sidebar_tags' => buildTagLinks('nome, path FROM tags order by nome', $type),
+    ];
+
+    return preg_replace_callback('#\[([a-zA-Z_]{3,})\]#', function ($matches) use ($termo) {
+        return array_key_exists($matches[1], $termo) ? $termo[$matches[1]] : $matches[0];
+    }, $arquivo);
+}
+
+function buildRootCss($debug, $type)
+{
+    $arquivos = ['comum/fixo', 'comum/artigo'];
+
+    if ($debug) {
+        $codigo = '';
+        foreach ($arquivos as $arquivo) {
+            $codigo .= montaObjetoRoot(minPathExtendRoot($arquivo, 'css'), 'css');
+        }
+        return $codigo;
+    }
+
+    $css = '';
+    foreach ($arquivos as $arquivo) {
+        $path = $_SERVER['DOCUMENT_ROOT'] . minPathToCacheRoot($arquivo, 'css');
+        $conteudo = @file_get_contents($path);
+        if ($conteudo !== false) {
+            $css .= $conteudo;
+        }
+    }
+
+    if ($css === '') {
+        return '';
+    }
+
+    return '<style' . ($type === 'amp' ? ' amp-custom' : '') . '>' . $css . '</style>';
+}
+
+function buildTagLinks($query, $type)
+{
+    $db = new database('localhost', BD_LOGIN, BD_SENHA, BD);
+    $tags = $db->v_select($query);
+
+    if ($tags === false || !is_array($tags)) {
+        return '';
+    }
+
+    $html = '';
+    foreach ($tags as $tag) {
+        $nome = $tag['nome'] ?? '';
+        $path = $tag['path'] ?? '';
+        $html .= '<li><a href="/tag/' . $path . '#content">' . $nome . '</a></li>';
+    }
+
+    return $html;
+}
+
+function montaObjetoRoot($path, $tipo)
+{
+    if ($tipo === 'css') {
+        return '<link rel="STYLESHEET" type="text/css" href="' . $path . '"/>';
+    }
+
+    return '<script src="' . $path . '"></script>';
+}
+
+function minPathExtendRoot($arquivo, $tipo)
+{
+    preg_match('#^(comum|config)/(.*)#', $arquivo, $nome);
+    $path = (count($nome) > 1) ? $nome[1] : '';
+
+    switch ($path) {
+        case 'comum':
+            return '/comum/estatico/' . $tipo . '/' . $nome[2] . '.' . $tipo;
+        case 'config':
+            return '/config/' . $nome[2] . '.' . $tipo;
+        default:
+            return '/site/estatico/' . $tipo . '/' . $arquivo . '.' . $tipo;
+    }
+}
+
+function minPathToCacheRoot($filePath, $tipo)
+{
+    return '/cache/' . $tipo . '/' . preg_replace('#^(comum|config)/#', '', $filePath) . '.' . $tipo;
 }

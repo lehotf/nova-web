@@ -34,7 +34,7 @@ function send(param) {
         ? param.f
         : function(retorno) {
             if (retorno && retorno.cabecalho) {
-                _m(retorno.cabecalho.msg, retorno.cabecalho.status, 1);
+                notifySendMessage(retorno.cabecalho.msg, retorno.cabecalho.status, 1);
             }
         };
 
@@ -316,23 +316,154 @@ function hasSendCache() {
 }
 
 /**
- * Emite mensagem de erro/sucesso usando a infraestrutura global, quando existir.
- * Se não existir, faz fallback para `console`.
+ * Emite mensagem de erro/sucesso usando um toast global compartilhado.
+ * Se o DOM não estiver disponível, faz fallback para `console`.
  *
  * @param {string} message Mensagem a ser exibida
  * @param {string} status Status legado (`ok`, `erro`, etc.)
  * @param {number} legacyFlag Parâmetro legado opcional
  */
 function notifySendMessage(message, status, legacyFlag) {
-    if (typeof _m === 'function') {
-        _m(message, status, legacyFlag);
+    var normalizedMessage = String(message || '').trim();
+    if (!normalizedMessage) {
+        return;
+    }
+
+    if (typeof document !== 'undefined' && document.body) {
+        showSendToast(normalizedMessage, mapSendMessageType(status));
         return;
     }
 
     if (status === 'erro') {
-        console.error(message);
+        console.error(normalizedMessage, legacyFlag);
         return;
     }
 
-    console.log(message);
+    console.log(normalizedMessage, legacyFlag);
+}
+
+function mapSendMessageType(status) {
+    if (status === 'ok' || status === 'success' || status === 'sucesso') {
+        return 'success';
+    }
+
+    if (status === 'erro' || status === 'error' || status === 'falha') {
+        return 'error';
+    }
+
+    return 'info';
+}
+
+function showSendToast(message, type) {
+    ensureSendToastStyles();
+
+    var container = ensureSendToastContainer();
+    if (!container) {
+        return;
+    }
+
+    container.innerHTML = '';
+
+    var toast = document.createElement('div');
+    toast.className = 'send-toast send-toast-' + type;
+    toast.innerHTML = getSendToastIcon(type) + '<span>' + escapeSendMessage(message) + '</span>';
+    container.appendChild(toast);
+
+    window.setTimeout(function() {
+        toast.style.animation = 'sendToastSlideOut 220ms ease';
+        window.setTimeout(function() {
+            if (toast.parentNode) {
+                toast.parentNode.removeChild(toast);
+            }
+        }, 220);
+    }, 2800);
+}
+
+function ensureSendToastContainer() {
+    var container = document.getElementById('sendToastContainer');
+    if (container) {
+        return container;
+    }
+
+    if (!document.body) {
+        return null;
+    }
+
+    container = document.createElement('div');
+    container.id = 'sendToastContainer';
+    container.className = 'send-toast-container';
+    document.body.appendChild(container);
+
+    return container;
+}
+
+function ensureSendToastStyles() {
+    if (document.getElementById('sendToastStyles')) {
+        return;
+    }
+
+    var style = document.createElement('style');
+    style.id = 'sendToastStyles';
+    style.textContent = '' +
+        '@keyframes sendToastSlideIn {' +
+            'from { opacity: 0; transform: translateY(20px); }' +
+            'to { opacity: 1; transform: translateY(0); }' +
+        '}' +
+        '@keyframes sendToastSlideOut {' +
+            'from { opacity: 1; transform: translateY(0); }' +
+            'to { opacity: 0; transform: translateY(20px); }' +
+        '}' +
+        '.send-toast-container {' +
+            'position: fixed;' +
+            'bottom: 32px;' +
+            'left: 50%;' +
+            'transform: translateX(-50%);' +
+            'z-index: 3000;' +
+            'display: flex;' +
+            'flex-direction: column;' +
+            'align-items: center;' +
+            'pointer-events: none;' +
+        '}' +
+        '.send-toast {' +
+            'background: rgba(19, 26, 37, 0.96);' +
+            'backdrop-filter: blur(20px);' +
+            'border: 1px solid rgba(255, 255, 255, 0.1);' +
+            'border-radius: 18px;' +
+            'padding: 14px 18px;' +
+            'color: #f5f7fb;' +
+            'box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);' +
+            'animation: sendToastSlideIn 220ms ease;' +
+            'pointer-events: auto;' +
+            'display: flex;' +
+            'align-items: center;' +
+            'gap: 10px;' +
+            'min-width: 300px;' +
+            'max-width: min(500px, calc(100vw - 32px));' +
+        '}' +
+        '.send-toast svg {' +
+            'width: 20px;' +
+            'height: 20px;' +
+            'flex-shrink: 0;' +
+        '}' +
+        '.send-toast-success { border-left: 4px solid #7ee0a0; }' +
+        '.send-toast-error { border-left: 4px solid hsl(0, 75%, 60%); }' +
+        '.send-toast-info { border-left: 4px solid #62d0ff; }';
+    document.head.appendChild(style);
+}
+
+function escapeSendMessage(text) {
+    var div = document.createElement('div');
+    div.textContent = text || '';
+    return div.innerHTML;
+}
+
+function getSendToastIcon(type) {
+    switch (type) {
+        case 'success':
+            return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-8.93"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>';
+        case 'error':
+            return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>';
+        default:
+            return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>';
+    }
 }

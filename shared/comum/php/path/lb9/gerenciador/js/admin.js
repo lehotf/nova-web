@@ -15,9 +15,9 @@
             this.cacheState = false;
             this.commandEndpoints = {
                 rebuild_all: 'php/admin_rebuild_all.php',
-                cache_templates: 'php/admin_cache_templates.php',
+                cache_templates: '/comum/php/xhr/gerador/cacheTemplates.php',
                 ultimos_links: 'php/admin_ultimos_links.php',
-                compact_assets: 'php/admin_compact_assets.php',
+                compact_assets: '/comum/php/xhr/compactador/compacta.php',
                 sitemap: 'php/admin_sitemap.php',
                 clear_cache: 'php/admin_clear_cache.php'
             };
@@ -128,16 +128,42 @@
                 return;
             }
 
+            if (commandId !== 'cache_templates' && commandId !== 'compact_assets') {
+                const button = this.commandButtons.find((item) => item.dataset.command === commandId);
+                if (!button) return;
+
+                button.disabled = true;
+
+                window.setTimeout(() => {
+                    button.disabled = false;
+                    this.showToast(`Ação preparada para ${this.getCommandLabel(commandId)}. Backend pendente.`, 'info');
+                }, 180);
+                return;
+            }
+
             const button = this.commandButtons.find((item) => item.dataset.command === commandId);
             if (!button) return;
 
             button.disabled = true;
 
-            // Endpoints reservados para a próxima etapa.
-            window.setTimeout(() => {
-                button.disabled = false;
-                this.showToast(`Ação preparada para ${this.getCommandLabel(commandId)}. Backend pendente.`, 'info');
-            }, 180);
+            send({
+                url: this.commandEndpoints[commandId],
+                method: 'POST',
+                dados: {},
+                r: this,
+                f: function(payload) {
+                    button.disabled = false;
+                    const status = payload?.cabecalho?.status || '';
+                    const message = payload?.cabecalho?.msg || `${this.getCommandLabel(commandId)} executado.`;
+
+                    if (status !== 'ok') {
+                        this.showToast(message || `Erro ao executar ${this.getCommandLabel(commandId)}.`, 'error');
+                        return;
+                    }
+
+                    this.showToast(message, 'success');
+                }
+            });
         }
 
         getCommandLabel(commandId) {
