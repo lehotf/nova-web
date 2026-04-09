@@ -1,12 +1,16 @@
 <?php
 require $_SERVER['DOCUMENT_ROOT'] . '/comum/php/autoload.php';
-require __DIR__ . '/admin_common.php';
 
 $c = new controlador(observador: true, autenticador: true);
 $c->autenticador->acesso(2);
 
-adminJsonResponse([
-    'sucesso' => true,
-    'mensagem' => 'Estado atual do cache carregado.',
-    'cache' => adminCurrentCacheState()
-]);
+function adminCurrentCacheState(): array
+{
+    return [
+        'active' => (bool) CACHE_ATIVO,
+        'source' => 'config'
+    ];
+}
+
+$c->observador->r['cache'] = adminCurrentCacheState();
+$c->observador->envia('Estado atual do cache carregado.');

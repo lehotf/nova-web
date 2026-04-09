@@ -87,13 +87,17 @@
                 dados: {},
                 r: this,
                 f: function(payload) {
-                    if (!payload?.sucesso) {
-                        this.showToast(payload?.mensagem || 'Erro ao carregar estado do cache', 'error');
+                    const status = payload?.cabecalho?.status || '';
+                    const message = payload?.cabecalho?.msg || 'Erro ao carregar estado do cache';
+                    const cache = payload?.dados?.cache;
+
+                    if (status !== 'ok' || !cache) {
+                        this.showToast(message, 'error');
                         return;
                     }
 
-                    this.cacheState = !!payload.cache?.active;
-                    this.renderCacheState(payload.cache?.source || 'config');
+                    this.cacheState = !!cache.active;
+                    this.renderCacheState(cache.source || 'config');
                 }
             });
         }
@@ -110,15 +114,18 @@
                 r: this,
                 f: function(payload) {
                     this.toggleCacheBtn.disabled = false;
+                    const status = payload?.cabecalho?.status || '';
+                    const message = payload?.cabecalho?.msg || 'Erro ao alternar cache';
+                    const cache = payload?.dados?.cache;
 
-                    if (!payload?.sucesso) {
-                        this.showToast(payload?.mensagem || 'Erro ao alternar cache', 'error');
+                    if (status !== 'ok' || !cache) {
+                        this.showToast(message, 'error');
                         return;
                     }
 
-                    this.cacheState = !!payload.cache?.active;
-                    this.renderCacheState(payload.cache?.source || 'config');
-                    this.showToast(payload?.mensagem || 'Estado do cache alterado.', 'success');
+                    this.cacheState = !!cache.active;
+                    this.renderCacheState(cache.source || 'config');
+                    this.showToast(message || 'Estado do cache alterado.', 'success');
                 }
             });
         }
