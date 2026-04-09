@@ -1,6 +1,7 @@
 class ArtigosApp extends window.BaseModule {
     constructor(root = document) {
         super(root);
+        this.apiBase = '/comum/php/path/lb9/php';
         this.isActive = true;
         this.artigos = [];
         this.artigoAtual = null;
@@ -86,7 +87,7 @@ class ArtigosApp extends window.BaseModule {
             const params = new URLSearchParams({ acao: 'listar' });
             if (termo) params.set('termo', termo);
 
-            const res = await fetch(`php/artigos.php?${params}`);
+            const res = await fetch(`${this.apiBase}/artigos.php?${params}`);
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
             const data = await res.json();
@@ -138,7 +139,7 @@ class ArtigosApp extends window.BaseModule {
 
     async abrirArtigo(id) {
         try {
-            const res = await fetch(`php/artigos.php?acao=obter&id=${encodeURIComponent(id)}`);
+            const res = await fetch(`${this.apiBase}/artigos.php?acao=obter&id=${encodeURIComponent(id)}`);
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const data = await res.json();
             if (!data.sucesso) throw new Error(data.mensagem || 'Erro ao carregar artigo');
@@ -232,7 +233,7 @@ class ArtigosApp extends window.BaseModule {
         };
 
         try {
-            const res = await fetch('php/artigos.php', {
+            const res = await fetch(`${this.apiBase}/artigos.php`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
@@ -275,7 +276,7 @@ class ArtigosApp extends window.BaseModule {
         if (!id) return;
 
         try {
-            const res = await fetch('php/artigos.php', {
+            const res = await fetch(`${this.apiBase}/artigos.php`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ acao: 'excluir', id })

@@ -8,7 +8,7 @@ require $_SERVER['DOCUMENT_ROOT'] . '/comum/php/autoload.php';
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gerenciador de Conteúdo — Painel Admin</title>
     <meta name="description" content="Painel de controle para administração de conteúdo do site">
-    <link rel="icon" type="image/svg+xml" href="favicon-tarefas.svg">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">

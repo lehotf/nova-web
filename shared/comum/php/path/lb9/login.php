@@ -1,5 +1,5 @@
 <?php
-$redirectPadrao = '/comum/php/path/lb9/gerenciador/a.php';
+$redirectPadrao = '/comum/php/path/lb9/a.php';
 $redirect = isset($_GET['redirect']) ? (string) $_GET['redirect'] : $redirectPadrao;
 
 if (!preg_match('#^/[A-Za-z0-9/_?.=&-]*$#', $redirect)) {

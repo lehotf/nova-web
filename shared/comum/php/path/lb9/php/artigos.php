@@ -18,7 +18,7 @@ header('Content-Type: application/json; charset=utf-8');
 $docRoot  = $_SERVER['DOCUMENT_ROOT'];
 $autoload = $docRoot . '/comum/php/autoload.php';
 if (!file_exists($autoload)) {
-    $autoload = dirname(__DIR__, 5) . '/php/autoload.php';
+    $autoload = dirname(__DIR__, 4) . '/php/autoload.php';
 }
 require_once $autoload;
 

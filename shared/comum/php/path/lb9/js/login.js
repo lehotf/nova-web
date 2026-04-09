@@ -8,11 +8,12 @@
         return;
     }
 
-    const redirect = window.lb9LoginRedirect || '/comum/php/path/lb9/gerenciador/a.php';
+    const redirect = window.lb9LoginRedirect || '/comum/php/path/lb9/a.php';
+    const apiBase = '/comum/php/path/lb9/php/autenticacao';
 
     function autenticarComCookie() {
         send({
-            a: 'comum/autenticacao/cookie',
+            url: `${apiBase}/cookie.php`,
             method: 'POST',
             dados: {},
             f: function(payload) {
@@ -40,7 +41,7 @@
         submitBtn.disabled = true;
 
         send({
-            a: 'comum/autenticacao/get_token',
+            url: `${apiBase}/get_token.php`,
             method: 'POST',
             dados: { login: login },
             f: function(tokenPayload) {
@@ -53,7 +54,7 @@
                 }
 
                 send({
-                    a: 'comum/autenticacao/login',
+                    url: `${apiBase}/login.php`,
                     method: 'POST',
                     dados: {
                         login: login,

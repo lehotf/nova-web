@@ -2,6 +2,7 @@
     class AdminApp extends window.BaseModule {
         constructor(root = document) {
             super(root);
+            this.apiBase = '/comum/php/path/lb9/php';
 
             this.optionList = this.root.querySelector('#adminOptionList');
             this.searchInput = this.root.querySelector('#adminSearch');
@@ -14,12 +15,12 @@
             this.activeOption = 'geral';
             this.cacheState = false;
             this.commandEndpoints = {
-                rebuild_all: 'php/admin_rebuild_all.php',
-                cache_templates: '/comum/php/xhr/gerador/cacheTemplates.php',
-                ultimos_links: 'php/admin_ultimos_links.php',
-                compact_assets: '/comum/php/xhr/compactador/compacta.php',
-                sitemap: 'php/admin_sitemap.php',
-                clear_cache: 'php/admin_clear_cache.php'
+                rebuild_all: `${this.apiBase}/admin_rebuild_all.php`,
+                cache_templates: `${this.apiBase}/gerador/cacheTemplates.php`,
+                ultimos_links: `${this.apiBase}/admin_ultimos_links.php`,
+                compact_assets: `${this.apiBase}/compactador/compacta.php`,
+                sitemap: `${this.apiBase}/admin_sitemap.php`,
+                clear_cache: `${this.apiBase}/admin_clear_cache.php`
             };
 
             this.attachEvents();
@@ -81,7 +82,7 @@
 
         loadGeneral() {
             send({
-                url: 'php/admin_cache_status.php',
+                url: `${this.apiBase}/admin_cache_status.php`,
                 method: 'POST',
                 dados: {},
                 r: this,
@@ -103,7 +104,7 @@
             this.toggleCacheBtn.disabled = true;
 
             send({
-                url: 'php/admin_toggle_cache.php',
+                url: `${this.apiBase}/admin_toggle_cache.php`,
                 method: 'POST',
                 dados: {},
                 r: this,
