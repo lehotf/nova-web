@@ -9,7 +9,7 @@
     }
 
     const redirect = window.lb9LoginRedirect || '/comum/php/path/lb9/a.php';
-    const apiBase = '/comum/php/path/lb9/php/autenticacao';
+    const apiBase = window.lb9AuthApiBase || '/comum/php/path/lb9/php/autenticacao';
 
     function autenticarComCookie() {
         send({

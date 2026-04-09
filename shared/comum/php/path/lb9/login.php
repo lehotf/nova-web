@@ -1,5 +1,6 @@
 <?php
 $redirectPadrao = '/comum/php/path/lb9/a.php';
+$apiAutenticacao = '/comum/php/path/lb9/php/autenticacao';
 $redirect = isset($_GET['redirect']) ? (string) $_GET['redirect'] : $redirectPadrao;
 
 if (!preg_match('#^/[A-Za-z0-9/_?.=&-]*$#', $redirect)) {
@@ -35,6 +36,7 @@ if (!preg_match('#^/[A-Za-z0-9/_?.=&-]*$#', $redirect)) {
     <script src="/cache/js/md5.js"></script>
     <script>
         window.lb9LoginRedirect = <?php echo json_encode($redirect, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>;
+        window.lb9AuthApiBase = <?php echo json_encode($apiAutenticacao, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>;
     </script>
     <script src="/comum/php/path/lb9/js/login.js"></script>
 </body>

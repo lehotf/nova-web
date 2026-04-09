@@ -17,10 +17,10 @@
             this.commandEndpoints = {
                 rebuild_all: `${this.apiBase}/admin_rebuild_all.php`,
                 cache_templates: `${this.apiBase}/gerador/cacheTemplates.php`,
-                ultimos_links: `${this.apiBase}/admin_ultimos_links.php`,
+                ultimos_links: `${this.apiBase}/ultimos.php`,
                 compact_assets: `${this.apiBase}/compactador/compacta.php`,
-                sitemap: `${this.apiBase}/admin_sitemap.php`,
-                clear_cache: `${this.apiBase}/admin_clear_cache.php`
+                sitemap: `${this.apiBase}/sitemap.php`,
+                clear_cache: `${this.apiBase}/clear_cache.php`
             };
 
             this.attachEvents();
@@ -129,7 +129,7 @@
                 return;
             }
 
-            if (commandId !== 'cache_templates' && commandId !== 'compact_assets') {
+            if (commandId !== 'cache_templates' && commandId !== 'compact_assets' && commandId !== 'ultimos_links' && commandId !== 'sitemap' && commandId !== 'clear_cache') {
                 const button = this.commandButtons.find((item) => item.dataset.command === commandId);
                 if (!button) return;
 
