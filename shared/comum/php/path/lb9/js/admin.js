@@ -136,6 +136,11 @@
                 return;
             }
 
+            if (commandId === 'rebuild_all') {
+                this.runRebuildAll();
+                return;
+            }
+
             if (commandId !== 'cache_templates' && commandId !== 'compact_assets' && commandId !== 'ultimos_links' && commandId !== 'sitemap' && commandId !== 'clear_cache') {
                 const button = this.commandButtons.find((item) => item.dataset.command === commandId);
                 if (!button) return;
@@ -170,6 +175,66 @@
                     }
 
                     this.showToast(message, 'success');
+                }
+            });
+        }
+
+        runRebuildAll() {
+            const rebuildButton = this.commandButtons.find((item) => item.dataset.command === 'rebuild_all');
+            if (!rebuildButton) return;
+
+            const steps = ['compact_assets', 'cache_templates'];
+            const originalLabel = rebuildButton.textContent;
+
+            rebuildButton.disabled = true;
+            this.setCommandButtonsDisabled(steps, true);
+
+            const runStep = (index) => {
+                if (index >= steps.length) {
+                    rebuildButton.disabled = false;
+                    this.setCommandButtonsDisabled(steps, false);
+                    rebuildButton.textContent = originalLabel;
+                    this.showToast('Reconstrução concluída com sucesso.', 'success');
+                    return;
+                }
+
+                const commandId = steps[index];
+                rebuildButton.textContent = `Executando: ${this.getCommandLabel(commandId)}`;
+
+                this.executeCommandRequest(commandId, (payload) => {
+                    const status = payload?.cabecalho?.status || '';
+                    const message = payload?.cabecalho?.msg || `${this.getCommandLabel(commandId)} executado.`;
+
+                    if (status !== 'ok') {
+                        rebuildButton.disabled = false;
+                        this.setCommandButtonsDisabled(steps, false);
+                        rebuildButton.textContent = originalLabel;
+                        this.showToast(message || `Erro ao executar ${this.getCommandLabel(commandId)}.`, 'error');
+                        return;
+                    }
+
+                    runStep(index + 1);
+                });
+            };
+
+            runStep(0);
+        }
+
+        executeCommandRequest(commandId, callback) {
+            send({
+                url: this.commandEndpoints[commandId],
+                method: 'POST',
+                dados: {},
+                r: this,
+                f: callback
+            });
+        }
+
+        setCommandButtonsDisabled(commandIds, disabled) {
+            commandIds.forEach((commandId) => {
+                const button = this.commandButtons.find((item) => item.dataset.command === commandId);
+                if (button) {
+                    button.disabled = disabled;
                 }
             });
         }
