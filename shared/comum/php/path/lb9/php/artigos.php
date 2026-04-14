@@ -84,7 +84,7 @@ function listar(database $db): void
         $like = '%' . $termo . '%';
         $sql = "SELECT id, titulo, subtitulo,
                        CASE WHEN LEFT(path, 1) = '/' THEN path ELSE CONCAT('/', path) END AS path,
-                       keywords, thumb,
+                       keywords, thumb, duracao,
                        publicado, ultimos, root, search, amp, datePublished
                 FROM links
                 WHERE titulo LIKE ? OR subtitulo LIKE ?
@@ -94,7 +94,7 @@ function listar(database $db): void
     } else {
         $sql = "SELECT id, titulo, subtitulo,
                        CASE WHEN LEFT(path, 1) = '/' THEN path ELSE CONCAT('/', path) END AS path,
-                       keywords, thumb,
+                       keywords, thumb, duracao,
                        publicado, ultimos, root, search, amp, datePublished
                 FROM links
                 ORDER BY datePublished DESC
@@ -124,7 +124,7 @@ function obter(database $db): void
                    CASE WHEN LEFT(path, 1) = '/' THEN path ELSE CONCAT('/', path) END AS path,
                    keywords,
                    artigo AS conteudo,
-                   thumb,
+                   thumb, duracao,
                    publicado, ultimos, root, search, amp, datePublished
             FROM links
             WHERE id = ?
@@ -145,6 +145,7 @@ function inserir(database $db, array $data): void
     $subtitulo = trim($data['subtitulo'] ?? '');
     $path = normalizePath($data['path'] ?? '');
     $keywords = trim($data['keywords'] ?? '');
+    $duracao = validarDuracao($data['duracao'] ?? '');
     $conteudo = $data['conteudo'] ?? '';
     $dataPub = validarData($data['data'] ?? '');
     $publicado = (int) ($data['publicado'] ?? 0);
@@ -164,13 +165,13 @@ function inserir(database $db, array $data): void
                  publicado, ultimos, root, search, amp)
             VALUES
                 (?, ?, ?, ?, ?,
-                 ?, ?, ?, NOW(), 0, '00:00:00',
+                 ?, ?, ?, NOW(), 0, ?,
                  ?, ?, ?, ?, ?)";
 
-    $db->query($sql, 'ssssssssiiiii', [
+    $db->query($sql, 'sssssssssiiiii', [
         $titulo, $titulo, $titulo,
         $subtitulo, $path,
-        $keywords, $conteudo, $dataPub,
+        $keywords, $conteudo, $dataPub, $duracao,
         $publicado, $ultimos, $root, $search, $amp
     ]);
 
@@ -185,6 +186,7 @@ function atualizar(database $db, array $data): void
     $subtitulo = trim($data['subtitulo'] ?? '');
     $path = normalizePath($data['path'] ?? '');
     $keywords = trim($data['keywords'] ?? '');
+    $duracao = validarDuracao($data['duracao'] ?? '');
     $conteudo = $data['conteudo'] ?? '';
     $dataPub = validarData($data['data'] ?? '');
     $publicado = (int) ($data['publicado'] ?? 0);
@@ -205,6 +207,7 @@ function atualizar(database $db, array $data): void
                 subtitulo          = ?,
                 path               = ?,
                 keywords           = ?,
+                duracao            = ?,
                 artigo             = ?,
                 datePublished      = ?,
                 dateModified       = NOW(),
@@ -215,10 +218,10 @@ function atualizar(database $db, array $data): void
                 amp                = ?
             WHERE id = ?";
 
-    $db->query($sql, 'ssssssssiiiiii', [
+    $db->query($sql, 'sssssssssiiiiii', [
         $titulo, $titulo, $titulo,
         $subtitulo, $path,
-        $keywords, $conteudo, $dataPub,
+        $keywords, $duracao, $conteudo, $dataPub,
         $publicado, $ultimos, $root, $search, $amp,
         $id
     ]);
@@ -417,6 +420,23 @@ function validarData(string $v): ?string
         }
     }
     return null;
+}
+
+function validarDuracao(string $v): string
+{
+    $v = trim($v);
+    if ($v === '') {
+        return '00:00:00';
+    }
+
+    if (preg_match('/^\d{2}:\d{2}:\d{2}$/', $v)) {
+        [$horas, $minutos, $segundos] = array_map('intval', explode(':', $v));
+        if ($minutos <= 59 && $segundos <= 59) {
+            return sprintf('%02d:%02d:%02d', $horas, $minutos, $segundos);
+        }
+    }
+
+    return '00:00:00';
 }
 
 function normalizePath(string $path): string

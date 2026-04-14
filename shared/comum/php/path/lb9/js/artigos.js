@@ -32,6 +32,7 @@ class ArtigosApp extends window.BaseModule {
         this.artigoSubtitulo = this.root.querySelector('#artigoSubtitulo');
         this.artigoData = this.root.querySelector('#artigoData');
         this.artigoKeywords = this.root.querySelector('#artigoKeywords');
+        this.artigoDuracao = this.root.querySelector('#artigoDuracao');
         this.artigoConteudo = this.root.querySelector('#artigoConteudo');
         this.btnImagemArtigo = this.root.querySelector('#btnImagemArtigo');
         this.artigoImagemUpload = this.root.querySelector('#artigoImagemUpload');
@@ -98,6 +99,9 @@ class ArtigosApp extends window.BaseModule {
             if (!this.artigoAtual?.id) {
                 this.artigoPath.value = this.gerarSlug(this.artigoTitulo.value);
             }
+        });
+        this.artigoDuracao?.addEventListener('input', () => {
+            this.artigoDuracao.value = this.aplicarMascaraDuracao(this.artigoDuracao.value);
         });
 
         this.artigoConteudo?.addEventListener('click', () => this.salvarSelecaoConteudo());
@@ -206,6 +210,7 @@ class ArtigosApp extends window.BaseModule {
         this.artigoSubtitulo.value = artigo.subtitulo || '';
         this.artigoData.value = artigo.datePublished ? this.formatarDataBr(artigo.datePublished.substring(0, 10)) : '';
         this.artigoKeywords.value = artigo.keywords || '';
+        this.artigoDuracao.value = artigo.duracao && artigo.duracao !== '00:00:00' ? artigo.duracao : '';
         this.artigoConteudo.value = artigo.conteudo || '';
 
         this.flagPublicado.checked = artigo.publicado == 1;
@@ -233,6 +238,7 @@ class ArtigosApp extends window.BaseModule {
         this.artigoSubtitulo.value = '';
         this.artigoData.value = this.dataAtualBr();
         this.artigoKeywords.value = '';
+        this.artigoDuracao.value = '';
         this.artigoConteudo.value = '';
 
         this.flagPublicado.checked = false;
@@ -264,7 +270,15 @@ class ArtigosApp extends window.BaseModule {
             return;
         }
 
+        const duracao = this.normalizarDuracao(this.artigoDuracao.value);
+        if (!duracao) {
+            this.artigoDuracao.focus();
+            this.showToast('Informe a duração no formato hh:mm:ss', 'error');
+            return;
+        }
+
         this.artigoData.value = this.formatarDataBr(dataIso);
+        this.artigoDuracao.value = duracao;
 
         const payload = {
             acao: this.artigoId.value ? 'atualizar' : 'inserir',
@@ -274,6 +288,7 @@ class ArtigosApp extends window.BaseModule {
             subtitulo: this.artigoSubtitulo.value.trim(),
             data: dataIso,
             keywords: this.artigoKeywords.value.trim(),
+            duracao,
             conteudo: this.artigoConteudo.value.trim(),
             publicado: this.flagPublicado.checked ? 1 : 0,
             ultimos: this.flagUltimos.checked ? 1 : 0,
@@ -808,6 +823,35 @@ class ArtigosApp extends window.BaseModule {
         const mes = String(agora.getMonth() + 1).padStart(2, '0');
         const dia = String(agora.getDate()).padStart(2, '0');
         return `${dia}/${mes}/${ano}`;
+    }
+
+    aplicarMascaraDuracao(valor) {
+        const numeros = String(valor || '').replace(/\D/g, '').substring(0, 6);
+        if (!numeros) return '';
+
+        const partes = [];
+        if (numeros.length > 0) partes.push(numeros.substring(0, Math.min(2, numeros.length)));
+        if (numeros.length > 2) partes.push(numeros.substring(2, Math.min(4, numeros.length)));
+        if (numeros.length > 4) partes.push(numeros.substring(4, Math.min(6, numeros.length)));
+        return partes.join(':');
+    }
+
+    normalizarDuracao(valor) {
+        const texto = String(valor || '').trim();
+        if (!texto) return '00:00:00';
+
+        const numeros = texto.replace(/\D/g, '');
+        if (!numeros) return '00:00:00';
+        if (numeros.length !== 6) return '';
+
+        const horas = Number(numeros.substring(0, 2));
+        const minutos = Number(numeros.substring(2, 4));
+        const segundos = Number(numeros.substring(4, 6));
+
+        if (Number.isNaN(horas) || Number.isNaN(minutos) || Number.isNaN(segundos)) return '';
+        if (minutos > 59 || segundos > 59) return '';
+
+        return `${String(horas).padStart(2, '0')}:${String(minutos).padStart(2, '0')}:${String(segundos).padStart(2, '0')}`;
     }
 
     normalizeSearch(text) {

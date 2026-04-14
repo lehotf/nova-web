@@ -81,8 +81,8 @@ require $_SERVER['DOCUMENT_ROOT'] . '/comum/php/autoload.php';
                                 </div>
                             </div>
 
-                            <!-- Linha 2: Subtítulo (50%) | Keywords (50%) -->
-                            <div class="form-row-2col">
+                            <!-- Linha 2: Subtítulo (50%) | Keywords (35%) | Duração (15%) -->
+                            <div class="form-row-3col">
                                 <div class="form-group">
                                     <label for="artigoSubtitulo">Subtítulo</label>
                                     <input id="artigoSubtitulo" type="text" placeholder="Subtítulo / meta description">
@@ -90,6 +90,10 @@ require $_SERVER['DOCUMENT_ROOT'] . '/comum/php/autoload.php';
                                 <div class="form-group">
                                     <label for="artigoKeywords">Keywords</label>
                                     <input id="artigoKeywords" type="text" placeholder="palavra1, palavra2, palavra3">
+                                </div>
+                                <div class="form-group">
+                                    <label for="artigoDuracao">Duração</label>
+                                    <input id="artigoDuracao" type="text" inputmode="numeric" placeholder="00:00:00" maxlength="8">
                                 </div>
                             </div>
 
