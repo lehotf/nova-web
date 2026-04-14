@@ -10,6 +10,7 @@ class ArtigosApp extends window.BaseModule {
         this.thumbCropState = this.getThumbCropDefaults();
         this.lastConteudoSelectionStart = 0;
         this.lastConteudoSelectionEnd = 0;
+        this.destaquesConfig = [];
 
         // Sidebar
         this.artigoSearch = this.root.querySelector('#artigoSearch');
@@ -21,6 +22,7 @@ class ArtigosApp extends window.BaseModule {
         this.artigoForm = this.root.querySelector('#artigoForm');
         this.btnExcluir = this.root.querySelector('#btnExcluir');
         this.btnThumb = this.root.querySelector('#btnThumb');
+        this.btnArtigoConfiguracoes = this.root.querySelector('#btnArtigoConfiguracoes');
         this.thumbStatus = this.root.querySelector('#thumbStatus');
         this.thumbPreview = this.root.querySelector('#thumbPreview');
         this.thumbPreviewEmpty = this.root.querySelector('#thumbPreviewEmpty');
@@ -61,6 +63,13 @@ class ArtigosApp extends window.BaseModule {
         this.deleteConfirmCancel = this.root.querySelector('#deleteConfirmCancel');
         this.deleteConfirmAction = this.root.querySelector('#deleteConfirmAction');
 
+        // Modal de configurações
+        this.artigoConfigModal = this.root.querySelector('#artigoConfigModal');
+        this.artigoConfigNotice = this.root.querySelector('#artigoConfigNotice');
+        this.artigoConfigDestaques = this.root.querySelector('#artigoConfigDestaques');
+        this.artigoConfigCancel = this.root.querySelector('#artigoConfigCancel');
+        this.artigoConfigSave = this.root.querySelector('#artigoConfigSave');
+
         // Toast
         this.toastContainer = this.root.querySelector('#toastContainer');
 
@@ -71,6 +80,7 @@ class ArtigosApp extends window.BaseModule {
     attachEvents() {
         const deleteOverlay = this.deleteConfirmModal?.querySelector('.modal-overlay');
         const thumbOverlay = this.thumbUploadModal?.querySelector('.modal-overlay');
+        const configOverlay = this.artigoConfigModal?.querySelector('.modal-overlay');
 
         this.artigoSearch?.addEventListener('input', () => this.filtrarLista());
         this.artigoSearch?.addEventListener('keydown', (e) => {
@@ -84,10 +94,12 @@ class ArtigosApp extends window.BaseModule {
         this.artigoForm?.addEventListener('submit', (e) => this.salvarArtigo(e));
         this.btnExcluir?.addEventListener('click', () => this.abrirConfirmacaoExclusao());
         this.btnThumb?.addEventListener('click', () => this.abrirUploadThumb());
+        this.btnArtigoConfiguracoes?.addEventListener('click', () => this.abrirConfiguracoesArtigo());
         this.btnImagemArtigo?.addEventListener('click', () => this.abrirUploadImagemArtigo());
         this.thumbUploadInput?.addEventListener('change', (e) => this.handleThumbFileChange(e));
         this.artigoImagemUpload?.addEventListener('change', (e) => this.handleArtigoImageChange(e));
         this.thumbUploadAction?.addEventListener('click', () => this.enviarThumb());
+        this.artigoConfigSave?.addEventListener('click', () => this.salvarConfiguracoesArtigo());
 
         this.thumbCropArea?.addEventListener('wheel', (e) => this.handleThumbWheel(e), { passive: false });
         this.thumbCropArea?.addEventListener('mousedown', (e) => this.iniciarArrasteThumb(e));
@@ -116,7 +128,9 @@ class ArtigosApp extends window.BaseModule {
             { element: this.deleteConfirmAction, event: 'click', handler: () => this.closeDeleteConfirm(true) },
             { element: deleteOverlay, event: 'click', handler: () => this.closeDeleteConfirm(false) },
             { element: this.thumbUploadCancel, event: 'click', handler: () => this.fecharUploadThumb() },
-            { element: thumbOverlay, event: 'click', handler: () => this.fecharUploadThumb() }
+            { element: thumbOverlay, event: 'click', handler: () => this.fecharUploadThumb() },
+            { element: this.artigoConfigCancel, event: 'click', handler: () => this.fecharConfiguracoesArtigo() },
+            { element: configOverlay, event: 'click', handler: () => this.fecharConfiguracoesArtigo() }
         ]);
     }
 
@@ -251,6 +265,7 @@ class ArtigosApp extends window.BaseModule {
         this.atualizarEstadoThumb({});
         this.lastConteudoSelectionStart = 0;
         this.lastConteudoSelectionEnd = 0;
+        this.destaquesConfig = [];
     }
 
     async salvarArtigo(event) {
@@ -507,6 +522,141 @@ class ArtigosApp extends window.BaseModule {
     fecharUploadThumb() {
         window.AppUtils.closeModal(this.thumbUploadModal);
         this.resetThumbModal({ preserveFile: false });
+    }
+
+    async abrirConfiguracoesArtigo() {
+        this.renderizarConfiguracoesArtigo();
+
+        window.AppUtils.openModal({
+            modal: this.artigoConfigModal,
+            focusTarget: this.artigoConfigSave,
+            focusDelayMs: 40,
+            closeOnEscape: true,
+            onEscape: () => this.fecharConfiguracoesArtigo()
+        });
+
+        await this.carregarConfiguracoesArtigo();
+    }
+
+    fecharConfiguracoesArtigo() {
+        window.AppUtils.closeModal(this.artigoConfigModal);
+    }
+
+    async carregarConfiguracoesArtigo() {
+        const params = new URLSearchParams({ acao: 'listar_destaques' });
+        if (this.artigoId?.value) {
+            params.set('id', this.artigoId.value);
+        }
+
+        try {
+            const res = await fetch(`${this.apiBase}/artigos.php?${params}`);
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const data = await res.json();
+            if (!data.sucesso) throw new Error(data.mensagem || 'Erro ao carregar configurações');
+
+            this.destaquesConfig = Array.isArray(data.destaques) ? data.destaques : [];
+            this.renderizarConfiguracoesArtigo();
+        } catch (err) {
+            console.error('Erro ao carregar configurações do artigo:', err);
+            this.showToast('Erro ao carregar configurações', 'error');
+        }
+    }
+
+    renderizarConfiguracoesArtigo() {
+        if (!this.artigoConfigDestaques || !this.artigoConfigNotice) return;
+
+        const artigoId = Number(this.artigoId?.value || 0);
+        const artigoSalvo = artigoId > 0;
+
+        this.artigoConfigNotice.textContent = artigoSalvo
+            ? 'Escolha em quais posições de destaque este artigo deve aparecer.'
+            : 'Salve o artigo antes de definir posição de destaque.';
+        this.artigoConfigNotice.classList.remove('hidden');
+
+        if (this.artigoConfigSave) {
+            this.artigoConfigSave.disabled = !artigoSalvo;
+        }
+
+        if (!this.destaquesConfig.length) {
+            this.artigoConfigDestaques.innerHTML = '<div class="config-option"><div class="config-option-body"><span class="config-option-title">Nenhuma posição cadastrada.</span><span class="config-option-meta">Cadastre registros em links_destaques para habilitar esta configuração.</span></div></div>';
+            return;
+        }
+
+        this.artigoConfigDestaques.innerHTML = this.destaquesConfig
+            .map((item) => {
+                const selecionado = Number(item.selecionado) === 1;
+                const ocupadoPorOutro = Number(item.linkID) > 0 && Number(item.linkID) !== artigoId;
+                const classes = [
+                    'config-option',
+                    selecionado ? 'is-selected' : '',
+                    !artigoSalvo ? 'is-disabled' : ''
+                ].filter(Boolean).join(' ');
+
+                let meta = `ID da posição: ${this.escapeHtml(String(item.id))}`;
+                if (ocupadoPorOutro) {
+                    const titulo = item.artigoTitulo ? ` (${this.escapeHtml(item.artigoTitulo)})` : '';
+                    meta += ` · atualmente no artigo ${this.escapeHtml(String(item.linkID))}${titulo}`;
+                } else if (selecionado) {
+                    meta += ' · já vinculada a este artigo';
+                } else {
+                    meta += ' · disponível';
+                }
+
+                return `
+                    <label class="${classes}">
+                        <input type="checkbox" class="config-destaque-checkbox" value="${this.escapeHtml(String(item.id))}" ${selecionado ? 'checked' : ''} ${artigoSalvo ? '' : 'disabled'}>
+                        <div class="config-option-body">
+                            <span class="config-option-title">${this.escapeHtml(item.nome || `Posição ${item.id}`)}</span>
+                            <span class="config-option-meta">${meta}</span>
+                        </div>
+                    </label>
+                `;
+            })
+            .join('');
+    }
+
+    async salvarConfiguracoesArtigo() {
+        const artigoId = Number(this.artigoId?.value || 0);
+        if (!artigoId) {
+            this.showToast('Salve o artigo antes de alterar os destaques', 'error');
+            return;
+        }
+
+        const destaqueIds = Array.from(this.artigoConfigDestaques?.querySelectorAll('.config-destaque-checkbox:checked') || [])
+            .map((input) => Number(input.value))
+            .filter((id) => id > 0);
+
+        if (this.artigoConfigSave) {
+            this.artigoConfigSave.disabled = true;
+        }
+
+        try {
+            const res = await fetch(`${this.apiBase}/artigos.php`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    acao: 'salvar_destaques',
+                    id: artigoId,
+                    destaque_ids: destaqueIds
+                })
+            });
+
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const data = await res.json();
+            if (!data.sucesso) throw new Error(data.mensagem || 'Erro ao salvar configurações');
+
+            this.destaquesConfig = Array.isArray(data.destaques) ? data.destaques : this.destaquesConfig;
+            this.renderizarConfiguracoesArtigo();
+            this.showToast('Configurações salvas com sucesso!', 'success');
+            this.fecharConfiguracoesArtigo();
+        } catch (err) {
+            console.error('Erro ao salvar configurações do artigo:', err);
+            this.showToast(err.message || 'Erro ao salvar configurações', 'error');
+        } finally {
+            if (this.artigoConfigSave) {
+                this.artigoConfigSave.disabled = false;
+            }
+        }
     }
 
     resetThumbModal({ preserveFile = false } = {}) {
@@ -866,6 +1016,7 @@ class ArtigosApp extends window.BaseModule {
         if (!this.isActive) {
             this.closeDeleteConfirm(false);
             this.fecharUploadThumb();
+            this.fecharConfiguracoesArtigo();
         }
     }
 }

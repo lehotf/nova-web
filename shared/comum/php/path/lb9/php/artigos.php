@@ -62,6 +62,12 @@ try {
         case 'upload_imagem_artigo':
             uploadImagemArtigo($data);
             break;
+        case 'listar_destaques':
+            listarDestaques($db);
+            break;
+        case 'salvar_destaques':
+            salvarDestaques($db, $data);
+            break;
         default:
             echo json_encode(['sucesso' => false, 'mensagem' => 'Ação inválida.']);
             break;
@@ -241,6 +247,56 @@ function excluir(database $db, array $data): void
     $db->query($sql, 'i', [$id]);
 
     echo json_encode(['sucesso' => true]);
+}
+
+function listarDestaques(database $db): void
+{
+    $artigoId = (int) ($_GET['id'] ?? 0);
+
+    echo json_encode([
+        'sucesso' => true,
+        'destaques' => obterDestaquesComEstado($db, $artigoId)
+    ]);
+}
+
+function salvarDestaques(database $db, array $data): void
+{
+    $artigoId = (int) ($data['id'] ?? 0);
+    if (!$artigoId) {
+        echo json_encode(['sucesso' => false, 'mensagem' => 'Salve o artigo antes de definir destaques.']);
+        return;
+    }
+
+    $res = $db->query("SELECT id FROM links WHERE id = ? LIMIT 1", 'i', [$artigoId]);
+    if (!($res instanceof mysqli_result) || !$res->fetch_assoc()) {
+        echo json_encode(['sucesso' => false, 'mensagem' => 'Artigo não encontrado para vincular destaque.']);
+        return;
+    }
+
+    $selecionados = normalizarIdsDestaque($data['destaque_ids'] ?? []);
+
+    if ($selecionados) {
+        $placeholders = implode(', ', array_fill(0, count($selecionados), '?'));
+        $tipos = str_repeat('i', count($selecionados) + 1);
+        $params = array_merge([$artigoId], $selecionados);
+
+        $db->query(
+            "UPDATE links_destaques SET linkID = 0 WHERE linkID = ? AND id NOT IN ({$placeholders})",
+            $tipos,
+            $params
+        );
+    } else {
+        $db->query("UPDATE links_destaques SET linkID = 0 WHERE linkID = ?", 'i', [$artigoId]);
+    }
+
+    foreach ($selecionados as $destaqueId) {
+        $db->query("UPDATE links_destaques SET linkID = ? WHERE id = ?", 'ii', [$artigoId, $destaqueId]);
+    }
+
+    echo json_encode([
+        'sucesso' => true,
+        'destaques' => obterDestaquesComEstado($db, $artigoId)
+    ]);
 }
 
 function uploadThumb(database $db, array $data): void
@@ -456,6 +512,40 @@ function limitarQualidade(int $valor): int
         return 20;
     }
     return $valor;
+}
+
+function normalizarIdsDestaque($valor): array
+{
+    if (!is_array($valor)) {
+        return [];
+    }
+
+    $ids = array_map('intval', $valor);
+    $ids = array_values(array_unique(array_filter($ids, static fn ($id) => $id > 0)));
+    sort($ids);
+
+    return $ids;
+}
+
+function obterDestaquesComEstado(database $db, int $artigoId): array
+{
+    $sql = "SELECT links_destaques.id, links_destaques.nome, COALESCE(links_destaques.linkID, 0) AS linkID,
+                   links.titulo AS artigoTitulo
+            FROM links_destaques
+            LEFT JOIN links ON links.id = links_destaques.linkID
+            ORDER BY links_destaques.id ASC";
+
+    $res = $db->query($sql);
+    $itens = [];
+
+    if ($res instanceof mysqli_result) {
+        while ($row = $res->fetch_assoc()) {
+            $row['selecionado'] = ((int) $row['linkID'] === $artigoId) ? 1 : 0;
+            $itens[] = $row;
+        }
+    }
+
+    return $itens;
 }
 
 function criarImagemOrigem(string $arquivo, string $mime)

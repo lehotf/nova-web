@@ -75,9 +75,17 @@ require $_SERVER['DOCUMENT_ROOT'] . '/comum/php/autoload.php';
                                     <label for="artigoPath">Path (URL)</label>
                                     <input id="artigoPath" type="text" placeholder="ex.: /artigos/meu-artigo">
                                 </div>
-                                <div class="form-group">
+                                <div class="form-group form-group-inline-action">
                                     <label for="artigoData">Data</label>
-                                    <input id="artigoData" type="text" inputmode="numeric" placeholder="dd/mm/aaaa">
+                                    <div class="form-input-with-action">
+                                        <input id="artigoData" type="text" inputmode="numeric" placeholder="dd/mm/aaaa">
+                                        <button type="button" id="btnArtigoConfiguracoes" class="field-action-btn" title="Configurações avançadas">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <circle cx="12" cy="12" r="3"></circle>
+                                                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.01a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.01a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.01a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
 
@@ -256,6 +264,28 @@ require $_SERVER['DOCUMENT_ROOT'] . '/comum/php/autoload.php';
                 <div class="modal-actions">
                     <button id="deleteConfirmCancel" class="btn btn-secondary">Cancelar</button>
                     <button id="deleteConfirmAction" class="btn btn-danger">Excluir</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="artigoConfigModal" class="modal hidden">
+            <div class="modal-overlay"></div>
+            <div class="modal-content">
+                <div class="modal-icon modal-icon-input">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.01a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.01a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.01a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                    </svg>
+                </div>
+                <h2 class="modal-title">Configurações do Artigo</h2>
+                <p class="modal-message">Parâmetros menos usados ficam aqui. Marcar uma posição de destaque substitui o artigo atualmente vinculado a ela.</p>
+
+                <div id="artigoConfigNotice" class="config-notice hidden"></div>
+                <div id="artigoConfigDestaques" class="config-options-list"></div>
+
+                <div class="modal-actions">
+                    <button id="artigoConfigCancel" class="btn btn-secondary">Fechar</button>
+                    <button id="artigoConfigSave" class="btn btn-primary">Salvar Configurações</button>
                 </div>
             </div>
         </div>

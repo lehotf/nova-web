@@ -258,6 +258,51 @@ body {
     gap: 16px;
 }
 
+.form-group-inline-action .form-label-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.form-input-with-action {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.form-input-with-action input {
+    flex: 1;
+    min-width: 0;
+}
+
+.field-action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    flex-shrink: 0;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.03);
+    color: #b9b9b9;
+    cursor: pointer;
+    transition: background var(--transition-normal), color var(--transition-normal), border-color var(--transition-normal), transform var(--transition-fast);
+}
+
+.field-action-btn svg {
+    width: 15px;
+    height: 15px;
+}
+
+.field-action-btn:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.18);
+    transform: rotate(18deg);
+}
+
 /* Linha 2: duas colunas iguais */
 .form-row-2col {
     display: grid;
@@ -506,6 +551,75 @@ body {
     display: flex;
     justify-content: flex-end;
     gap: 10px;
+}
+
+.config-notice {
+    margin: 0 0 14px;
+    padding: 12px 14px;
+    border-radius: var(--radius-sm);
+    background: rgba(255, 255, 255, 0.06);
+    color: #c7c7c7;
+    font-size: 0.9rem;
+    line-height: 1.45;
+}
+
+.config-options-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 18px;
+}
+
+.config-option {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 14px 14px 16px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--radius-sm);
+    background: rgba(255, 255, 255, 0.03);
+    transition: background var(--transition-normal), border-color var(--transition-normal);
+}
+
+.config-option:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.config-option input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    margin-top: 2px;
+    accent-color: var(--color-accent);
+    flex-shrink: 0;
+}
+
+.config-option-body {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.config-option-title {
+    color: #ececec;
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+.config-option-meta {
+    color: #aaaaaa;
+    font-size: 0.85rem;
+    line-height: 1.4;
+}
+
+.config-option.is-selected {
+    border-color: rgba(138, 99, 255, 0.36);
+    background: rgba(138, 99, 255, 0.08);
+}
+
+.config-option.is-disabled {
+    opacity: 0.7;
 }
 
 .thumb-modal-content {

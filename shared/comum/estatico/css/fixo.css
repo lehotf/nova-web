@@ -1,4 +1,4 @@
-* {
+* { 
      outline: none;
      border: none;
      font-size: 100%;
@@ -12,7 +12,7 @@
  html {
      height: 100%;
  }
-body {
+ body {
      color: #505050;
      height: 100%;
      font-size: 19px;
@@ -22,7 +22,7 @@ body {
      overflow-x: hidden;
      margin: 0;
      padding: 0;
-     background-color: #f1f1f1;
+     background-color: #F1F1F1;
  }
 
  article, aside, details, figcaption, figure, footer, header, hgroup, menu, section {
@@ -81,7 +81,7 @@ body {
 .th_p {
      color: #444;
  }
-a {
+ a {
      color: #171717;
      text-decoration: none;
  }
@@ -123,7 +123,7 @@ a {
      background-color: #F2F2F2;
      color: #444;
  }
-.duracao {
+ .duracao {
      position: absolute;
      right: 3px;
      bottom: 3px;
@@ -533,11 +533,12 @@ Dropdown Menu
      /* padding-bottom: 15px; */
      text-align: left;
  }
-.topo_content {
+ .topo_content {
      height: calc(100% - 36px);
+     /* line-height: calc(100% - 36px); */
      padding-top: 41px;
  }
-.max_width {
+ .max_width {
      max-width: 1418px;
      position: relative;
      margin: auto;
@@ -600,17 +601,23 @@ Inputbox
  .adfeed {
      height: 250px;
  }
-.textLink {
+ .textLink {
      background-color: #FFF;
      padding: 10px;
+     /* padding-right: 14px; */
+     /* padding-left: 11px; */
      font-size: 18px;
  }
  .textLink a {
      line-height: 24px;
      display: block;
+     /* margin-bottom: 10px; */
      padding: 15px;
+     /* padding-left: 14px; */
+     /* padding-right: 14px; */
      color: #716bc7;
      font-weight: bold;
+     /* background-color: #F1F1F1; */
      border-bottom: 1px solid #EEE;
  }
  .textLink a:first-child {
@@ -641,8 +648,11 @@ Inputbox
  .modulo:first-child .legenda_modulo {
      background-color: #f1f1f1;
  }
-.link_container {
+ .link_container {
      transition: all 0.4s;
+     box-shadow: 0px 3px 20px 0 rgba(0, 0, 0, 0.075);
+     border-bottom-right-radius: 10px;
+     border-bottom-left-radius: 10px;
  }
  .modulo .link_container:hover, .ultimos_artigos:hover {
      box-shadow: 0 5px 13px 0 rgba(0, 0, 0, 0.2);
@@ -675,7 +685,7 @@ Inputbox
  .c25:nth-child(4n+4) {
      margin-right: 0px;
  }
-.c25 .legenda, .ultimos_artigos .legenda {
+ .c25 .legenda, .ultimos_artigos .legenda {
      line-height: 21px;
      height: 110px;
      padding: 13px;
@@ -683,7 +693,7 @@ Inputbox
  .c25 .legenda div, .ultimos_artigos .legenda div {
      line-height: 18px;
  }
-.c25 .legenda div:first-child, .ultimos_artigos .legenda div:first-child {
+ .c25 .legenda div:first-child, .ultimos_artigos .legenda div:first-child {
      margin-bottom: 3px;
      font-weight: 700;
      font-size: 16px;
@@ -717,7 +727,7 @@ Inputbox
      top: calc(100% - 21px);
      background: linear-gradient(rgba(255, 255, 255, 0), rgba(255, 255, 255, 1));
  }
-.ultimos_artigos .legenda:before {
+ .ultimos_artigos .legenda:before {
      background: linear-gradient(rgba(241, 241, 241, 0), rgba(241, 241, 241, 1));
  }
  .ultimos_artigos .legenda {
@@ -726,7 +736,7 @@ Inputbox
  .ultimos_artigos:first-child {
      margin-bottom: 20px;
  }
-.img_fit {
+ .img_fit {
      width: 100%;
      position: absolute;
      margin: auto;
@@ -764,12 +774,15 @@ Inputbox
      text-overflow: ellipsis;
      font-size: 9px;
  }
-#flex_container {
+ #flex_container {
      display: flex;
      flex-wrap: wrap;
      max-width: 1550px;
      margin: auto;
+     /* position: relative; */
+     /* margin-top: -36px; */
      min-height: calc(100% - 308px);
+     /* padding-top: 20px; */
  }
  #keywords {
      text-align: center;
@@ -972,7 +985,7 @@ Inputbox
  .ultimos_artigos {
      position: relative;
  }
-.ultimos_artigos:hover {
+ .ultimos_artigos:hover {
      background-color: #EEE;
  }
  .ultimos_artigos:hover a span:nth-child(2) {
@@ -990,14 +1003,10 @@ Inputbox
      z-index: 10;
      opacity: 0.3;
  }
-.sidebartags {
-     background-color: #f1f1f1;
-     margin-bottom: 20px;
-     box-shadow: 0px 3px 20px 0 rgba(0, 0, 0, 0.075);
+ .sidebartags {     
+     margin-bottom: 20px;     
  }
- .sidebartags ul {
-     /* background-color: #ffffff; */
- }
+
  .sidebartags ul li a {
      padding-left: 14px;
      padding-right: 14px;
@@ -1005,13 +1014,12 @@ Inputbox
      padding-bottom: 10px;
      height: unset;
      line-height: unset;
-     font-size: 14px;
+     font-size: 16px;
      display: inline-block;
      width: 100%;
      vertical-align: bottom;
      color: #7d7d7d;
-     margin-bottom: 1px;
-     background-color: #ffffff;
+     margin-bottom: 1px;    
      font-weight: bold;
  }
  .sidebartags ul li a:hover {
@@ -1051,7 +1059,7 @@ Inputbox
      background-color: #989898;
      color: #FFF;
  }
-#arranhaceu {
+ #arranhaceu {
      background-color: #ececec;
      width: 300px;
      bottom: 0px;
@@ -1139,31 +1147,24 @@ Inputbox
  .centered {
      text-align: center;
  }
-.searchbox {
-     color: #314153;
+ .searchbox {
+     color: #757575;
      background-color: #fff;
-     padding: 16px 18px;
+     padding: 16px;
      margin-bottom: 20px;
-     box-shadow: 0 18px 38px rgba(31, 28, 24, 0.08);
      display: block;
-     border-radius: 18px;
-     border: 1px solid rgba(39, 51, 69, 0.08);
-     font-weight: 700;
-     letter-spacing: 0.02em;
-     transition: transform 0.25s ease, box-shadow 0.25s ease, background-color 0.25s ease, color 0.25s ease;
+     border-radius: 10px;
  }
  .searchbox:hover {
-     background: #213246;
-     color: #f7f2ea;
-     transform: translateY(-2px);
-     box-shadow: 0 22px 44px rgba(28, 25, 21, 0.16);
+     background-color: #000;
+     color: #FFF;
  }
  .searchbox:before {
      font-family: icomoon;
      content: "a";
      padding-right: 12px;
  }
-#topo_root {
+ #topo_root {
      height: 154px;
  }
  .cor2 {
