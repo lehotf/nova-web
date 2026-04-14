@@ -758,9 +758,8 @@ Inputbox
  }
 
  .folha_de_papel {
-     box-shadow: 0px -7px 7px 0px rgba(0, 0, 0, 0.075);
-     border-top-left-radius: 20px;
-     border-top-right-radius: 20px;
+
+     background-color: #FFF;
  }
 
  .video_texto {
@@ -1517,8 +1516,9 @@ Inputbox
          color: #d0d0d0;
      }
      div.padding50 {
-         /* margin: 0; */
+         margin-bottom: 0px;
      }
+
      .fb_comentarios {
          margin-top: 1px;
      }
@@ -1586,7 +1586,7 @@ Inputbox
          margin-left: 0px;
      }
      div.padding50 {
-         padding: 28px;
+         padding: 28px;         
      }
      div.padding50 .modulo {
          margin-left: -20px;
