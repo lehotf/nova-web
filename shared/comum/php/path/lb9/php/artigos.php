@@ -329,7 +329,7 @@ function uploadThumb(database $db, array $data): void
         return;
     }
 
-    if (!salvarResizeJpeg($crop, 272, $smallFile, $qualidadeP) || !salvarResizeJpeg($crop, 559, $largeFile, $qualidadeG)) {
+    if (!salvarResizeJpeg($crop, 283, $smallFile, $qualidadeP) || !salvarResizeJpeg($crop, 586, $largeFile, $qualidadeG)) {
         imagedestroy($crop);
         echo json_encode(['sucesso' => false, 'mensagem' => 'Falha ao gerar os tamanhos da thumb.']);
         return;
