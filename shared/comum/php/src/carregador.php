@@ -270,11 +270,11 @@ class carregador
     }
 
     private function executaPadrao($comando)
-    {        
+    {                
         $this->db = new database('localhost', BD_LOGIN, BD_SENHA, BD);
         require 'comum/php/include/ad.php';
         
-        if ($comando == 'root') {
+        if ($comando == 'root') {            
             require 'site/php/path/root.php';
         } else {
             require 'site/php/path/' . PADRAO . '.php';

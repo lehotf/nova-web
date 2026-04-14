@@ -65,6 +65,37 @@ function rootTemplateMTime($file)
     return 0;
 }
 
+function pathMTime($path)
+{
+    $time = @filemtime($path);
+    if ($time) {
+        return $time;
+    }
+
+    return 0;
+}
+
+function rootAssetDependencies()
+{
+    return [
+        $_SERVER['DOCUMENT_ROOT'] . '/comum/estatico/css/fixo.css',
+        $_SERVER['DOCUMENT_ROOT'] . '/comum/estatico/css/artigo.css',
+        $_SERVER['DOCUMENT_ROOT'] . '/cache/css/fixo.css',
+        $_SERVER['DOCUMENT_ROOT'] . '/cache/css/artigo.css',
+    ];
+}
+
+function rootDependencyTime()
+{
+    $time = 0;
+
+    foreach (rootAssetDependencies() as $path) {
+        $time = max($time, pathMTime($path));
+    }
+
+    return $time;
+}
+
 function substituiAssets($texto, $debug)
 {
     if ($debug) {
@@ -122,6 +153,7 @@ function gera_root($debug, $forcar = false, $type = 'canonical')
     foreach (rootFiles($type) as $file) {
         $rootTime = max($rootTime, rootTemplateMTime($file));
     }
+    $rootTime = max($rootTime, rootDependencyTime());
 
     $cacheTime = @filemtime($cacheFile);
     $cacheTime = $cacheTime ? $cacheTime : 0;
