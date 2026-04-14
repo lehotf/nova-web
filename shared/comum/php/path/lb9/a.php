@@ -77,7 +77,7 @@ require $_SERVER['DOCUMENT_ROOT'] . '/comum/php/autoload.php';
                                 </div>
                                 <div class="form-group">
                                     <label for="artigoData">Data</label>
-                                    <input id="artigoData" type="date">
+                                    <input id="artigoData" type="text" inputmode="numeric" placeholder="dd/mm/aaaa">
                                 </div>
                             </div>
 
@@ -128,6 +128,37 @@ require $_SERVER['DOCUMENT_ROOT'] . '/comum/php/autoload.php';
                                         </label>
                                     </div>
 
+                                    <div class="content-side-actions">
+                                        <input id="artigoImagemUpload" class="hidden" type="file" accept=".jpg,.jpeg,.png,image/jpeg,image/png">
+                                        <button type="button" id="btnImagemArtigo" class="btn btn-secondary btn-small full-width">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                                <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                                                <polyline points="21 15 16 10 5 21"></polyline>
+                                            </svg>
+                                            Upload Imagem
+                                        </button>
+                                    </div>
+
+                                    <div class="thumb-panel">
+                                        <div class="thumb-panel-header">
+                                            <span class="thumb-panel-title">Thumb</span>
+                                            <span id="thumbStatus" class="thumb-status">Salve o artigo para liberar o upload.</span>
+                                        </div>
+                                        <div class="thumb-panel-body">
+                                            <img id="thumbPreview" class="thumb-preview hidden" alt="Preview da thumb do artigo">
+                                            <div id="thumbPreviewEmpty" class="thumb-preview-empty">Nenhuma thumb enviada.</div>
+                                        </div>
+                                        <button type="button" id="btnThumb" class="btn btn-secondary">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                                <polyline points="17 8 12 3 7 8"></polyline>
+                                                <line x1="12" y1="3" x2="12" y2="15"></line>
+                                            </svg>
+                                            Upload da Thumb
+                                        </button>
+                                    </div>
+
                                     <div class="form-group-buttons">
                                         <button type="submit" class="btn btn-primary">
                                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -160,6 +191,49 @@ require $_SERVER['DOCUMENT_ROOT'] . '/comum/php/autoload.php';
         </div>
 
         <div id="toastContainer" class="toast-container"></div>
+
+        <div id="thumbUploadModal" class="modal hidden">
+            <div class="modal-overlay"></div>
+            <div class="modal-content thumb-modal-content">
+                <div class="modal-icon modal-icon-input">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                </div>
+                <h2 class="modal-title">Upload da Thumb</h2>
+                <p class="modal-message">Selecione a imagem, ajuste a posição com o mouse e use a roda para zoom. A thumb final será salva com o nome do ID do artigo.</p>
+
+                <div class="thumb-modal-grid">
+                    <div class="form-group">
+                        <label for="thumbUploadInput">Imagem</label>
+                        <input id="thumbUploadInput" type="file" accept=".jpg,.jpeg,.png,image/jpeg,image/png">
+                    </div>
+                    <div class="thumb-quality-grid">
+                        <div class="form-group">
+                            <label for="thumbQualidadeG">Qualidade G</label>
+                            <input id="thumbQualidadeG" type="number" min="20" max="100" value="75">
+                        </div>
+                        <div class="form-group">
+                            <label for="thumbQualidadeP">Qualidade P</label>
+                            <input id="thumbQualidadeP" type="number" min="20" max="100" value="75">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="thumb-crop-shell">
+                    <div id="thumbCropArea" class="thumb-crop-area">
+                        <div id="thumbCropPlaceholder" class="thumb-crop-placeholder">Selecione uma imagem para começar.</div>
+                    </div>
+                </div>
+
+                <div class="modal-actions">
+                    <button id="thumbUploadCancel" class="btn btn-secondary">Cancelar</button>
+                    <button id="thumbUploadAction" class="btn btn-primary">Salvar Thumb</button>
+                </div>
+            </div>
+        </div>
 
         <div id="deleteConfirmModal" class="modal hidden">
             <div class="modal-overlay"></div>
