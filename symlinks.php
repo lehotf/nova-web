@@ -1,15 +1,14 @@
 <?php
 /**
- * Script para criar symlinks automaticamente ao migrar de servidor
- * Coloque este arquivo na raiz do public_html e execute via CLI ou navegador
+ * Script para criar os symlinks do site atual.
+ * Coloque este arquivo na raiz do site e execute via CLI ou navegador.
  */
 
 // Configurações
-$BASE_DIR = $_SERVER['DOCUMENT_ROOT'];
-$SHARED_DIR = $BASE_DIR . '/shared';
-
-// Sites que usam estrutura completa de artigos
-$SITES_ARTIGOS = ['eupenso.com','quemoleza.com','calculatudo.com'];
+$SITE_DIR = __DIR__;
+$SITE_NAME = basename($SITE_DIR);
+$HTDOCS_DIR = dirname($SITE_DIR);
+$SHARED_DIR = $HTDOCS_DIR . '/shared';
 
 // Symlinks para sites de artigos
 $SYMLINKS_ARTIGOS = [
@@ -48,10 +47,10 @@ function output($msg, $type = 'info') {
 }
 
 function createSymlink($target, $link) {
-    global $BASE_DIR;
+    global $SITE_DIR, $HTDOCS_DIR;
 
-    $fullLink = $BASE_DIR . '/' . $link;
-    $fullTarget = $BASE_DIR . $target;
+    $fullLink = $SITE_DIR . '/' . $link;
+    $fullTarget = $HTDOCS_DIR . '/' . ltrim($target, '/');
 
     // Verifica se o link já existe
     if (file_exists($fullLink) || is_link($fullLink)) {
@@ -100,7 +99,9 @@ if (!$isCliMode) {
 }
 
 output("=== Iniciando configuração de symlinks ===", 'info');
-output("Base: $BASE_DIR", 'info');
+output("Site: $SITE_NAME", 'info');
+output("Base do site: $SITE_DIR", 'info');
+output("Shared: $SHARED_DIR", 'info');
 echo $isCliMode ? "\n" : "<br>";
 
 // Verifica se diretório shared existe
@@ -109,22 +110,22 @@ if (!is_dir($SHARED_DIR)) {
     exit(1);
 }
 
-// Processa sites de artigos
-output("--- Sites de Artigos ---", 'info');
-foreach ($SITES_ARTIGOS as $site) {
-    $siteDir = $BASE_DIR . '/' . $site;
-
-    if (!is_dir($siteDir)) {
-        output("Site não encontrado, pulando: $site", 'warning');
-        continue;
+if ($SITE_NAME === 'calculatudo.com') {
+    output("--- Configurando calculatudo.com ---", 'info');
+    foreach ($SYMLINKS_CALCULATUDO as $link => $target) {
+        createSymlink($target, $link);
     }
-
-    output("Processando: $site", 'info');
-
+} else {
+    output("--- Configurando site de artigos ---", 'info');
     foreach ($SYMLINKS_ARTIGOS as $link => $target) {
-        $fullLink = $site . '/' . $link;
-        createSymlink($target, $fullLink);
+        createSymlink($target, $link);
     }
+}
 
-    echo $isCliMode ? "\n" : "<br>";
+echo $isCliMode ? "\n" : "<br>";
+
+output("=== Finalizado ===", 'success');
+
+if (!$isCliMode) {
+    echo "</body></html>";
 }

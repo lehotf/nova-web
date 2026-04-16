@@ -10,7 +10,7 @@ $o = $c->observador;
 $links = $db->v_select(
     "CASE WHEN LEFT(path, 1) = '/' THEN path ELSE CONCAT('/', path) END AS path,
      id,
-     thumb_titulo_html,
+     thumb_titulo,
      duracao,
      titulo,
      thumb,
@@ -55,7 +55,7 @@ function renderUltimosHtml(array $links, monta_artigo $renderer, bool $amp): str
         }
 
         $conteudo .= '<div class="ultimos_artigos"><a href="' . $path . '#content">'
-            . $renderer->image('c25', (string) ($link['thumb'] ?? ''), (string) ($link['duracao'] ?? ''), (string) ($link['titulo'] ?? ''), (string) ($link['thumb_titulo_html'] ?? ''))
+            . $renderer->image('c25', (string) ($link['thumb'] ?? ''), (string) ($link['duracao'] ?? ''), (string) ($link['titulo'] ?? ''), $renderer->renderThumbTitleHtml((string) ($link['thumb_titulo'] ?? '')))
             . '<div class="legenda"><div>' . (string) ($link['titulo'] ?? '') . '</div><div>' . (string) ($link['subtitulo'] ?? '') . '</div></div></a></div>';
     }
 

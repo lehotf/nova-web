@@ -277,7 +277,7 @@ class carregador
         if ($comando == 'root') {            
             require 'comum/php/path/root.php';
         } else {
-            require 'comum/php/path/' . PADRAO . '.php';
+            require 'comum/php/path/padrao.php';
         }
     }
 }

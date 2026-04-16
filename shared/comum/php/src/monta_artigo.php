@@ -10,6 +10,7 @@ class monta_artigo
     public $legenda;
     public $cor;
     public $next_page;
+    public $script;
 
     public function __construct($db, $guardiao, $amp)
     {
@@ -21,6 +22,7 @@ class monta_artigo
         $this->legenda = '';
         $this->cor = null;
         $this->next_page = null;
+        $this->script = [];
     }
 
     private function publicPathSql($column = 'links.path')
@@ -33,13 +35,72 @@ class monta_artigo
         return ltrim((string) $path, '/');
     }
 
+    private function buildThumbTitleHtml($texto)
+    {
+        $texto = (string) $texto;
+        if ($texto === '') {
+            return '';
+        }
+
+        $linhas = preg_split("/\r\n|\r|\n/", $texto);
+        if (!$linhas) {
+            return '';
+        }
+
+        $html = '';
+        $contador = 0;
+
+        foreach ($linhas as $linha) {
+            $contador++;
+            $conteudo = $linha;
+
+            if (function_exists('verifica_fonte')) {
+                $conteudo = verifica_fonte($conteudo);
+            }
+            if (function_exists('substitui')) {
+                $conteudo = substitui($conteudo);
+            }
+            if (function_exists('substitui_nbsp')) {
+                $conteudo = substitui_nbsp($conteudo);
+            }
+
+            $html .= '<div class="th_l' . $contador . '">' . $conteudo . '</div>';
+        }
+
+        return $html;
+    }
+
+    public function renderThumbTitleHtml($texto)
+    {
+        return $this->buildThumbTitleHtml($texto);
+    }
+
     public function montaArtigoHtml($texto)
     {
+        $texto = $this->extraiScripts($texto);
+
         if ($this->amp) {
             return converte($texto, false, true);
         }
 
         return converte($texto);
+    }
+
+    public function extraiScripts($texto)
+    {
+        $this->script = [];
+
+        $texto = preg_replace_callback('/js\[(.*?)\]/', function ($match) {
+            $nomes = array_filter(array_map('trim', explode(',', $match[1])), 'strlen');
+
+            if ($nomes) {
+                $this->script = array_merge($this->script, $nomes);
+            }
+
+            return '';
+        }, $texto);
+
+        return trim($texto);
     }
 
     public function montaAmpScript($duracao)
@@ -141,7 +202,7 @@ class monta_artigo
             }
             $thumb = $link['thumb'] ? $link['thumb'] : '';
 
-            $conteudo .= '<div class="' . $param['classe'] . '"><a href="' . $link['path'] . '#content"><div class="link_container">' . $this->image($param['classe'], $thumb, $link['duracao'], $link['titulo'], $link['thumb_titulo_html']) . '<div class="legenda"><div>' . $link['titulo'] . '</div><div>' . $link['subtitulo'] . '</div></div></div></a></div>';
+            $conteudo .= '<div class="' . $param['classe'] . '"><a href="' . $link['path'] . '#content"><div class="link_container">' . $this->image($param['classe'], $thumb, $link['duracao'], $link['titulo'], $this->buildThumbTitleHtml($link['thumb_titulo'] ?? '')) . '<div class="legenda"><div>' . $link['titulo'] . '</div><div>' . $link['subtitulo'] . '</div></div></div></a></div>';
         }
         $conteudo .= '<div class="clear"></div></div>';
 
@@ -231,7 +292,7 @@ class monta_artigo
             $params2 = array_merge($params, [(int) $offset, (int) (2 * $max)]);
             return $this->removeItemDuplicado(
                 $db->v_select(
-                    "id, " . $this->publicPathSql('links.path') . " as path, links.thumb_titulo_html, links.thumb, links.duracao, links.titulo, links.subtitulo from links_tags inner join links on links.id = links_tags.linkID where (links.publicado = 1 and links.search = 1 $tagWhere$root$remove) order by ${order}links.datePublished desc, links.id DESC LIMIT ?, ?",
+                    "id, " . $this->publicPathSql('links.path') . " as path, links.thumb_titulo, links.thumb, links.duracao, links.titulo, links.subtitulo from links_tags inner join links on links.id = links_tags.linkID where (links.publicado = 1 and links.search = 1 $tagWhere$root$remove) order by ${order}links.datePublished desc, links.id DESC LIMIT ?, ?",
                     $tipos . 'ii',
                     $params2
                 ),
@@ -240,7 +301,7 @@ class monta_artigo
         } else {
             $params2 = array_merge($params, [(int) $offset, (int) $max]);
             return $db->v_select(
-                "id, " . $this->publicPathSql('links.path') . " as path, links.thumb_titulo_html, links.thumb, links.duracao, links.titulo, links.subtitulo from links_tags inner join links on links.id = links_tags.linkID where (links.publicado = 1 and links.search = 1 $tagWhere$root$remove) order by ${order}links.datePublished desc, links.id DESC LIMIT ?, ?",
+                "id, " . $this->publicPathSql('links.path') . " as path, links.thumb_titulo, links.thumb, links.duracao, links.titulo, links.subtitulo from links_tags inner join links on links.id = links_tags.linkID where (links.publicado = 1 and links.search = 1 $tagWhere$root$remove) order by ${order}links.datePublished desc, links.id DESC LIMIT ?, ?",
                 $tipos . 'ii',
                 $params2
             );
@@ -268,7 +329,7 @@ class monta_artigo
 
         $params = array_merge($params, [(int) $offset, (int) $max]);
         $links = $db->v_select(
-            "id, " . $this->publicPathSql('links.path') . " as path, links.thumb_titulo_html, links.thumb, links.duracao, links.titulo, links.subtitulo from links where (links.publicado = 1 and links.search = 1 $root$remove) order by ${order}links.datePublished desc, links.id DESC LIMIT ?, ?",
+            "id, " . $this->publicPathSql('links.path') . " as path, links.thumb_titulo, links.thumb, links.duracao, links.titulo, links.subtitulo from links where (links.publicado = 1 and links.search = 1 $root$remove) order by ${order}links.datePublished desc, links.id DESC LIMIT ?, ?",
             $tipos . 'ii',
             $params
         );
@@ -339,7 +400,7 @@ class monta_artigo
 
         $params[] = (int) $max;
         $links = $db->v_select(
-            "id, " . $this->publicPathSql('links.path') . " as path, links.thumb_titulo_html, links.titulo, links.subtitulo from links where (links.publicado = 1 and links.search = 1 $remove) order by links.datePublished desc, links.id DESC LIMIT ?",
+            "id, " . $this->publicPathSql('links.path') . " as path, links.thumb_titulo, links.titulo, links.subtitulo from links where (links.publicado = 1 and links.search = 1 $remove) order by links.datePublished desc, links.id DESC LIMIT ?",
             $tipos . 'i',
             $params
         );
@@ -374,7 +435,7 @@ class monta_artigo
 
         $busca = '%' . $texto . '%';
         $links = $db->v_select(
-            "id, " . $this->publicPathSql('links.path') . " as path, links.thumb_titulo_html, links.thumb, links.duracao, links.titulo, links.subtitulo from links where (links.publicado = 1 and links.search = 1 and (links.titulo like ? or links.subtitulo like ?)) order by links.datePublished desc, links.id DESC LIMIT ?, ?",
+            "id, " . $this->publicPathSql('links.path') . " as path, links.thumb_titulo, links.thumb, links.duracao, links.titulo, links.subtitulo from links where (links.publicado = 1 and links.search = 1 and (links.titulo like ? or links.subtitulo like ?)) order by links.datePublished desc, links.id DESC LIMIT ?, ?",
             'ssii',
             [$busca, $busca, (int) $offset, (int) $max]
         );

@@ -41,7 +41,7 @@ if ($dados) {
     $contato = $montador->montaContato();
     $sidebar = $montador->montaSidebar();
         
-    $dados_preparados = [
+    $dados_preparados = [        
         'structured'  => $structured,
         'amp_script'  => $amp_script,
         'titulo'      => $dados['titulo'],
@@ -51,8 +51,12 @@ if ($dados) {
         'image'       => $image,
         'artigo'      => $artigo_html . $montador->showTags() . $contato,
         'modulos'     => $add . $modulos,            
-        'sidebar'     => $sidebar,
+        'sidebar'     => $sidebar                
     ];
+
+    if ($montador->script) {
+        $dados_preparados['js'] = $montador->script;
+    }
 
     if ($dados['amp'] == 0) {
         $dados_preparados['alternative_link'] = '';

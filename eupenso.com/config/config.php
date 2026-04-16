@@ -6,7 +6,6 @@ date_default_timezone_set('America/Sao_Paulo');
 define('NOME_SITE', 'Eu Penso');
 define('SITE', $_SERVER['SERVER_NAME']);
 define('DESCRICAO_SITE', 'Uma conversa sobre os fatos sociais e politicos.');
-define('PADRAO', 'artigo');
 define('BD', 'eupens16_eupenso');
 define('BD_LOGIN', 'eupens16_site');
 define('DNS_SITE', 'https://' . SITE);

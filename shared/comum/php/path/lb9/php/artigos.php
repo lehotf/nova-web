@@ -126,7 +126,7 @@ function obter(database $db): void
         return;
     }
 
-    $sql = "SELECT id, titulo, subtitulo,
+    $sql = "SELECT id, titulo, thumb_titulo, subtitulo,
                    CASE WHEN LEFT(path, 1) = '/' THEN path ELSE CONCAT('/', path) END AS path,
                    keywords,
                    artigo AS conteudo,
@@ -148,6 +148,7 @@ function obter(database $db): void
 function inserir(database $db, array $data): void
 {
     $titulo = trim($data['titulo'] ?? '');
+    $thumbTitulo = trim($data['thumb_titulo'] ?? '');
     $subtitulo = trim($data['subtitulo'] ?? '');
     $path = normalizePath($data['path'] ?? '');
     $keywords = trim($data['keywords'] ?? '');
@@ -164,18 +165,17 @@ function inserir(database $db, array $data): void
         echo json_encode(['sucesso' => false, 'mensagem' => 'Título obrigatório.']);
         return;
     }
-
     $sql = "INSERT INTO links
-                (titulo, thumb_titulo, thumb_titulo_html, subtitulo, path,
+                (titulo, thumb_titulo, subtitulo, path,
                  keywords, artigo, datePublished, dateModified, thumb, duracao,
                  publicado, ultimos, root, search, amp)
             VALUES
-                (?, ?, ?, ?, ?,
+                (?, ?, ?, ?,
                  ?, ?, ?, NOW(), 0, ?,
                  ?, ?, ?, ?, ?)";
 
-    $db->query($sql, 'sssssssssiiiii', [
-        $titulo, $titulo, $titulo,
+    $db->query($sql, 'ssssssssiiiii', [
+        $titulo, $thumbTitulo,
         $subtitulo, $path,
         $keywords, $conteudo, $dataPub, $duracao,
         $publicado, $ultimos, $root, $search, $amp
@@ -189,6 +189,7 @@ function atualizar(database $db, array $data): void
 {
     $id = (int) ($data['id'] ?? 0);
     $titulo = trim($data['titulo'] ?? '');
+    $thumbTitulo = trim($data['thumb_titulo'] ?? '');
     $subtitulo = trim($data['subtitulo'] ?? '');
     $path = normalizePath($data['path'] ?? '');
     $keywords = trim($data['keywords'] ?? '');
@@ -205,11 +206,9 @@ function atualizar(database $db, array $data): void
         echo json_encode(['sucesso' => false, 'mensagem' => 'ID e título são obrigatórios.']);
         return;
     }
-
     $sql = "UPDATE links SET
                 titulo             = ?,
                 thumb_titulo       = ?,
-                thumb_titulo_html  = ?,
                 subtitulo          = ?,
                 path               = ?,
                 keywords           = ?,
@@ -224,8 +223,8 @@ function atualizar(database $db, array $data): void
                 amp                = ?
             WHERE id = ?";
 
-    $db->query($sql, 'sssssssssiiiiii', [
-        $titulo, $titulo, $titulo,
+    $db->query($sql, 'ssssssssiiiiii', [
+        $titulo, $thumbTitulo,
         $subtitulo, $path,
         $keywords, $duracao, $conteudo, $dataPub,
         $publicado, $ultimos, $root, $search, $amp,
@@ -252,26 +251,38 @@ function excluir(database $db, array $data): void
 function listarDestaques(database $db): void
 {
     $artigoId = (int) ($_GET['id'] ?? 0);
+    $thumbTitulo = '';
+
+    if ($artigoId > 0) {
+        $res = $db->query("SELECT thumb_titulo FROM links WHERE id = ? LIMIT 1", 'i', [$artigoId]);
+        if ($res instanceof mysqli_result && ($artigo = $res->fetch_assoc())) {
+            $thumbTitulo = trim((string) ($artigo['thumb_titulo'] ?? ''));
+        }
+    }
 
     echo json_encode([
         'sucesso' => true,
-        'destaques' => obterDestaquesComEstado($db, $artigoId)
+        'destaques' => obterDestaquesComEstado($db, $artigoId),
+        'thumb_titulo' => $thumbTitulo
     ]);
 }
 
 function salvarDestaques(database $db, array $data): void
 {
     $artigoId = (int) ($data['id'] ?? 0);
+    $thumbTitulo = trim((string) ($data['thumb_titulo'] ?? ''));
     if (!$artigoId) {
         echo json_encode(['sucesso' => false, 'mensagem' => 'Salve o artigo antes de definir destaques.']);
         return;
     }
 
     $res = $db->query("SELECT id FROM links WHERE id = ? LIMIT 1", 'i', [$artigoId]);
-    if (!($res instanceof mysqli_result) || !$res->fetch_assoc()) {
+    if (!($res instanceof mysqli_result) || !($artigo = $res->fetch_assoc())) {
         echo json_encode(['sucesso' => false, 'mensagem' => 'Artigo não encontrado para vincular destaque.']);
         return;
     }
+
+    $db->query("UPDATE links SET thumb_titulo = ?, dateModified = NOW() WHERE id = ?", 'si', [$thumbTitulo, $artigoId]);
 
     $selecionados = normalizarIdsDestaque($data['destaque_ids'] ?? []);
 
@@ -295,7 +306,8 @@ function salvarDestaques(database $db, array $data): void
 
     echo json_encode([
         'sucesso' => true,
-        'destaques' => obterDestaquesComEstado($db, $artigoId)
+        'destaques' => obterDestaquesComEstado($db, $artigoId),
+        'thumb_titulo' => $thumbTitulo
     ]);
 }
 

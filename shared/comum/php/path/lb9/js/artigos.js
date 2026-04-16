@@ -65,6 +65,7 @@ class ArtigosApp extends window.BaseModule {
 
         // Modal de configurações
         this.artigoConfigModal = this.root.querySelector('#artigoConfigModal');
+        this.artigoConfigThumbTitulo = this.root.querySelector('#artigoConfigThumbTitulo');
         this.artigoConfigNotice = this.root.querySelector('#artigoConfigNotice');
         this.artigoConfigDestaques = this.root.querySelector('#artigoConfigDestaques');
         this.artigoConfigCancel = this.root.querySelector('#artigoConfigCancel');
@@ -226,6 +227,9 @@ class ArtigosApp extends window.BaseModule {
         this.artigoKeywords.value = artigo.keywords || '';
         this.artigoDuracao.value = artigo.duracao && artigo.duracao !== '00:00:00' ? artigo.duracao : '';
         this.artigoConteudo.value = artigo.conteudo || '';
+        if (this.artigoAtual) {
+            this.artigoAtual.thumb_titulo = artigo.thumb_titulo || '';
+        }
 
         this.flagPublicado.checked = artigo.publicado == 1;
         this.flagUltimos.checked = artigo.ultimos == 1;
@@ -266,6 +270,9 @@ class ArtigosApp extends window.BaseModule {
         this.lastConteudoSelectionStart = 0;
         this.lastConteudoSelectionEnd = 0;
         this.destaquesConfig = [];
+        if (this.artigoAtual) {
+            this.artigoAtual.thumb_titulo = '';
+        }
     }
 
     async salvarArtigo(event) {
@@ -299,6 +306,7 @@ class ArtigosApp extends window.BaseModule {
             acao: this.artigoId.value ? 'atualizar' : 'inserir',
             id: this.artigoId.value || '',
             titulo,
+            thumb_titulo: this.artigoAtual?.thumb_titulo || '',
             path: this.artigoPath.value.trim(),
             subtitulo: this.artigoSubtitulo.value.trim(),
             data: dataIso,
@@ -380,6 +388,12 @@ class ArtigosApp extends window.BaseModule {
     }
 
     handleConteudoKeydown(event) {
+        if (event.key === 'Tab') {
+            event.preventDefault();
+            this.artigoForm?.requestSubmit();
+            return;
+        }
+
         if ((event.ctrlKey || event.metaKey) && String(event.key).toLowerCase() === 'i') {
             event.preventDefault();
             this.abrirUploadImagemArtigo();
@@ -525,6 +539,9 @@ class ArtigosApp extends window.BaseModule {
     }
 
     async abrirConfiguracoesArtigo() {
+        if (this.artigoConfigThumbTitulo) {
+            this.artigoConfigThumbTitulo.value = this.artigoAtual?.thumb_titulo || '';
+        }
         this.renderizarConfiguracoesArtigo();
 
         window.AppUtils.openModal({
@@ -555,6 +572,12 @@ class ArtigosApp extends window.BaseModule {
             if (!data.sucesso) throw new Error(data.mensagem || 'Erro ao carregar configurações');
 
             this.destaquesConfig = Array.isArray(data.destaques) ? data.destaques : [];
+            if (this.artigoConfigThumbTitulo) {
+                this.artigoConfigThumbTitulo.value = data.thumb_titulo || '';
+            }
+            if (this.artigoAtual) {
+                this.artigoAtual.thumb_titulo = data.thumb_titulo || '';
+            }
             this.renderizarConfiguracoesArtigo();
         } catch (err) {
             console.error('Erro ao carregar configurações do artigo:', err);
@@ -572,6 +595,10 @@ class ArtigosApp extends window.BaseModule {
             ? 'Escolha em quais posições de destaque este artigo deve aparecer.'
             : 'Salve o artigo antes de definir posição de destaque.';
         this.artigoConfigNotice.classList.remove('hidden');
+
+        if (this.artigoConfigThumbTitulo) {
+            this.artigoConfigThumbTitulo.disabled = !artigoSalvo;
+        }
 
         if (this.artigoConfigSave) {
             this.artigoConfigSave.disabled = !artigoSalvo;
@@ -625,6 +652,7 @@ class ArtigosApp extends window.BaseModule {
         const destaqueIds = Array.from(this.artigoConfigDestaques?.querySelectorAll('.config-destaque-checkbox:checked') || [])
             .map((input) => Number(input.value))
             .filter((id) => id > 0);
+        const thumbTitulo = this.artigoConfigThumbTitulo?.value.trim() || '';
 
         if (this.artigoConfigSave) {
             this.artigoConfigSave.disabled = true;
@@ -637,7 +665,8 @@ class ArtigosApp extends window.BaseModule {
                 body: JSON.stringify({
                     acao: 'salvar_destaques',
                     id: artigoId,
-                    destaque_ids: destaqueIds
+                    destaque_ids: destaqueIds,
+                    thumb_titulo: thumbTitulo
                 })
             });
 
@@ -646,6 +675,13 @@ class ArtigosApp extends window.BaseModule {
             if (!data.sucesso) throw new Error(data.mensagem || 'Erro ao salvar configurações');
 
             this.destaquesConfig = Array.isArray(data.destaques) ? data.destaques : this.destaquesConfig;
+            if (this.artigoConfigThumbTitulo) {
+                this.artigoConfigThumbTitulo.value = data.thumb_titulo || '';
+            }
+            if (!this.artigoAtual) {
+                this.artigoAtual = {};
+            }
+            this.artigoAtual.thumb_titulo = data.thumb_titulo || '';
             this.renderizarConfiguracoesArtigo();
             this.showToast('Configurações salvas com sucesso!', 'success');
             this.fecharConfiguracoesArtigo();

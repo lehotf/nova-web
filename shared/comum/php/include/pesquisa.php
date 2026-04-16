@@ -10,6 +10,41 @@ function normalize_link_path($path)
     return ltrim((string) $path, '/');
 }
 
+function build_thumb_title_html($texto)
+{
+    $texto = (string) $texto;
+    if ($texto === '') {
+        return '';
+    }
+
+    $linhas = preg_split("/\r\n|\r|\n/", $texto);
+    if (!$linhas) {
+        return '';
+    }
+
+    $html = '';
+    $contador = 0;
+
+    foreach ($linhas as $linha) {
+        $contador++;
+        $conteudo = $linha;
+
+        if (function_exists('verifica_fonte')) {
+            $conteudo = verifica_fonte($conteudo);
+        }
+        if (function_exists('substitui')) {
+            $conteudo = substitui($conteudo);
+        }
+        if (function_exists('substitui_nbsp')) {
+            $conteudo = substitui_nbsp($conteudo);
+        }
+
+        $html .= '<div class="th_l' . $contador . '">' . $conteudo . '</div>';
+    }
+
+    return $html;
+}
+
 function image($classe, $thumb, $duracao, $titulo, $thumb_titulo)
 {
     global $amp;
@@ -67,7 +102,7 @@ function modulo($param)
         }
         $thumb = $link['thumb'] ? $link['thumb'] : '';
 
-        $conteudo .= '<div class="' . $param['classe'] . '"><a href="' . $link['path'] . '#content"><div class="link_container">' . image($param['classe'], $thumb, $link['duracao'], $link['titulo'], $link['thumb_titulo_html']) . '<div class="legenda"><div>' . $link['titulo'] . '</div><div>' . $link['subtitulo'] . '</div></div></div></a></div>';
+        $conteudo .= '<div class="' . $param['classe'] . '"><a href="' . $link['path'] . '#content"><div class="link_container">' . image($param['classe'], $thumb, $link['duracao'], $link['titulo'], build_thumb_title_html($link['thumb_titulo'] ?? '')) . '<div class="legenda"><div>' . $link['titulo'] . '</div><div>' . $link['subtitulo'] . '</div></div></div></a></div>';
 
     }
     $conteudo .= '<div class="clear"></div></div>';
@@ -141,9 +176,9 @@ function getLinksFromTagsID($db, $tagsID, $offset, $max, $root, $order = '')
     }
 
     if (count($tagsID) > 1) {
-        return removeItemDuplicado(v_select($db, "id, " . public_link_path_sql('links.path') . " as path, links.thumb_titulo_html, links.thumb, links.duracao, links.titulo, links.subtitulo from links_tags inner join links on links.id = links_tags.linkID where (links.publicado = 1 and links.search = 1 $tagWhere$root$remove) order by ${order}links.datePublished desc, links.id DESC LIMIT $offset, " . (2 * $max)), $max);
+        return removeItemDuplicado(v_select($db, "id, " . public_link_path_sql('links.path') . " as path, links.thumb_titulo, links.thumb, links.duracao, links.titulo, links.subtitulo from links_tags inner join links on links.id = links_tags.linkID where (links.publicado = 1 and links.search = 1 $tagWhere$root$remove) order by ${order}links.datePublished desc, links.id DESC LIMIT $offset, " . (2 * $max)), $max);
     } else {
-        return v_select($db, "id, " . public_link_path_sql('links.path') . " as path, links.thumb_titulo_html, links.thumb, links.duracao, links.titulo, links.subtitulo from links_tags inner join links on links.id = links_tags.linkID where (links.publicado = 1 and links.search = 1 $tagWhere$root$remove) order by ${order}links.datePublished desc, links.id DESC LIMIT $offset, $max");
+        return v_select($db, "id, " . public_link_path_sql('links.path') . " as path, links.thumb_titulo, links.thumb, links.duracao, links.titulo, links.subtitulo from links_tags inner join links on links.id = links_tags.linkID where (links.publicado = 1 and links.search = 1 $tagWhere$root$remove) order by ${order}links.datePublished desc, links.id DESC LIMIT $offset, $max");
     }
 
 }
@@ -162,7 +197,7 @@ function listaItem($db, $param = [])
         $remove = '';
     }
 
-    $links = v_select($db, "id, " . public_link_path_sql('links.path') . " as path, links.thumb_titulo_html, links.thumb, links.duracao, links.titulo, links.subtitulo from links where (links.publicado = 1 and links.search = 1 $root$remove) order by ${order}links.datePublished desc, links.id DESC LIMIT $offset, $max");
+    $links = v_select($db, "id, " . public_link_path_sql('links.path') . " as path, links.thumb_titulo, links.thumb, links.duracao, links.titulo, links.subtitulo from links where (links.publicado = 1 and links.search = 1 $root$remove) order by ${order}links.datePublished desc, links.id DESC LIMIT $offset, $max");
 
     if (count($links) == $max) {
         $GLOBALS['next_page'] = $offset + $max + 1;
@@ -219,7 +254,7 @@ function showTextLinks($db, $max)
 {
     global $removedLinks;
 
-    $links = v_select($db, "id, " . public_link_path_sql('links.path') . " as path, links.thumb_titulo_html, links.titulo, links.subtitulo from links where (links.publicado = 1 and links.search = 1 and id NOT IN (" . $removedLinks . ")) order by links.datePublished desc, links.id DESC LIMIT $max");
+    $links = v_select($db, "id, " . public_link_path_sql('links.path') . " as path, links.thumb_titulo, links.titulo, links.subtitulo from links where (links.publicado = 1 and links.search = 1 and id NOT IN (" . $removedLinks . ")) order by links.datePublished desc, links.id DESC LIMIT $max");
 
     $texto = '<div class="divisor"><div class="textLink">';
 
@@ -251,7 +286,7 @@ function pesquisaLink($db, $texto, $param = [])
     $max    = $param['max'] ? $param['max'] : '24';
     $offset = isset($param['offset']) ? $param['offset'] : 0;
 
-    $links = v_select($db, "id, " . public_link_path_sql('links.path') . " as path, links.thumb_titulo_html, links.thumb, links.duracao, links.titulo, links.subtitulo from links where (links.publicado = 1 and links.search = 1 and (links.titulo like '%$texto%' or links.subtitulo like '%$texto%')) order by links.datePublished desc, links.id DESC LIMIT $offset, $max");
+    $links = v_select($db, "id, " . public_link_path_sql('links.path') . " as path, links.thumb_titulo, links.thumb, links.duracao, links.titulo, links.subtitulo from links where (links.publicado = 1 and links.search = 1 and (links.titulo like '%$texto%' or links.subtitulo like '%$texto%')) order by links.datePublished desc, links.id DESC LIMIT $offset, $max");
     //$links2 = v_select("path, thumb, titulo, subtitulo from links where (titulo like '%$texto%' and publicado = 1 and thumb = '') order by data desc, id DESC LIMIT $max");
 
     if (($links) && (count($links) == $max)) {
