@@ -9,13 +9,12 @@ $BASE_DIR = $_SERVER['DOCUMENT_ROOT'];
 $SHARED_DIR = $BASE_DIR . '/shared';
 
 // Sites que usam estrutura completa de artigos
-$SITES_ARTIGOS = ['eupenso.com'];
+$SITES_ARTIGOS = ['eupenso.com','quemoleza.com','calculatudo.com'];
 
 // Symlinks para sites de artigos
 $SYMLINKS_ARTIGOS = [
     'comum' => '/shared/comum',
     'log' => '/shared/logs',
-    'site' => '/shared/sites/artigos',
     'cache/css' => '/shared/cache/css',
     'cache/js' => '/shared/cache/js',
 ];
@@ -128,26 +127,4 @@ foreach ($SITES_ARTIGOS as $site) {
     }
 
     echo $isCliMode ? "\n" : "<br>";
-}
-
-// Processa calculatudo
-output("--- Calculatudo ---", 'info');
-$calculatudoDir = $BASE_DIR . '/calculatudo.com';
-
-if (is_dir($calculatudoDir)) {
-    output("Processando: calculatudo.com", 'info');
-
-    foreach ($SYMLINKS_CALCULATUDO as $link => $target) {
-        $fullLink = 'calculatudo.com/' . $link;
-        createSymlink($target, $fullLink);
-    }
-} else {
-    output("Site não encontrado, pulando: calculatudo.com", 'warning');
-}
-
-echo $isCliMode ? "\n" : "<br>";
-output("=== Configuração concluída ===", 'success');
-
-if (!$isCliMode) {
-    echo "</body></html>";
 }
