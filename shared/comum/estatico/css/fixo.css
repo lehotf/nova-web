@@ -604,21 +604,16 @@ Inputbox
  .textLink {
      background-color: #F7F7F7;
      padding: 10px;
-     /* padding-right: 14px; */
-     /* padding-left: 11px; */
-     font-size: 18px;
  }
+
  .textLink a {
      line-height: 24px;
      display: block;
-     /* margin-bottom: 10px; */
      padding: 15px;
-     /* padding-left: 14px; */
-     /* padding-right: 14px; */
      color: #716bc7;
      font-weight: bold;
-     /* background-color: #F1F1F1; */
      border-bottom: 1px solid #EEE;
+     font-size: 20px;
  }
  .textLink a:first-child {
      padding-top: 7px;
@@ -628,7 +623,7 @@ Inputbox
      border-bottom: none;
  }
  .textLink a div {
-     font-size: 15px;
+     font-size: 17px;
      color: #999;
      font-weight: 400;
  }
@@ -668,7 +663,7 @@ Inputbox
  .c50 .legenda div:first-child {
      margin-bottom: 10px;
      font-weight: 700;
-     font-size: 22px;
+     font-size: 24px;
      line-height: 29px;
  }
  .c50 .legenda div:nth-child(2) {
