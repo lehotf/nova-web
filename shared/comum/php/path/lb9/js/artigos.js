@@ -83,6 +83,13 @@ class ArtigosApp extends window.BaseModule {
         const thumbOverlay = this.thumbUploadModal?.querySelector('.modal-overlay');
         const configOverlay = this.artigoConfigModal?.querySelector('.modal-overlay');
 
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'F1' && this.isActive) {
+                e.preventDefault();
+                this.abrirConfiguracoesArtigo();
+            }
+        });
+
         this.artigoSearch?.addEventListener('input', () => this.filtrarLista());
         this.artigoSearch?.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {

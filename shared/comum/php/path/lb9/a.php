@@ -277,7 +277,6 @@ require $_SERVER['DOCUMENT_ROOT'] . '/comum/php/autoload.php';
                     </svg>
                 </div>
                 <h2 class="modal-title">Configurações do Artigo</h2>
-                <p class="modal-message">Parâmetros menos usados ficam aqui. Marcar uma posição de destaque substitui o artigo atualmente vinculado a ela.</p>
 
                 <div class="form-group">
                     <label for="artigoConfigThumbTitulo">Thumb Título</label>
