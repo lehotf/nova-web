@@ -405,7 +405,7 @@ class monta_artigo
             $params
         );
 
-        $texto = '<div class="divisor"><div class="textLink">';
+        $texto = '<div class="textLink">';
 
         if ($links) {
             foreach ($links as $key => $link) {
@@ -413,7 +413,7 @@ class monta_artigo
             }
         }
 
-        $texto .= '</div></div>';
+        $texto .= '</div>';
 
         return $texto;
     }

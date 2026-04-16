@@ -601,38 +601,46 @@ Inputbox
  .adfeed {
      height: 250px;
  }
- .textLink {
-     background-color: #F7F7F7;
-     padding: 10px;
- }
 
  .textLink a {
-     line-height: 24px;
+     position: relative;
+     line-height: 27px;
      display: block;
-     padding: 15px;
-     color: #716bc7;
+     padding: 16px 18px 16px 24px;
+     color: #34475b;
      font-weight: bold;
-     border-bottom: 1px solid #EEE;
+     border: 1px solid rgba(75, 88, 66, 0.08);
+     border-radius: 10px;
+     margin-bottom: 8px;
      font-size: 20px;
+     background-color: #FFF;
+     box-shadow: none;
  }
- .textLink a:first-child {
-     padding-top: 7px;
- }
- .textLink a:last-child {
-     padding-bottom: 7px;
-     border-bottom: none;
+
+ .textLink a:before {
+     position: absolute;
+     content: "";
+     left: 0;
+     top: 7px;
+     bottom: 7px;
+     width: 3px;
+     border-radius: 5px;
+     background-color: #d4a5e0;
  }
  .textLink a div {
-     font-size: 17px;
-     color: #999;
+     margin-top: 6px;
+     font-size: 15px;
+     line-height: 22px;
+     color: #707780;
      font-weight: 400;
  }
  .textLink a:hover {
-     background-color: #EEE;
-     color: #000;
+     background-color: #f6f2f9;
+     color: #2d4a68;
+     transform: translateX(4px);
  }
  .textLink a:hover div {
-     color: #555;
+     color: #4f5d68;
  }
  .textLink a:last-child {
      margin-bottom: 0;
@@ -1278,9 +1286,7 @@ Inputbox
          left: 2.4vw;
          top: 1.7vw;
      }
-     .textLink {
-         padding-top: 20px;
-     }
+   
      .c50 .legenda {
          height: 155px;
          padding: 20px;
