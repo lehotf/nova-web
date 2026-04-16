@@ -40,6 +40,248 @@ body {
     overflow-x: hidden;
 }
 
+/* #importado de comum.css */
+.hidden {
+    display: none !important;
+}
+
+* {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+}
+
+*::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-sm) var(--spacing-lg);
+    border: none;
+    border-radius: var(--radius-md);
+    font-family: inherit;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    white-space: nowrap;
+}
+
+.btn svg {
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+.btn-icon {
+    padding: var(--spacing-sm);
+    background: var(--color-surface);
+    color: var(--color-accent);
+    border: 1px solid rgba(255, 255, 255, 0);
+}
+
+.btn-icon:hover {
+    background: var(--color-surface-hover);
+    border-color: var(--color-accent);
+}
+
+.btn-primary {
+    background: var(--color-success);
+    color: #fff;
+}
+
+.btn-primary:hover {
+    filter: brightness(1.1);
+}
+
+.btn-secondary {
+    background: var(--color-surface);
+    color: var(--color-text-primary);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.btn-secondary:hover {
+    background: var(--color-surface-hover);
+}
+
+.btn-danger {
+    background: hsl(0, 75%, 60%);
+    color: #fff;
+}
+
+.btn-danger:hover {
+    filter: brightness(1.06);
+    box-shadow: 0 0 20px rgba(255, 59, 48, 0.25);
+}
+
+@keyframes toastSlideIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes toastSlideOut {
+    from { opacity: 1; transform: translateY(0); }
+    to   { opacity: 0; transform: translateY(20px); }
+}
+
+.toast-container {
+    position: fixed;
+    bottom: var(--spacing-xl);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 3000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    pointer-events: none;
+}
+
+.toast {
+    background: var(--color-surface);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md) var(--spacing-lg);
+    color: var(--color-text-primary);
+    box-shadow: var(--shadow-lg, 0 8px 32px rgba(0, 0, 0, 0.4));
+    animation: toastSlideIn var(--transition-normal);
+    pointer-events: auto;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    min-width: 300px;
+    max-width: 500px;
+}
+
+.toast svg {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+}
+
+.toast.toast-success { border-left: 4px solid var(--color-success); }
+
+.toast.toast-error { border-left: 4px solid hsl(0, 75%, 60%); }
+
+.toast.toast-info { border-left: 4px solid var(--color-accent); }
+
+.main-content {
+    display: grid;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.sidebar {
+    background: var(--color-surface);
+    padding: var(--spacing-xl);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.editor {
+    background: var(--color-bg-secondary);
+    padding: var(--spacing-xl);
+    height: 100vh;
+    overflow-y: auto;
+}
+
+.editor-placeholder {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    color: var(--color-text-secondary);
+}
+
+.task-form {
+    display: flex;
+    flex-direction: column;
+    min-height: calc(100dvh - (var(--spacing-xl) * 2));
+    height: auto;
+}
+
+.form-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    flex: 1 0 auto;
+    min-height: 0;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group label {
+    font-size: 12px;
+    color: #bbbbbb;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+    padding: var(--spacing-sm);
+    background: var(--color-bg-tertiary);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-sm);
+    color: #b3b3b3;
+    font-family: Courier, monospace;
+    font-size: 1rem;
+    transition: all var(--transition-normal);
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 3px rgba(138, 99, 255, 0.1);
+}
+
+.form-row-description {
+    display: flex;
+    gap: 16px;
+    flex: 1;
+    min-height: 0;
+}
+
+.form-group-description {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+}
+
+.form-group-description textarea {
+    flex: 1;
+    min-height: 0;
+    resize: vertical;
+}
+
+.container {
+    width: 100%;
+    height: 100vh;
+}
+
 /* ── Layout principal ── */
 .main-content {
     grid-template-columns: 560px 1fr;
@@ -319,6 +561,14 @@ body {
     font-family: Courier, monospace;
     font-size: 20px;
     min-height: 240px;
+}
+
+.form-group .config-thumb-titulo-input {
+    min-height: 64px;
+    max-height: 96px;
+    resize: vertical;
+    font-size: 1rem;
+    line-height: 1.35;
 }
 
 .content-side-actions {

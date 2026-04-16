@@ -13,7 +13,6 @@ require $_SERVER['DOCUMENT_ROOT'] . '/comum/php/autoload.php';
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/launcher.css">
-    <link rel="stylesheet" href="css/comum.css">
     <link rel="stylesheet" href="css/styles.css">
     <script src="/comum/estatico/js/send.js"></script>
 </head>
@@ -282,7 +281,7 @@ require $_SERVER['DOCUMENT_ROOT'] . '/comum/php/autoload.php';
 
                 <div class="form-group">
                     <label for="artigoConfigThumbTitulo">Thumb Título</label>
-                    <input id="artigoConfigThumbTitulo" type="text" placeholder="Título exibido na thumb">
+                    <textarea id="artigoConfigThumbTitulo" class="config-thumb-titulo-input" rows="2" placeholder="Título exibido na thumb"></textarea>
                 </div>
                 <div id="artigoConfigNotice" class="config-notice hidden"></div>
                 <div id="artigoConfigDestaques" class="config-options-list"></div>
