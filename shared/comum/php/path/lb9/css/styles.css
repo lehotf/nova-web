@@ -226,6 +226,7 @@ body {
 .form-group {
     display: flex;
     flex-direction: column;
+    min-width: 0;
 }
 
 .form-group label {
@@ -496,7 +497,7 @@ body {
 /* Linha 1: Título (50%) | URL (35%) | Data (15%) */
 .form-row-3col {
     display: grid;
-    grid-template-columns: 50fr 35fr 15fr;
+    grid-template-columns: minmax(0, 50fr) minmax(0, 35fr) minmax(0, 15fr);
     gap: 16px;
 }
 
@@ -511,6 +512,7 @@ body {
     display: flex;
     align-items: center;
     gap: 8px;
+    min-width: 0;
 }
 
 .form-input-with-action input {
