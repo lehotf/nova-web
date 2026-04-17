@@ -636,7 +636,7 @@ Inputbox
      bottom: 7px;
      width: 3px;
      border-radius: 5px;
-     background-color: #7bb7ff;
+     background-color: #7751b3;
      transition: width 220ms ease, background-color 220ms ease, opacity 220ms ease;
  }
 .textLink a div {
