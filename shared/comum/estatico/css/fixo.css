@@ -12,8 +12,8 @@
  html {
      height: 100%;
  }
- body {
-     color: #505050;
+body {
+     color: #d6dbe3;
      height: 100%;
      font-size: 19px;
      font-family: arial, sans-serif;
@@ -22,7 +22,7 @@
      overflow-x: hidden;
      margin: 0;
      padding: 0;
-     background-color: #F1F1F1;
+     background-color: #0f1115;
  }
 
  article, aside, details, figcaption, figure, footer, header, hgroup, menu, section {
@@ -40,12 +40,12 @@
  table {
      border-spacing: 0;
  }
- nav {
+nav {
      display: inline-block;
      margin-left: 3em;
      height: 100%;
      line-height: 100%;
-     color: #969696;
+     color: #96a0ad;
      font-size: 1.2em;
  }
  .th_l1 {
@@ -79,10 +79,10 @@
      color: #3e78df;
  }
 .th_p {
-     color: #444;
+     color: #d6dbe3;
  }
  a {
-     color: #171717;
+     color: #e5edf7;
      text-decoration: none;
  }
  footer {
@@ -90,12 +90,14 @@
      padding: 60px;
      font-size: 12px;
      text-align: center;
+     background-color: #0b0f14;
+     color: #7f8a97;
  }
  footer a {
-     color: #777;
+     color: #aab5c2;
  }
  footer a:hover {
-     color: #000;
+     color: #f4f7fb;
  }
  .msgContainer {
      position: fixed;
@@ -111,7 +113,7 @@
      transition: opacity 800ms;
      pointer-events: none;
  }
- .msgItem {
+.msgItem {
      display: table;
      padding: 21px;
      padding-top: 8px;
@@ -120,8 +122,8 @@
      margin-bottom: 1px;
      line-height: 18px;
      transition: opacity 800ms;
-     background-color: #F2F2F2;
-     color: #444;
+     background-color: #1a2028;
+     color: #d6dbe3;
  }
  .duracao {
      position: absolute;
@@ -164,12 +166,12 @@
      font-weight: normal;
      margin-bottom: 10px;
  }
- #tempo {
+#tempo {
      position: absolute;
      top: 9px;
      right: 10px;
      text-align: right;
-     color: #b9b9b9;
+     color: #96a0ad;
      z-index: 1000;
      font-size: 10px;
  }
@@ -195,17 +197,17 @@
  .facebook {
      margin-left: 20px;
  }
- textarea {
+textarea {
      width: 100%;
      height: 100%;
      padding: 6px;
      padding: 17px;
      display: inline-block;
      margin-bottom: 0.8em;
-     border: 1px solid #E2E2E2;
-     background-color: #FFF;
+     border: 1px solid #313845;
+     background-color: #151a21;
      font-size: 1em;
-     color: #555;
+     color: #d7dde6;
  }
  .form {
      margin-top: 0px;
@@ -214,60 +216,60 @@
      /* background-color: #EEE; */
      /* padding: 19px; */
  }
- .form .titulo {
+.form .titulo {
      margin-bottom: 39px;
      text-align: center;
-     color: #8c8c8c;
+     color: #a7b0bb;
      padding: 8px;
      width: 83%;
      margin-left: auto;
      margin-right: auto;
      margin-top: 7px;
  }
- .form .prefixo {
+.form .prefixo {
      position: absolute;
      left: -29px;
      top: 0px;
      font-size: 13px;
-     background-color: #8694a7;
+     background-color: #42556d;
      padding-left: 8px;
      padding-right: 8px;
      color: #FFF;
      height: 40px;
      line-height: 39px;
  }
- .form .sufixo {
+.form .sufixo {
      position: absolute;
      z-index: 100;
      right: -30px;
      line-height: 40px;
-     background-color: #bdbdbd;
+     background-color: #586170;
      padding-left: 6px;
      padding-right: 6px;
      color: #FFF;
      top: 0px;
      font-size: 13px;
  }
- input[type=text], input[type=password], input[type=number] {
+input[type=text], input[type=password], input[type=number] {
      padding: 11px;
      display: inline-block;
      margin-bottom: 16px;
      /* border: 1px solid #d2d2d2; */
-     background-color: #FFF;
+     background-color: #151a21;
      font-family: Arial;
      font-size: 16px;
-     color: #555;
+     color: #e0e6ee;
      width: 100%;
      /* border-top-right-radius: 0px; */
      /* border-bottom-right-radius: 0px; */
      transition: width 0.2s;
      height: 47px;
-     border: 1px solid #cdd3dc;
+     border: 1px solid #313845;
      border-radius: 3px;
      font-weight: bold;
  }
- input[type=text]:focus, input[type=password]:focus, input[type=number]:focus {
-     background-color: #FFF;
+input[type=text]:focus, input[type=password]:focus, input[type=number]:focus {
+     background-color: #171d26;
      border: 1px solid #9eca4e
  }
  .form .formItemContainer {
@@ -283,12 +285,12 @@
  }
 
 div input:placeholder-shown {
-     background-color:#f4f4f4     
- }
+     background-color:#131821     
+}
 
 
 input:focus+label {
-     background-color: #FFF;
+     background-color: #0f1115;
  }
 
  input[type=text]:placeholder-shown, input[type=password]:placeholder-shown, input[type=number]:placeholder-shown {
@@ -309,8 +311,8 @@ input:focus+label {
      display: block;
      font-family: Arial;
      font-size: 10px;
-     background-color: #ffffff;
-     color: #6994d0;
+     background-color: #0f1115;
+     color: #8db3e8;
      padding-left: 4px;
      padding-right: 4px;
      /* border-right: 1px solid #DDD; */
@@ -327,37 +329,39 @@ input:focus+label {
      /* border-top-right-radius: 13px; */
      /* border-bottom-right-radius: 13px; */
  }
- .botao, input[type=button].botao {
+.botao, input[type=button].botao {
      width: 100%;
-     border-left: 1px solid #F6F6F6;
-     border-right: 1px solid #F6F6F6;
-     border-bottom: 1px solid #F6F6F6;
+     border-left: 1px solid #222936;
+     border-right: 1px solid #222936;
+     border-bottom: 1px solid #222936;
      height: 40px;
      padding: 6px;
-     background-color: #6994d0;
+     background-color: #4f79b2;
      color: #FFFFFF;
      display: inline-block;
      cursor: pointer;
      margin-right: 10px;
-     transition: box-shadow 0.6s, color 0.6s, background-color 1s;
+     transition: transform 180ms ease, box-shadow 220ms ease, color 220ms ease, background-color 220ms ease, filter 220ms ease;
      border: none;
      font-size: 1.1em;
      margin-bottom: 1px;
      border-radius: 3px;
  }
- .botao:hover, input[type=button].botao:hover {
-     box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2);
-     background-color: #5982D3;
-     color: #DDD;
+.botao:hover, input[type=button].botao:hover {
+     box-shadow: 0 12px 28px 0 rgba(0, 0, 0, 0.32);
+     background-color: #5d8bcb;
+     color: #f4f7fb;
+     transform: translateY(-2px);
+     filter: brightness(1.04);
  }
- .checkbox {
+.checkbox {
      /* margin-top: 15px; */
      margin-bottom: 15px;
      text-align: center;
-     background-color: #F4F4F4;
+     background-color: #151a21;
      padding: 5.5px;
      border-radius: 4px;
-     border: 1px solid #cdd3dc;
+     border: 1px solid #313845;
  }
  .check_ph {
      text-align: center;
@@ -388,6 +392,7 @@ input:focus+label {
      /* border-radius: 3px; */
      font-size: 13px;
      border-radius: 4px;
+     transition: transform 160ms ease, background-color 180ms ease, box-shadow 180ms ease, color 180ms ease;
  }
 
 .checkbox li.selected span{
@@ -410,6 +415,8 @@ input:focus+label {
  .checkbox li:hover {
      background-color: #555;
      color: #FFF;
+     transform: translateY(-1px);
+     box-shadow: 0 8px 18px rgba(0, 0, 0, 0.22);
  }
  ul.tab {
      margin-bottom: 10px;
@@ -425,17 +432,20 @@ input:focus+label {
      background-color: #9eca4e;
      color: #FFF;
  }
- ul.tab li a {
+ul.tab li a {
      display: block;
      min-width: 79px;
      padding: 5px;
-     background-color: #FFF;
+     background-color: #151a21;
      text-align: center;
      color: #7EAA3E;
+     transition: transform 180ms ease, background-color 180ms ease, color 180ms ease, box-shadow 180ms ease;
  }
  ul.tab li a:hover {
      background-color: #9eca4e;
      color: #FFF;
+     transform: translateY(-1px);
+     box-shadow: 0 8px 18px rgba(0, 0, 0, 0.2);
  }
  /*
 Dropdown Menu
@@ -444,9 +454,9 @@ Dropdown Menu
  .dropdown {
      position: absolute;
  }
- .dropdown_selecionado {
-     background-color: #EEE;
-     color: #000;
+.dropdown_selecionado {
+     background-color: #273140;
+     color: #edf2f8;
  }
  .janela {
      position: absolute;
@@ -467,13 +477,13 @@ Dropdown Menu
  h1 {
      font-size: 42px;
      line-height: 50px;
-     color: #4285bf;
+     color: #eaeaea;
      /* background-color: #FFF; */
  }
- h2 {
+h2 {
      font-size: 1.3em;
      line-height: 1em;
-     color: #888;
+     color: #9ca6b2;
      font-weight: 700;
  }
  ul li {
@@ -554,11 +564,11 @@ Inputbox
 
 */
 
- .inputbox {
+.inputbox {
      position: fixed;
-     background-color: #FFF;
+     background-color: #151a21;
      font-family: Arial;
-     color: #777;
+     color: #9ca6b2;
      transition: opacity 400ms;
      background-repeat: no-repeat;
      background-position-x: 1px;
@@ -566,15 +576,15 @@ Inputbox
      max-width: 100%;
      padding: 40px;
  }
- .inputbox h1 {
+.inputbox h1 {
      font-weight: bold;
      font-size: 2.2em;
      margin-bottom: 10px;
-     color: #848484;
+     color: #edf2f8;
  }
- .inputbox p {
+.inputbox p {
      margin-bottom: 20px;
-     color: #bbbbbb;
+     color: #9ca6b2;
  }
  .inputbox .form {
      border: none;
@@ -602,20 +612,21 @@ Inputbox
      height: 250px;
  }
 
- .textLink a {
+.textLink a {
      position: relative;
      line-height: 27px;
      display: block;
      padding: 16px 18px 16px 24px;
-     color: #34475b;
+     color: #edf2f8;
      font-weight: bold;
-     border: 1px solid rgba(75, 88, 66, 0.08);
+     border: 1px solid #262d37;
      border-radius: 10px;
      margin-bottom: 8px;
      font-size: 20px;
-     background-color: #FFF;
-     box-shadow: none;
- }
+     background-color: #151a21;
+     box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+     transition: transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease, background-color 220ms ease, color 220ms ease;
+}
 
  .textLink a:before {
      position: absolute;
@@ -625,44 +636,61 @@ Inputbox
      bottom: 7px;
      width: 3px;
      border-radius: 5px;
-     background-color: #d4a5e0;
+     background-color: #7bb7ff;
+     transition: width 220ms ease, background-color 220ms ease, opacity 220ms ease;
  }
- .textLink a div {
+.textLink a div {
      margin-top: 6px;
      font-size: 15px;
      line-height: 22px;
-     color: #707780;
+     color: #9ca6b2;
      font-weight: 400;
+     transition: color 220ms ease, transform 220ms ease;
  }
- .textLink a:hover {
-     background-color: #f4f4f4;
-     color: #2d4a68;
-     transform: translateX(4px);
+.textLink a:hover {
+     background-color: #1b212a;
+     color: #ffffff;
+     transform: translateX(6px);
+     border-color: #3d4f65;
+     box-shadow: 0 14px 28px rgba(0, 0, 0, 0.28);
  }
- .textLink a:hover div {
-     color: #4f5d68;
- }
+.textLink a:hover:before {
+     width: 6px;
+     background-color: #9eca4e;
+}
+.textLink a:hover div {
+     color: #c8d2de;
+     transform: translateX(1px);
+}
  .textLink a:last-child {
      margin-bottom: 0;
  }
  .c50:nth-child(2) {
      margin-right: 0;
  }
- .modulo:first-child .legenda_modulo {
-     background-color: #f1f1f1;
+.modulo:first-child .legenda_modulo {
+     background-color: #0f1115;
  }
- .link_container {
-     transition: all 0.4s;
-     box-shadow: 0px 3px 20px 0 rgba(0, 0, 0, 0.075);
+.link_container {
+     transition: transform 260ms ease, box-shadow 260ms ease, filter 260ms ease;
+     box-shadow: 0px 10px 30px 0 rgba(0, 0, 0, 0.28);
      border-bottom-right-radius: 10px;
      border-bottom-left-radius: 10px;
  }
- .modulo .link_container:hover, .ultimos_artigos:hover {
-     box-shadow: 0 5px 13px 0 rgba(0, 0, 0, 0.2);
+.modulo .link_container:hover, .ultimos_artigos:hover {
+     box-shadow: 0 10px 28px 0 rgba(0, 0, 0, 0.45);
+     transform: translateY(-6px);
+     filter: brightness(1.03);
  }
- .modulo a:hover .link_container .legenda div, .ultimos_artigos a:hover .legenda div {
-     color: #000;
+.modulo a:hover .link_container .legenda div, .ultimos_artigos a:hover .legenda div {
+     color: #ffffff;
  }
+.modulo a:hover .entry-image img, .ultimos_artigos a:hover .entry-image img {
+     transform: scale(1.035);
+}
+.modulo a:hover .duracao, .ultimos_artigos a:hover .duracao {
+     background-color: rgba(20, 29, 38, 0.88);
+}
  .c50 .legenda {
      padding: 27px;
      padding-top: 24px;
@@ -706,40 +734,40 @@ Inputbox
      line-height: 21px;
      font-size: 14px;
  }
- .legenda div:first-child {
-     color: #484848;
+.legenda div:first-child {
+     color: #edf2f8;
  }
- .legenda div:nth-child(2) {
-     color: #888;
+.legenda div:nth-child(2) {
+     color: #9ca6b2;
  }
- .legenda {
+.legenda {
      width: 100%;
      margin-top: 0px;
-     background-color: #ffffff;
+     background-color: #151a21;
      overflow: hidden;
      position: relative;
      border-bottom-right-radius: 10px;
      border-bottom-left-radius: 10px;
  }
- .legenda:before {
+.legenda:before {
      content: '';
      width: 100%;
      height: 21px;
      position: absolute;
      left: 0;
      top: calc(100% - 21px);
-     background: linear-gradient(rgba(255, 255, 255, 0), rgba(255, 255, 255, 1));
+     background: linear-gradient(rgba(21, 26, 33, 0), rgba(21, 26, 33, 1));
  }
- .ultimos_artigos .legenda:before {
-     background: linear-gradient(rgba(241, 241, 241, 0), rgba(241, 241, 241, 1));
+.ultimos_artigos .legenda:before {
+     background: linear-gradient(rgba(26, 32, 40, 0), rgba(26, 32, 40, 1));
  }
- .ultimos_artigos .legenda {
-     background-color: #F1F1F1;
+.ultimos_artigos .legenda {
+     background-color: #1a2028;
  }
  .ultimos_artigos:first-child {
      margin-bottom: 20px;
  }
- .img_fit {
+.img_fit {
      width: 100%;
      position: absolute;
      margin: auto;
@@ -747,14 +775,15 @@ Inputbox
      left: 0;
      right: 0;
      bottom: 0;
- }
- .entry-image {
+     transition: transform 320ms ease, filter 320ms ease;
+}
+.entry-image {
      overflow: hidden;
      width: 100%;
      border-bottom: none;
      position: relative;
      padding-top: 54.95%;
-     background-color: #d8d8d8;
+     background-color: #252c35;
      vertical-align: middle;
      border-top-left-radius: 10px;
      border-top-right-radius: 10px;
@@ -762,7 +791,7 @@ Inputbox
 
  .folha_de_papel {
 
-     background-color: #FFF;
+     background-color: #151a21;
  }
 
  .video_texto {
@@ -806,10 +835,10 @@ Inputbox
      margin-bottom: 20px;
      display: none;
  }
- .legenda_modulo {
+.legenda_modulo {
      position: absolute;
      left: 3px;
-     color: #afafaf;
+     color: #96a0ad;
      transform: rotate(-90deg);
      transform-origin: left top 0;
      bottom: -6px;
@@ -827,9 +856,9 @@ Inputbox
      color: #ccc;
      font-size: 11px;
  }
- #content .white, .white {
-     background-color: #FFF;
-     color: #757575;
+#content .white, .white {
+     background-color: #151a21;
+     color: #96a0ad;
  }
  .add_arranhaceu {
      position: absolute;
@@ -847,22 +876,22 @@ Inputbox
      color: #ccc;
      font-size: 11px;
  }
- .add_article {
+.add_article {
      padding-bottom: 30px;
      padding-top: 30px;
      position: relative;
-     border-top: 1px solid #CCC;
+     border-top: 1px solid #2a313b;
      font-size: 19px;
      line-height: 26.88px;
      margin-top: 40px;
  }
- .add_article:before {
+.add_article:before {
      content: "continua depois da publicidade";
      top: -24px;
      left: calc(50% - 97px);
-     color: #989898;
+     color: #96a0ad;
      font-size: 12px;
-     background-color: #FFF;
+     background-color: #273140;
      padding: 10px;
      position: absolute;
      height: 26px;
@@ -879,7 +908,7 @@ Inputbox
  .tags ul {
      /* background-color: #f1f1f1; */
  }
- .tags ul li a {
+.tags ul li a {
      padding: 11px;
      height: unset;
      line-height: unset;
@@ -887,20 +916,23 @@ Inputbox
      display: inline-block;
      width: 100%;
      vertical-align: bottom;
-     color: #727272;
-     background-color: #FFF;
+     color: #9ca6b2;
+     background-color: #151a21;
+     transition: transform 180ms ease, background-color 180ms ease, color 180ms ease, box-shadow 180ms ease;
  }
- .tags ul li a:hover {
-     background-color: #424242;
+.tags ul li a:hover {
+     background-color: #273140;
      color: #FFF;
+     transform: translateY(-2px);
+     box-shadow: 0 10px 22px rgba(0, 0, 0, 0.22);
  }
  .tags ul li {
      display: inline-block;
  }
- .fundo_claro {
-     background-color: #fff;
+.fundo_claro {
+     background-color: #151a21;
      margin-top: 20px;
-     box-shadow: 0 1px 2px rgba(0, 0, 0, .1);
+     box-shadow: 0 1px 2px rgba(0, 0, 0, .35);
  }
  .lista {
      font-size: 17px;
@@ -926,9 +958,12 @@ Inputbox
      color: #FFF;
      font-size: 14px;
      border-radius: 3px;
+     transition: transform 180ms ease, background-color 180ms ease, box-shadow 180ms ease;
  }
  .file:hover, input[type=button]:hover {
      background-color: #6674a7;
+     transform: translateY(-1px);
+     box-shadow: 0 10px 22px rgba(0, 0, 0, 0.24);
  }
  .modulo:first-child.marginBm20 {
      margin-bottom: -20px;
@@ -955,21 +990,21 @@ Inputbox
      margin: auto;
      width: 300px;
  }
- .fb_comentarios {
-     background-color: #FFF;
+.fb_comentarios {
+     background-color: #151a21;
      margin-top: 20px;
-     box-shadow: 0 1px 2px rgba(0, 0, 0, .1);
+     box-shadow: 0 1px 2px rgba(0, 0, 0, .35);
  }
  .inlineblock {
      display: inline-block;
      width: 100%;
  }
- .fixed_left {
+.fixed_left {
      position: fixed;
      top: 0;
      height: 100%;
      width: calc(100% - 1461px);
-     background-color: #eaeaea;
+     background-color: #0d1117;
      max-width: 459px;
      padding: 30px;
      left: 0px;
@@ -986,11 +1021,12 @@ Inputbox
  .ultimos_artigos {
      position: relative;
  }
- .ultimos_artigos:hover {
-     background-color: #EEE;
+.ultimos_artigos:hover {
+     background-color: #1b212a;
+     transform: translateY(-4px);
  }
- .ultimos_artigos:hover a span:nth-child(2) {
-     color: #000;
+.ultimos_artigos:hover a span:nth-child(2) {
+     color: #ffffff;
  }
  .ultimos_artigos a {
      display: block;
@@ -1008,7 +1044,7 @@ Inputbox
      margin-bottom: 20px;     
  }
 
- .sidebartags ul li a {
+.sidebartags ul li a {
      padding-left: 14px;
      padding-right: 14px;
      padding-top: 10px;
@@ -1019,32 +1055,38 @@ Inputbox
      display: inline-block;
      width: 100%;
      vertical-align: bottom;
-     color: #727272;
+     color: #9ca6b2;
      margin-bottom: 1px;
+     transition: transform 180ms ease, background-color 180ms ease, color 180ms ease, padding-left 180ms ease, box-shadow 180ms ease;
  }
- .sidebartags ul li a:hover {
-     background-color: #424242;
+.sidebartags ul li a:hover {
+     background-color: #273140;
      color: #FFF;
+     transform: translateX(4px);
+     padding-left: 18px;
+     box-shadow: 0 8px 18px rgba(0, 0, 0, 0.18);
  }
- .pagebar a {
-     color: #0366d6;
+.pagebar a {
+     color: #8ab4ff;
+     transition: color 180ms ease, text-shadow 180ms ease;
  }
- .pagebar a:hover {
-     color: #333;
+.pagebar a:hover {
+     color: #edf2f8;
+     text-shadow: 0 0 18px rgba(138, 180, 255, 0.3);
  }
  .sidebartags ul li {
      display: inline-block;
      width: calc(50% - 1px);
      margin-left: 1px;
  }
- #add_bar {
+#add_bar {
      width: 100%;
-     background-color: #fff;
+     background-color: #151a21;
      padding: 0;
  }
- #keywords span {
+#keywords span {
      display: inline-block;
-     background-color: #EEE;
+     background-color: #20262f;
      padding: 3px;
      padding-left: 8px;
      padding-right: 8px;
@@ -1054,51 +1096,54 @@ Inputbox
      margin-bottom: 2px;
      margin-top: 2px;
      cursor: pointer;
+     transition: transform 160ms ease, background-color 180ms ease, color 180ms ease, box-shadow 180ms ease;
  }
- #keywords span:hover {
-     background-color: #989898;
+#keywords span:hover {
+     background-color: #3c4654;
      color: #FFF;
+     transform: translateY(-1px);
+     box-shadow: 0 8px 18px rgba(0, 0, 0, 0.2);
  }
- #arranhaceu {
-     background-color: #ececec;
+#arranhaceu {
+     background-color: #11161d;
      width: 300px;
      bottom: 0px;
      margin: auto;
  }
- .divisor {
-     color: #757575;
-     background-color: #fff;
+.divisor {
+     color: #96a0ad;
+     background-color: #151a21;
      padding: 20px;
      margin-bottom: 20px;
-     box-shadow: 0px 3px 20px 0 rgba(0, 0, 0, 0.075);
+     box-shadow: 0px 10px 30px 0 rgba(0, 0, 0, 0.28);
      border-bottom-left-radius: 10px;
      border-bottom-right-radius: 10px;
      border-top-left-radius: 10px;
      border-top-right-radius: 10px;
  }
- .divisor_fixo {
-     color: #757575;
-     background-color: #fff;
+.divisor_fixo {
+     color: #96a0ad;
+     background-color: #151a21;
      padding: 20px;
      margin-bottom: 20px;
-     box-shadow: 0px 3px 20px 0 rgba(0, 0, 0, 0.075);
+     box-shadow: 0px 10px 30px 0 rgba(0, 0, 0, 0.28);
  }
  .sticky20 {
      position: sticky;
      top: 20px;
  }
- .titulo_divisor {
+.titulo_divisor {
      padding: 10px;
-     background-color: #7592ab;
+     background-color: #2f566e;
      text-align: center;
      color: #FFF;
      font-size: 18px;
  }
- .fundo_claro+div.padding50 {
-     border-right: 1px solid #EEE;
+.fundo_claro+div.padding50 {
+     border-right: 1px solid #262d37;
  }
- .fundo_claro .link_container {
-     border: 1px solid #F1F1F1;
+.fundo_claro .link_container {
+     border: 1px solid #262d37;
  }
  .noimage {
      position: absolute;
@@ -1122,9 +1167,9 @@ Inputbox
  .c50 .noimage div {
      font-size: 30px;
  }
- .interesse {
+.interesse {
      padding: 5px;
-     color: #888;
+     color: #96a0ad;
      font-size: 18px;
      margin-bottom: 20px;
  }
@@ -1147,17 +1192,20 @@ Inputbox
  .centered {
      text-align: center;
  }
- .searchbox {
-     color: #757575;
-     background-color: #e9e9e9;
+.searchbox {
+     color: #b6c0cb;
+     background-color: #151a21;
      padding: 16px;
      margin-bottom: 20px;
      display: block;
      border-radius: 10px;
+     transition: transform 180ms ease, background-color 180ms ease, color 180ms ease, box-shadow 180ms ease;
  }
- .searchbox:hover {
-     background-color: #000;
+.searchbox:hover {
+     background-color: #273140;
      color: #FFF;
+     transform: translateY(-2px);
+     box-shadow: 0 12px 24px rgba(0, 0, 0, 0.24);
  }
  .searchbox:before {
      font-family: icomoon;
@@ -1374,9 +1422,9 @@ Inputbox
      div.padding50 .link_container {
          border: none;
      }
-     div.padding50 .modulo {
-         background-color: #F1F1F1;
-         border: 1px solid #F1F1F1;
+    div.padding50 .modulo {
+         background-color: #11161d;
+         border: 1px solid #11161d;
      }
      .interesse {
          margin-bottom: 20px;
@@ -1404,9 +1452,9 @@ Inputbox
      .c50 .legenda div:first-child {
          font-size: 2.5vw;
      }
-     .searchbox {
+    .searchbox {
          color: #ffffff;
-         background-color: #828282;
+         background-color: #1b212a;
          padding: 11px;
          margin-bottom: 0px;
          box-shadow: none;
@@ -1416,13 +1464,13 @@ Inputbox
      #flex_container {
          padding-top: 0;
      }
-     body {
-         background-color: #FFF;
+    body {
+         background-color: #0f1115;
      }
-     .sidebartags ul li a {
-         background-color: #FFF;
+    .sidebartags ul li a {
+         background-color: #0f1115;
          padding: 14px;
-         color: #777;
+         color: #9ca6b2;
      }
      .topo_content {
          text-align: center;
@@ -1443,8 +1491,8 @@ Inputbox
          /* border-top: 4px solid #dcdcdc; */
          /* border-bottom: 1px solid #CCC; */
      }
-     .tags ul li a {
-         background-color: #EEE;
+    .tags ul li a {
+         background-color: #171d26;
          /* color: #848484; */
      }
      .tags ul li {
@@ -1455,8 +1503,8 @@ Inputbox
      .tags ul li:nth-child(3n+1) {
          margin-left: 0px;
      }
-     .tags ul {
-         background-color: #fff;
+    .tags ul {
+         background-color: #0f1115;
      }
      #add_bar {
          margin: 0;
@@ -1465,8 +1513,8 @@ Inputbox
          position: relative;
          top: 0;
      }
-     .titulo_divisor {
-         background-color: #777676;
+    .titulo_divisor {
+         background-color: #2a3240;
          margin: 0;
      }
      .divisor {
@@ -1490,11 +1538,11 @@ Inputbox
          padding: 0;
          margin: 0;
      }
-     .sidebartags {
+    .sidebartags {
          margin: 0;
          /* margin-top: -20px; */
          border-top: none;
-         background-color: #EEE;
+         background-color: #11161d;
      }
      #ultimos_container {
          padding: 0;
@@ -1534,8 +1582,8 @@ Inputbox
      .pagebar a {
          /* color: #CCC; */
      }
-     .modulo {
-         background-color: #FFF;
+    .modulo {
+         background-color: #0f1115;
      }
  }
  @media screen and (max-width:850px) {
@@ -1587,11 +1635,11 @@ Inputbox
      div.padding50 {
          padding: 28px;         
      }
-     div.padding50 .modulo {
+    div.padding50 .modulo {
          margin-left: -20px;
          margin-right: -20px;
-         background-color: #F1F1F1;
-         border-bottom: 1px solid #F1F1F1;
+         background-color: #11161d;
+         border-bottom: 1px solid #11161d;
      }
      .c25:nth-child(3n+1) {
          margin-right: 1px;
@@ -1641,9 +1689,9 @@ Inputbox
          padding: 0;
          text-align: center;
      }
-     div.padding50 .modulo {
+    div.padding50 .modulo {
          border: none;
-         border-bottom: 1px solid #F1F1F1;
+         border-bottom: 1px solid #11161d;
      }
      .noimage div {
          font-size: 17px;
@@ -1653,7 +1701,7 @@ Inputbox
          text-align: center;
      }
  }
- @media print {
+@media print {
      .topo_content {
          padding-left: 30px;
      }
