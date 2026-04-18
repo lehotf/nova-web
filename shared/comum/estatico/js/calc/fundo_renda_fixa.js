@@ -1,8 +1,6 @@
 (function () {
     var WIDGET_ID = 'calc-renda-fixa-widget';
     var RESULT_ID = 'calc-renda-fixa-resultado';
-    var SEND_SCRIPT_ID = 'calc-renda-fixa-send';
-    var CSS_ID = 'calc-renda-fixa-css';
     var ENDPOINT_ACTION = 'comum/calc/fundo_renda_fixa';
     var currencyFormatter = new Intl.NumberFormat('pt-BR', {
         style: 'currency',
@@ -27,53 +25,12 @@
             return;
         }
 
-        ensureAssets(function () {
-            var articleBody = document.querySelector('.div_corpo_artigo');
-            if (!articleBody) {
-                return;
-            }
-
-            renderCalculator(articleBody);
-        });
-    }
-
-    function ensureAssets(callback) {
-        ensureCss(function () {
-            ensureSend(callback);
-        });
-    }
-
-    function ensureCss(callback) {
-        if (document.getElementById(CSS_ID)) {
-            callback();
+        var articleBody = document.querySelector('.div_corpo_artigo');
+        if (!articleBody) {
             return;
         }
 
-        var link = document.createElement('link');
-        link.id = CSS_ID;
-        link.rel = 'stylesheet';
-        link.href = '/comum/estatico/css/calc.css';
-        link.onload = callback;
-        document.head.appendChild(link);
-    }
-
-    function ensureSend(callback) {
-        if (typeof window.send === 'function') {
-            callback();
-            return;
-        }
-
-        var existing = document.getElementById(SEND_SCRIPT_ID);
-        if (existing) {
-            existing.addEventListener('load', callback, { once: true });
-            return;
-        }
-
-        var script = document.createElement('script');
-        script.id = SEND_SCRIPT_ID;
-        script.src = '/comum/estatico/js/send.js';
-        script.onload = callback;
-        document.head.appendChild(script);
+        renderCalculator(articleBody);
     }
 
     function renderCalculator(articleBody) {

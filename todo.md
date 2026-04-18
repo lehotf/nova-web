@@ -22,3 +22,8 @@ Arquivo analisado: `/home/leo/Projetos/Web/Htdocs/eupenso.com/config/amp.html`
 - amp-ad: `https://amp.dev/documentation/components/amp-ad/`
 - Style and layout: `https://amp.dev/documentation/guides-and-tutorials/develop/style_and_layout/`
 - Google Analytics 4: `https://support.google.com/analytics/answer/10089681?hl=en`
+
+
+# Evitar múltiplos envios de solicitação de cálculo
+
+Travar com o Observador/Guardião

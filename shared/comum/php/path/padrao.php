@@ -56,6 +56,8 @@ if ($dados) {
 
     if ($montador->script) {
         $dados_preparados['js'] = $montador->script;
+        $dados_preparados['js'][] = 'send';
+        $dados_preparados['css'] = ['comum/calc'];
     }
 
     if ($dados['amp'] == 0) {
