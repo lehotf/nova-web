@@ -10,14 +10,7 @@ $o = $c->observador;
 
 const ALTERA_TUDO = false;
 
-$alterou_JS_root  = false;
-$alterou_CSS_root = false;
-$modificado       = '';
-
-$termo = [
-    'css_root' => ['comum/fixo', 'comum/artigo'],
-    'js_root' => [],
-];
+$modificado = '';
 
 function registraModificado($file)
 {
@@ -34,7 +27,7 @@ function registraModificado($file)
 
 function save($file, $origem)
 {
-    global $termo, $alterou_JS_root, $alterou_CSS_root;
+    global $modificado;
 
     $tipo    = pathinfo($file, PATHINFO_EXTENSION);
     $destino = pathExtendedToCache($origem . '/' . $file, $tipo);
@@ -42,16 +35,10 @@ function save($file, $origem)
 
     switch ($tipo) {
         case 'js':
-            if (isset($termo['js_root']) && in_array($origem . "/$file", $termo['js_root'], true)) {
-                $alterou_JS_root = true;
-            }
             $conteudo = compactaJS($origem . "/$file");
             break;
 
         case 'css':
-            if (isset($termo['css_root']) && in_array($origem . "/$file", $termo['css_root'], true)) {
-                $alterou_CSS_root = true;
-            }
             $conteudo = compactaCSS($origem . "/$file");
             break;
 
@@ -94,57 +81,15 @@ function verifica($dir)
     }
 }
 
-function monta_path($tipo)
-{
-    global $termo;
 
-    if (isset($termo[$tipo . '_root'])) {
-        foreach ($termo[$tipo . '_root'] as $pos => $arquivo) {
-            $termo[$tipo . '_root'][$pos] = $_SERVER['DOCUMENT_ROOT'] . minPathExtend($arquivo, $tipo);
-        }
-    }
-}
-
-function monta_principal($tipo)
-{
-    global $termo;
-
-    $conteudo = '';
-    foreach ($termo[$tipo . '_root'] as $arquivo) {
-        $destino = pathExtendedToCache($arquivo);
-        if ($conteudo != '') {
-            $conteudo = $conteudo . "\n";
-        }
-
-        $conteudo = $conteudo . file_get_contents($destino);
-    }
-    return $conteudo;
-}
-
-monta_path('js');
-monta_path('css');
-
-verifica($_SERVER['DOCUMENT_ROOT'] . '/config');
 verifica($_SERVER['DOCUMENT_ROOT'] . '/comum/estatico/js');
-verifica($_SERVER['DOCUMENT_ROOT'] . '/site/estatico/js');
 verifica($_SERVER['DOCUMENT_ROOT'] . '/comum/estatico/css');
-verifica($_SERVER['DOCUMENT_ROOT'] . '/site/estatico/css');
 
 if ($modificado != '') {
     $modificado = $modificado . ']';
     $msg        = "Arquivo(s) $modificado compactado(s).";
 } else {
     $msg = "Nenhum arquivo precisou ser compactado.";
-}
-
-if ($alterou_JS_root && !empty($termo['js_root'])) {
-    file_put_contents($_SERVER['DOCUMENT_ROOT'] . '/cache/js/principal.js', monta_principal('js'));
-    $msg = $msg . " RECRIADO: principal.js.";
-}
-
-if ($alterou_CSS_root && !empty($termo['css_root'])) {
-    file_put_contents($_SERVER['DOCUMENT_ROOT'] . '/cache/css/principal.css', monta_principal('css'));
-    $msg = $msg . " RECRIADO: principal.css.";
 }
 
 $o->envia($msg, 'ok');

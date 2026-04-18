@@ -123,10 +123,8 @@ class ArtigosApp extends window.BaseModule {
         this.thumbCropArea?.addEventListener('mouseup', () => this.encerrarArrasteThumb());
         this.thumbCropArea?.addEventListener('mouseleave', () => this.encerrarArrasteThumb());
 
-        this.artigoTitulo?.addEventListener('input', () => {
-            if (!this.artigoAtual?.id) {
-                this.artigoPath.value = this.gerarSlug(this.artigoTitulo.value);
-            }
+        this.artigoTitulo?.addEventListener('keyup', () => {
+            this.artigoPath.value = this.gerarSlug(this.artigoTitulo.value);
         });
         this.artigoDuracao?.addEventListener('input', () => {
             this.artigoDuracao.value = this.aplicarMascaraDuracao(this.artigoDuracao.value);
