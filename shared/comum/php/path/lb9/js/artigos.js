@@ -422,7 +422,7 @@ class ArtigosApp extends window.BaseModule {
         this.flagPublicado.checked = false;
         this.flagUltimos.checked = false;
         this.flagRoot.checked = false;
-        this.flagSearch.checked = true;
+        this.flagSearch.checked = false;
         this.flagAmp.checked = false;
 
         this.btnExcluir?.classList.add('hidden');
