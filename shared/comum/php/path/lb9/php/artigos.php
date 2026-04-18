@@ -12,6 +12,10 @@
  */
 
 header('Content-Type: application/json; charset=utf-8');
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+header('Cache-Control: post-check=0, pre-check=0', false);
+header('Pragma: no-cache');
+header('Expires: Thu, 01 Jan 1970 00:00:00 GMT');
 
 $docRoot = $_SERVER['DOCUMENT_ROOT'] ?: dirname(__DIR__, 6);
 $autoload = $docRoot . '/comum/php/autoload.php';
@@ -47,6 +51,12 @@ try {
         case 'obter':
             obter($db);
             break;
+        case 'listar_tags':
+            listarTags($db);
+            break;
+        case 'inserir_tag':
+            inserirTag($db, $data);
+            break;
         case 'inserir':
             inserir($db, $data);
             break;
@@ -61,12 +71,6 @@ try {
             break;
         case 'upload_imagem_artigo':
             uploadImagemArtigo($data);
-            break;
-        case 'listar_destaques':
-            listarDestaques($db);
-            break;
-        case 'salvar_destaques':
-            salvarDestaques($db, $data);
             break;
         default:
             echo json_encode(['sucesso' => false, 'mensagem' => 'Ação inválida.']);
@@ -126,14 +130,19 @@ function obter(database $db): void
         return;
     }
 
-    $sql = "SELECT id, titulo, thumb_titulo, subtitulo,
+    $sql = "SELECT links.id, links.titulo, links.thumb_titulo, links.subtitulo,
                    CASE WHEN LEFT(path, 1) = '/' THEN path ELSE CONCAT('/', path) END AS path,
-                   keywords,
-                   artigo AS conteudo,
-                   thumb, duracao,
-                   publicado, ultimos, root, search, amp, datePublished
+                   links.keywords,
+                   links.artigo AS conteudo,
+                   links.thumb, links.duracao,
+                   links.publicado, links.ultimos, links.root, links.search, links.amp, links.datePublished,
+                   MAX(links_destaques.id) AS destaque_id
             FROM links
-            WHERE id = ?
+            LEFT JOIN links_destaques ON links_destaques.linkID = links.id
+            WHERE links.id = ?
+            GROUP BY links.id, links.titulo, links.thumb_titulo, links.subtitulo, links.path,
+                     links.keywords, links.artigo, links.thumb, links.duracao,
+                     links.publicado, links.ultimos, links.root, links.search, links.amp, links.datePublished
             LIMIT 1";
     $res = $db->query($sql, 'i', [$id]);
 
@@ -142,7 +151,64 @@ function obter(database $db): void
         return;
     }
 
+    $artigo['tag_ids'] = obterTagIdsArtigo($db, (int) $artigo['id']);
+
     echo json_encode(['sucesso' => true, 'artigo' => $artigo]);
+}
+
+function listarTags(database $db): void
+{
+    $res = $db->query("SELECT id, nome, path, destaque FROM tags ORDER BY nome ASC");
+    $tags = [];
+
+    if ($res instanceof mysqli_result) {
+        while ($row = $res->fetch_assoc()) {
+            $tags[] = $row;
+        }
+    }
+
+    echo json_encode(['sucesso' => true, 'tags' => $tags]);
+}
+
+function inserirTag(database $db, array $data): void
+{
+    $nome = trim((string) ($data['nome'] ?? ''));
+    if ($nome === '') {
+        echo json_encode(['sucesso' => false, 'mensagem' => 'Informe o nome da tag.']);
+        return;
+    }
+
+    $nome = mb_substr($nome, 0, 25);
+    $path = mb_substr(url_amigavel($nome), 0, 25);
+
+    if ($path === '') {
+        echo json_encode(['sucesso' => false, 'mensagem' => 'Não foi possível gerar o path da tag.']);
+        return;
+    }
+
+    $resExistente = $db->query("SELECT id, nome, path, destaque FROM tags WHERE path = ? LIMIT 1", 's', [$path]);
+    if ($resExistente instanceof mysqli_result && ($tag = $resExistente->fetch_assoc())) {
+        echo json_encode([
+            'sucesso' => true,
+            'existente' => true,
+            'tag' => $tag
+        ]);
+        return;
+    }
+
+    $db->query("INSERT INTO tags (nome, path, destaque) VALUES (?, ?, 0)", 'ss', [$nome, $path]);
+    $id = (int) $db->link->insert_id;
+
+    echo json_encode([
+        'sucesso' => true,
+        'existente' => false,
+        'tag' => [
+            'id' => $id,
+            'nome' => $nome,
+            'path' => $path,
+            'destaque' => 0
+        ]
+    ]);
 }
 
 function inserir(database $db, array $data): void
@@ -160,6 +226,9 @@ function inserir(database $db, array $data): void
     $root = (int) ($data['root'] ?? 0);
     $search = (int) ($data['search'] ?? 0);
     $amp = (int) ($data['amp'] ?? 0);
+    $tagsCadastrar = normalizarIdsTag($data['tags_a_cadastrar'] ?? []);
+    $tagsExcluir = normalizarIdsTag($data['tags_a_excluir'] ?? []);
+    $destaque = normalizarDestaque($data['destaque'] ?? null);
 
     if ($titulo === '') {
         echo json_encode(['sucesso' => false, 'mensagem' => 'Título obrigatório.']);
@@ -174,62 +243,62 @@ function inserir(database $db, array $data): void
                  ?, ?, ?, NOW(), 0, ?,
                  ?, ?, ?, ?, ?)";
 
-    $db->query($sql, 'ssssssssiiiii', [
-        $titulo, $thumbTitulo,
-        $subtitulo, $path,
-        $keywords, $conteudo, $dataPub, $duracao,
-        $publicado, $ultimos, $root, $search, $amp
-    ]);
+    $db->link->begin_transaction();
 
-    $novoId = $db->link->insert_id;
+    try {
+        $db->query($sql, 'ssssssssiiiii', [
+            $titulo, $thumbTitulo,
+            $subtitulo, $path,
+            $keywords, $conteudo, $dataPub, $duracao,
+            $publicado, $ultimos, $root, $search, $amp
+        ]);
+
+        $novoId = $db->link->insert_id;
+        aplicarMudancasTagsArtigo($db, $novoId, $tagsCadastrar, $tagsExcluir);
+        aplicarDestaqueArtigo($db, $novoId, $destaque);
+        $db->link->commit();
+    } catch (Throwable $e) {
+        $db->link->rollback();
+        throw $e;
+    }
+
     echo json_encode(['sucesso' => true, 'id' => $novoId]);
 }
 
 function atualizar(database $db, array $data): void
 {
     $id = (int) ($data['id'] ?? 0);
-    $titulo = trim($data['titulo'] ?? '');
-    $thumbTitulo = trim($data['thumb_titulo'] ?? '');
-    $subtitulo = trim($data['subtitulo'] ?? '');
-    $path = normalizePath($data['path'] ?? '');
-    $keywords = trim($data['keywords'] ?? '');
-    $duracao = validarDuracao($data['duracao'] ?? '');
-    $conteudo = $data['conteudo'] ?? '';
-    $dataPub = validarData($data['data'] ?? '');
-    $publicado = (int) ($data['publicado'] ?? 0);
-    $ultimos = (int) ($data['ultimos'] ?? 0);
-    $root = (int) ($data['root'] ?? 0);
-    $search = (int) ($data['search'] ?? 0);
-    $amp = (int) ($data['amp'] ?? 0);
+    $tagsCadastrar = normalizarIdsTag($data['tags_a_cadastrar'] ?? []);
+    $tagsExcluir = normalizarIdsTag($data['tags_a_excluir'] ?? []);
+    $destaque = normalizarDestaque($data['destaque'] ?? null);
 
-    if (!$id || $titulo === '') {
-        echo json_encode(['sucesso' => false, 'mensagem' => 'ID e título são obrigatórios.']);
+    if (!$id) {
+        echo json_encode(['sucesso' => false, 'mensagem' => 'ID obrigatório.']);
         return;
     }
-    $sql = "UPDATE links SET
-                titulo             = ?,
-                thumb_titulo       = ?,
-                subtitulo          = ?,
-                path               = ?,
-                keywords           = ?,
-                duracao            = ?,
-                artigo             = ?,
-                datePublished      = ?,
-                dateModified       = NOW(),
-                publicado          = ?,
-                ultimos            = ?,
-                root               = ?,
-                search             = ?,
-                amp                = ?
-            WHERE id = ?";
 
-    $db->query($sql, 'ssssssssiiiiii', [
-        $titulo, $thumbTitulo,
-        $subtitulo, $path,
-        $keywords, $duracao, $conteudo, $dataPub,
-        $publicado, $ultimos, $root, $search, $amp,
-        $id
-    ]);
+    try {
+        [$set, $types, $params] = montarCamposAtualizacaoArtigo($data);
+    } catch (InvalidArgumentException $e) {
+        echo json_encode(['sucesso' => false, 'mensagem' => $e->getMessage()]);
+        return;
+    }
+
+    $db->link->begin_transaction();
+
+    try {
+        if ($set) {
+            $sql = "UPDATE links SET " . implode(', ', $set) . ", dateModified = NOW() WHERE id = ?";
+            $db->query($sql, $types . 'i', [...$params, $id]);
+        }
+
+        aplicarMudancasTagsArtigo($db, $id, $tagsCadastrar, $tagsExcluir);
+        aplicarDestaqueArtigo($db, $id, $destaque);
+        $db->link->commit();
+    } catch (Throwable $e) {
+        $db->link->rollback();
+        throw $e;
+    }
 
     echo json_encode(['sucesso' => true, 'id' => $id]);
 }
@@ -242,73 +311,18 @@ function excluir(database $db, array $data): void
         return;
     }
 
-    $sql = "DELETE FROM links WHERE id = ?";
-    $db->query($sql, 'i', [$id]);
+    $db->link->begin_transaction();
+
+    try {
+        $db->query("DELETE FROM links_tags WHERE linkID = ?", 'i', [$id]);
+        $db->query("DELETE FROM links WHERE id = ?", 'i', [$id]);
+        $db->link->commit();
+    } catch (Throwable $e) {
+        $db->link->rollback();
+        throw $e;
+    }
 
     echo json_encode(['sucesso' => true]);
-}
-
-function listarDestaques(database $db): void
-{
-    $artigoId = (int) ($_GET['id'] ?? 0);
-    $thumbTitulo = '';
-
-    if ($artigoId > 0) {
-        $res = $db->query("SELECT thumb_titulo FROM links WHERE id = ? LIMIT 1", 'i', [$artigoId]);
-        if ($res instanceof mysqli_result && ($artigo = $res->fetch_assoc())) {
-            $thumbTitulo = trim((string) ($artigo['thumb_titulo'] ?? ''));
-        }
-    }
-
-    echo json_encode([
-        'sucesso' => true,
-        'destaques' => obterDestaquesComEstado($db, $artigoId),
-        'thumb_titulo' => $thumbTitulo
-    ]);
-}
-
-function salvarDestaques(database $db, array $data): void
-{
-    $artigoId = (int) ($data['id'] ?? 0);
-    $thumbTitulo = trim((string) ($data['thumb_titulo'] ?? ''));
-    if (!$artigoId) {
-        echo json_encode(['sucesso' => false, 'mensagem' => 'Salve o artigo antes de definir destaques.']);
-        return;
-    }
-
-    $res = $db->query("SELECT id FROM links WHERE id = ? LIMIT 1", 'i', [$artigoId]);
-    if (!($res instanceof mysqli_result) || !($artigo = $res->fetch_assoc())) {
-        echo json_encode(['sucesso' => false, 'mensagem' => 'Artigo não encontrado para vincular destaque.']);
-        return;
-    }
-
-    $db->query("UPDATE links SET thumb_titulo = ?, dateModified = NOW() WHERE id = ?", 'si', [$thumbTitulo, $artigoId]);
-
-    $selecionados = normalizarIdsDestaque($data['destaque_ids'] ?? []);
-
-    if ($selecionados) {
-        $placeholders = implode(', ', array_fill(0, count($selecionados), '?'));
-        $tipos = str_repeat('i', count($selecionados) + 1);
-        $params = array_merge([$artigoId], $selecionados);
-
-        $db->query(
-            "UPDATE links_destaques SET linkID = 0 WHERE linkID = ? AND id NOT IN ({$placeholders})",
-            $tipos,
-            $params
-        );
-    } else {
-        $db->query("UPDATE links_destaques SET linkID = 0 WHERE linkID = ?", 'i', [$artigoId]);
-    }
-
-    foreach ($selecionados as $destaqueId) {
-        $db->query("UPDATE links_destaques SET linkID = ? WHERE id = ?", 'ii', [$artigoId, $destaqueId]);
-    }
-
-    echo json_encode([
-        'sucesso' => true,
-        'destaques' => obterDestaquesComEstado($db, $artigoId),
-        'thumb_titulo' => $thumbTitulo
-    ]);
 }
 
 function uploadThumb(database $db, array $data): void
@@ -526,7 +540,7 @@ function limitarQualidade(int $valor): int
     return $valor;
 }
 
-function normalizarIdsDestaque($valor): array
+function normalizarIdsTag($valor): array
 {
     if (!is_array($valor)) {
         return [];
@@ -539,25 +553,92 @@ function normalizarIdsDestaque($valor): array
     return $ids;
 }
 
-function obterDestaquesComEstado(database $db, int $artigoId): array
+function normalizarDestaque($valor): ?int
 {
-    $sql = "SELECT links_destaques.id, links_destaques.nome, COALESCE(links_destaques.linkID, 0) AS linkID,
-                   links.titulo AS artigoTitulo
-            FROM links_destaques
-            LEFT JOIN links ON links.id = links_destaques.linkID
-            ORDER BY links_destaques.id ASC";
+    $id = (int) $valor;
+    return in_array($id, [100, 200], true) ? $id : null;
+}
 
-    $res = $db->query($sql);
-    $itens = [];
+function montarCamposAtualizacaoArtigo(array $data): array
+{
+    $set = [];
+    $types = '';
+    $params = [];
+    $campos = [
+        'titulo' => ['coluna' => 'titulo', 'tipo' => 's', 'transform' => static fn ($valor) => trim((string) $valor), 'required' => true],
+        'thumb_titulo' => ['coluna' => 'thumb_titulo', 'tipo' => 's', 'transform' => static fn ($valor) => trim((string) $valor)],
+        'subtitulo' => ['coluna' => 'subtitulo', 'tipo' => 's', 'transform' => static fn ($valor) => trim((string) $valor)],
+        'path' => ['coluna' => 'path', 'tipo' => 's', 'transform' => static fn ($valor) => normalizePath((string) $valor)],
+        'keywords' => ['coluna' => 'keywords', 'tipo' => 's', 'transform' => static fn ($valor) => trim((string) $valor)],
+        'duracao' => ['coluna' => 'duracao', 'tipo' => 's', 'transform' => static fn ($valor) => validarDuracao((string) $valor)],
+        'conteudo' => ['coluna' => 'artigo', 'tipo' => 's', 'transform' => static fn ($valor) => (string) $valor],
+        'data' => ['coluna' => 'datePublished', 'tipo' => 's', 'transform' => static fn ($valor) => validarData((string) $valor), 'valid' => static fn ($valor) => $valor !== null],
+        'publicado' => ['coluna' => 'publicado', 'tipo' => 'i', 'transform' => static fn ($valor) => (int) $valor],
+        'ultimos' => ['coluna' => 'ultimos', 'tipo' => 'i', 'transform' => static fn ($valor) => (int) $valor],
+        'root' => ['coluna' => 'root', 'tipo' => 'i', 'transform' => static fn ($valor) => (int) $valor],
+        'search' => ['coluna' => 'search', 'tipo' => 'i', 'transform' => static fn ($valor) => (int) $valor],
+        'amp' => ['coluna' => 'amp', 'tipo' => 'i', 'transform' => static fn ($valor) => (int) $valor],
+    ];
+
+    foreach ($campos as $chave => $config) {
+        if (!array_key_exists($chave, $data)) {
+            continue;
+        }
+
+        $valor = $config['transform']($data[$chave]);
+
+        if (($config['required'] ?? false) && $valor === '') {
+            throw new InvalidArgumentException('Título obrigatório.');
+        }
+
+        if (isset($config['valid']) && !$config['valid']($valor)) {
+            throw new InvalidArgumentException('Valor inválido para o campo ' . $chave . '.');
+        }
+
+        $set[] = $config['coluna'] . ' = ?';
+        $types .= $config['tipo'];
+        $params[] = $valor;
+    }
+
+    return [$set, $types, $params];
+}
+
+function obterTagIdsArtigo(database $db, int $artigoId): array
+{
+    if ($artigoId <= 0) {
+        return [];
+    }
+
+    $res = $db->query("SELECT tagID FROM links_tags WHERE linkID = ? ORDER BY tagID ASC", 'i', [$artigoId]);
+    $ids = [];
 
     if ($res instanceof mysqli_result) {
         while ($row = $res->fetch_assoc()) {
-            $row['selecionado'] = ((int) $row['linkID'] === $artigoId) ? 1 : 0;
-            $itens[] = $row;
+            $ids[] = (int) $row['tagID'];
         }
     }
 
-    return $itens;
+    return $ids;
+}
+
+function aplicarMudancasTagsArtigo(database $db, int $artigoId, array $tagsCadastrar, array $tagsExcluir): void
+{
+    foreach ($tagsExcluir as $tagId) {
+        $db->query("DELETE FROM links_tags WHERE linkID = ? AND tagID = ?", 'ii', [$artigoId, $tagId]);
+    }
+
+    foreach ($tagsCadastrar as $tagId) {
+        $db->query("INSERT INTO links_tags (linkID, tagID) VALUES (?, ?)", 'ii', [$artigoId, $tagId]);
+    }
+}
+
+function aplicarDestaqueArtigo(database $db, int $artigoId, ?int $destaqueId): void
+{
+    if ($artigoId <= 0 || $destaqueId === null) {
+        return;
+    }
+
+    $db->query("UPDATE links_destaques SET linkID = ? WHERE id = ?", 'ii', [$artigoId, $destaqueId]);
 }
 
 function criarImagemOrigem(string $arquivo, string $mime)

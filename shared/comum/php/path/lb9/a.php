@@ -112,9 +112,16 @@ require $_SERVER['DOCUMENT_ROOT'] . '/comum/php/autoload.php';
                                     <textarea id="artigoConteudo" placeholder="Conteúdo do artigo (HTML ou texto)"></textarea>
                                 </div>
 
+                                <div class="form-group form-group-tags-column">
+                                    <label for="artigoNovaTag">Tags</label>
+                                    <input id="artigoNovaTag" class="tag-create-input" type="text" placeholder="Digite uma nova tag e pressione Enter">
+                                    <div id="artigoTagsList" class="artigo-tags-list" aria-label="Seleção de tags do artigo">
+                                        <p class="artigo-tags-empty">Carregando tags...</p>
+                                    </div>
+                                </div>
+
                                 <div class="form-group-flags-column">
-                                    <!-- Label espaçador: empurra flags para baixo do label "Conteúdo", alinhando com o início do textarea -->
-                                    <label class="flags-spacer-label">&nbsp;</label>
+                                    <div class="flags-spacer-label" aria-hidden="true">&nbsp;</div>
 
                                     <div class="flags-options">
                                         <label class="flag-option">
@@ -206,14 +213,16 @@ require $_SERVER['DOCUMENT_ROOT'] . '/comum/php/autoload.php';
         <div id="thumbUploadModal" class="modal hidden">
             <div class="modal-overlay"></div>
             <div class="modal-content thumb-modal-content">
-                <div class="modal-icon modal-icon-input">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                        <polyline points="17 8 12 3 7 8"></polyline>
-                        <line x1="12" y1="3" x2="12" y2="15"></line>
-                    </svg>
+                <div class="modal-head">
+                    <div class="modal-icon modal-icon-input">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="17 8 12 3 7 8"></polyline>
+                            <line x1="12" y1="3" x2="12" y2="15"></line>
+                        </svg>
+                    </div>
+                    <h2 class="modal-title">Upload da Thumb</h2>
                 </div>
-                <h2 class="modal-title">Upload da Thumb</h2>
                 <p class="modal-message">Selecione a imagem, ajuste a posição com o mouse e use a roda para zoom. A thumb final será salva com o nome do ID do artigo.</p>
 
                 <div class="thumb-modal-grid">
@@ -249,16 +258,18 @@ require $_SERVER['DOCUMENT_ROOT'] . '/comum/php/autoload.php';
         <div id="deleteConfirmModal" class="modal hidden">
             <div class="modal-overlay"></div>
             <div class="modal-content">
-                <div class="modal-icon modal-icon-input">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polyline points="3 6 5 6 21 6"></polyline>
-                        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
-                        <path d="M10 11v6"></path>
-                        <path d="M14 11v6"></path>
-                        <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path>
-                    </svg>
+                <div class="modal-head">
+                    <div class="modal-icon modal-icon-input">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="3 6 5 6 21 6"></polyline>
+                            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+                            <path d="M10 11v6"></path>
+                            <path d="M14 11v6"></path>
+                            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path>
+                        </svg>
+                    </div>
+                    <h2 id="deleteConfirmTitle" class="modal-title">Confirmar exclusão</h2>
                 </div>
-                <h2 id="deleteConfirmTitle" class="modal-title">Confirmar exclusão</h2>
                 <p id="deleteConfirmMessage" class="modal-message">Deseja realmente excluir este item?</p>
                 <div class="modal-actions">
                     <button id="deleteConfirmCancel" class="btn btn-secondary">Cancelar</button>
@@ -270,24 +281,25 @@ require $_SERVER['DOCUMENT_ROOT'] . '/comum/php/autoload.php';
         <div id="artigoConfigModal" class="modal hidden">
             <div class="modal-overlay"></div>
             <div class="modal-content">
-                <div class="modal-icon modal-icon-input">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="3"></circle>
-                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.01a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.01a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.01a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-                    </svg>
+                <div class="modal-head">
+                    <div class="modal-icon modal-icon-input">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="3"></circle>
+                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.01a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.01a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.01a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                        </svg>
+                    </div>
+                    <h2 class="modal-title">Configurações do Artigo</h2>
                 </div>
-                <h2 class="modal-title">Configurações do Artigo</h2>
 
                 <div class="form-group">
                     <label for="artigoConfigThumbTitulo">Thumb Título</label>
                     <textarea id="artigoConfigThumbTitulo" class="config-thumb-titulo-input" rows="2" placeholder="Título exibido na thumb"></textarea>
                 </div>
-                <div id="artigoConfigNotice" class="config-notice hidden"></div>
                 <div id="artigoConfigDestaques" class="config-options-list"></div>
 
                 <div class="modal-actions">
                     <button id="artigoConfigCancel" class="btn btn-secondary">Fechar</button>
-                    <button id="artigoConfigSave" class="btn btn-primary">Salvar Configurações</button>
+                    <button id="artigoConfigSave" class="btn btn-primary">Aplicar</button>
                 </div>
             </div>
         </div>
@@ -304,12 +316,13 @@ require $_SERVER['DOCUMENT_ROOT'] . '/comum/php/autoload.php';
                     </div>
                     <div id="adminOptionList" class="model-list admin-option-list">
                         <button class="model-name admin-option active" data-option="geral">Geral</button>
+                        <button class="model-name admin-option" data-option="tags">Tags</button>
                     </div>
                 </aside>
 
                 <section class="editor admin-editor">
                     <div class="admin-panel-shell">
-                        <div class="task-form admin-form">
+                        <div id="adminPanelGeral" class="task-form admin-form">
                             <div class="form-grid">
                                 <div class="admin-action-card">
                                     <div>
@@ -329,12 +342,75 @@ require $_SERVER['DOCUMENT_ROOT'] . '/comum/php/autoload.php';
                                 </div>
                             </div>
                         </div>
+
+                        <div id="adminPanelTags" class="task-form admin-form hidden">
+                            <div class="form-grid">
+                                <div class="admin-panel-header">
+                                    <h2>Tags</h2>
+                                    <p>Gerencie nome, path, destaque e exclusão das tags cadastradas.</p>
+                                </div>
+
+                                <div class="admin-tags-toolbar">
+                                    <input id="adminTagSearch" class="search-input" type="text" placeholder="Filtrar tags...">
+                                </div>
+
+                                <div class="admin-tags-layout">
+                                    <div id="adminTagsList" class="admin-tags-list">
+                                        <p class="empty-message">Carregando tags...</p>
+                                    </div>
+
+                                    <form id="adminTagForm" class="admin-tag-form">
+                                        <input type="hidden" id="adminTagId">
+
+                                        <div class="form-group">
+                                            <label for="adminTagNome">Nome</label>
+                                            <input id="adminTagNome" type="text" placeholder="Nome da tag">
+                                        </div>
+
+                                        <label class="flag-option">
+                                            <input type="checkbox" id="adminTagDestaque">
+                                            <span class="flag-label">Tag em destaque</span>
+                                        </label>
+
+                                        <div id="adminTagMeta" class="admin-tag-meta">Selecione uma tag na lista ou crie uma nova.</div>
+
+                                        <div class="form-group-buttons">
+                                            <button type="submit" id="adminTagSaveBtn" class="btn btn-primary">Salvar Tag</button>
+                                            <button type="button" id="adminTagDeleteBtn" class="btn btn-danger hidden">Excluir Tag</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </section>
             </main>
         </div>
 
         <div id="adminToastContainer" class="toast-container"></div>
+
+        <div id="adminTagDeleteModal" class="modal hidden">
+            <div class="modal-overlay"></div>
+            <div class="modal-content">
+                <div class="modal-head">
+                    <div class="modal-icon modal-icon-input">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="3 6 5 6 21 6"></polyline>
+                            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+                            <path d="M10 11v6"></path>
+                            <path d="M14 11v6"></path>
+                            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path>
+                        </svg>
+                    </div>
+                    <h2 id="adminTagDeleteTitle" class="modal-title">Confirmar exclusão</h2>
+                </div>
+                <p id="adminTagDeleteMessage" class="modal-message">Deseja realmente excluir esta tag?</p>
+                <div class="modal-actions">
+                    <button type="button" id="adminTagDeleteCancel" class="btn btn-secondary">Cancelar</button>
+                    <button type="button" id="adminTagDeleteConfirm" class="btn btn-danger">Excluir</button>
+                </div>
+            </div>
+        </div>
     </template>
 
     <script src="js/launcher.js"></script>

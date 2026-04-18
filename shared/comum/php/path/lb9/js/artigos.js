@@ -5,12 +5,17 @@ class ArtigosApp extends window.BaseModule {
         this.isActive = true;
         this.artigos = [];
         this.artigoAtual = null;
+        this.artigoOriginal = null;
         this.thumbObjectUrl = null;
         this.thumbDragState = null;
         this.thumbCropState = this.getThumbCropDefaults();
         this.lastConteudoSelectionStart = 0;
         this.lastConteudoSelectionEnd = 0;
-        this.destaquesConfig = [];
+        this.tagsDisponiveis = [];
+        this.tagsSelecionadas = new Set();
+        this.tagFilterTerm = '';
+        this.thumbTituloAtual = '';
+        this.destaqueAtual = null;
 
         // Sidebar
         this.artigoSearch = this.root.querySelector('#artigoSearch');
@@ -36,6 +41,8 @@ class ArtigosApp extends window.BaseModule {
         this.artigoKeywords = this.root.querySelector('#artigoKeywords');
         this.artigoDuracao = this.root.querySelector('#artigoDuracao');
         this.artigoConteudo = this.root.querySelector('#artigoConteudo');
+        this.artigoNovaTag = this.root.querySelector('#artigoNovaTag');
+        this.artigoTagsList = this.root.querySelector('#artigoTagsList');
         this.btnImagemArtigo = this.root.querySelector('#btnImagemArtigo');
         this.artigoImagemUpload = this.root.querySelector('#artigoImagemUpload');
 
@@ -66,7 +73,6 @@ class ArtigosApp extends window.BaseModule {
         // Modal de configurações
         this.artigoConfigModal = this.root.querySelector('#artigoConfigModal');
         this.artigoConfigThumbTitulo = this.root.querySelector('#artigoConfigThumbTitulo');
-        this.artigoConfigNotice = this.root.querySelector('#artigoConfigNotice');
         this.artigoConfigDestaques = this.root.querySelector('#artigoConfigDestaques');
         this.artigoConfigCancel = this.root.querySelector('#artigoConfigCancel');
         this.artigoConfigSave = this.root.querySelector('#artigoConfigSave');
@@ -104,6 +110,8 @@ class ArtigosApp extends window.BaseModule {
         this.btnThumb?.addEventListener('click', () => this.abrirUploadThumb());
         this.btnArtigoConfiguracoes?.addEventListener('click', () => this.abrirConfiguracoesArtigo());
         this.btnImagemArtigo?.addEventListener('click', () => this.abrirUploadImagemArtigo());
+        this.artigoNovaTag?.addEventListener('input', (e) => this.handleNovaTagInput(e));
+        this.artigoNovaTag?.addEventListener('keydown', (e) => this.handleNovaTagKeydown(e));
         this.thumbUploadInput?.addEventListener('change', (e) => this.handleThumbFileChange(e));
         this.artigoImagemUpload?.addEventListener('change', (e) => this.handleArtigoImageChange(e));
         this.thumbUploadAction?.addEventListener('click', () => this.enviarThumb());
@@ -144,7 +152,140 @@ class ArtigosApp extends window.BaseModule {
 
     async initialize() {
         this.atualizarEstadoThumb();
+        await this.carregarTags();
         await this.carregarArtigos();
+    }
+
+    async carregarTags() {
+        if (!this.artigoTagsList) return;
+
+        this.artigoTagsList.innerHTML = '<p class="artigo-tags-empty">Carregando tags...</p>';
+
+        try {
+            const res = await fetch(`${this.apiBase}/artigos.php?acao=listar_tags`);
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+            const data = await res.json();
+            if (!data.sucesso) throw new Error(data.mensagem || 'Erro ao carregar tags');
+
+            this.tagsDisponiveis = Array.isArray(data.tags) ? data.tags : [];
+            this.renderizarTags();
+        } catch (err) {
+            console.error('Erro ao carregar tags:', err);
+            this.artigoTagsList.innerHTML = '<p class="artigo-tags-empty">Não foi possível carregar as tags.</p>';
+            this.showToast('Erro ao carregar tags', 'error');
+        }
+    }
+
+    renderizarTags() {
+        if (!this.artigoTagsList) return;
+
+        const termo = this.normalizeSearch(this.tagFilterTerm || '');
+        const tagsVisiveis = termo
+            ? this.tagsDisponiveis.filter((tag) => this.normalizeSearch(tag.nome || '').includes(termo))
+            : this.tagsDisponiveis;
+
+        if (!this.tagsDisponiveis.length) {
+            this.artigoTagsList.innerHTML = '<p class="artigo-tags-empty">Nenhuma tag cadastrada.</p>';
+            return;
+        }
+
+        if (!tagsVisiveis.length) {
+            this.artigoTagsList.innerHTML = '<p class="artigo-tags-empty">Nenhuma tag encontrada para esse filtro.</p>';
+            return;
+        }
+
+        this.artigoTagsList.innerHTML = tagsVisiveis
+            .map((tag) => {
+                const id = Number(tag.id) || 0;
+                const selecionada = this.tagsSelecionadas.has(id);
+                const classes = ['artigo-tag-option', selecionada ? 'is-selected' : ''].filter(Boolean).join(' ');
+
+                return `
+                    <button type="button" class="${classes}" data-tag-id="${this.escapeHtml(String(id))}" aria-pressed="${selecionada ? 'true' : 'false'}">
+                        <span class="artigo-tag-option-text">${this.escapeHtml(tag.nome || '')}</span>
+                    </button>
+                `;
+            })
+            .join('');
+
+        this.artigoTagsList.querySelectorAll('[data-tag-id]').forEach((btn) => {
+            btn.addEventListener('click', () => this.toggleTag(btn.dataset.tagId));
+        });
+    }
+
+    handleNovaTagInput(event) {
+        this.tagFilterTerm = event.target?.value || '';
+        this.renderizarTags();
+    }
+
+    toggleTag(tagId) {
+        const id = Number(tagId);
+        if (!id) return;
+
+        if (this.tagsSelecionadas.has(id)) {
+            this.tagsSelecionadas.delete(id);
+        } else {
+            this.tagsSelecionadas.add(id);
+        }
+
+        this.renderizarTags();
+    }
+
+    async handleNovaTagKeydown(event) {
+        if (event.key !== 'Enter') return;
+
+        event.preventDefault();
+
+        const nome = this.artigoNovaTag?.value.trim() || '';
+        if (!nome) return;
+
+        if (this.artigoNovaTag) {
+            this.artigoNovaTag.disabled = true;
+        }
+
+        try {
+            const res = await fetch(`${this.apiBase}/artigos.php`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    acao: 'inserir_tag',
+                    nome
+                })
+            });
+
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const data = await res.json();
+            if (!data.sucesso || !data.tag?.id) {
+                throw new Error(data.mensagem || 'Erro ao cadastrar tag');
+            }
+
+            const tagId = Number(data.tag.id);
+            const jaExisteNaLista = this.tagsDisponiveis.some((tag) => Number(tag.id) === tagId);
+
+            if (!jaExisteNaLista) {
+                this.tagsDisponiveis.push(data.tag);
+                this.tagsDisponiveis.sort((a, b) => String(a.nome || '').localeCompare(String(b.nome || ''), 'pt-BR'));
+            }
+
+            this.tagsSelecionadas.add(tagId);
+            this.tagFilterTerm = '';
+            this.renderizarTags();
+
+            if (this.artigoNovaTag) {
+                this.artigoNovaTag.value = '';
+                this.artigoNovaTag.focus();
+            }
+
+            this.showToast(data.existente ? 'Tag existente vinculada ao artigo' : 'Tag cadastrada com sucesso!', 'success');
+        } catch (err) {
+            console.error('Erro ao cadastrar tag:', err);
+            this.showToast(err.message || 'Erro ao cadastrar tag', 'error');
+        } finally {
+            if (this.artigoNovaTag) {
+                this.artigoNovaTag.disabled = false;
+            }
+        }
     }
 
     async carregarArtigos(termo = '') {
@@ -234,8 +375,17 @@ class ArtigosApp extends window.BaseModule {
         this.artigoKeywords.value = artigo.keywords || '';
         this.artigoDuracao.value = artigo.duracao && artigo.duracao !== '00:00:00' ? artigo.duracao : '';
         this.artigoConteudo.value = artigo.conteudo || '';
+        this.tagsSelecionadas = new Set(
+            Array.isArray(artigo.tag_ids)
+                ? artigo.tag_ids.map((id) => Number(id)).filter((id) => id > 0)
+                : []
+        );
+        this.artigoOriginal = this.clonarArtigoOriginal(artigo);
+        this.thumbTituloAtual = artigo.thumb_titulo || '';
+        this.destaqueAtual = this.normalizarDestaque(artigo.destaque_id);
         if (this.artigoAtual) {
-            this.artigoAtual.thumb_titulo = artigo.thumb_titulo || '';
+            this.artigoAtual.thumb_titulo = this.thumbTituloAtual;
+            this.artigoAtual.destaque_id = this.destaqueAtual;
         }
 
         this.flagPublicado.checked = artigo.publicado == 1;
@@ -251,6 +401,7 @@ class ArtigosApp extends window.BaseModule {
         }
 
         this.atualizarEstadoThumb(artigo);
+        this.renderizarTags();
 
         this.editorPlaceholder.classList.add('hidden');
         this.artigoForm.classList.remove('hidden');
@@ -265,6 +416,8 @@ class ArtigosApp extends window.BaseModule {
         this.artigoKeywords.value = '';
         this.artigoDuracao.value = '';
         this.artigoConteudo.value = '';
+        this.tagsSelecionadas = new Set();
+        this.artigoOriginal = null;
 
         this.flagPublicado.checked = false;
         this.flagUltimos.checked = false;
@@ -276,10 +429,13 @@ class ArtigosApp extends window.BaseModule {
         this.atualizarEstadoThumb({});
         this.lastConteudoSelectionStart = 0;
         this.lastConteudoSelectionEnd = 0;
-        this.destaquesConfig = [];
+        this.thumbTituloAtual = '';
+        this.destaqueAtual = null;
         if (this.artigoAtual) {
             this.artigoAtual.thumb_titulo = '';
+            this.artigoAtual.destaque_id = null;
         }
+        this.renderizarTags();
     }
 
     async salvarArtigo(event) {
@@ -309,23 +465,50 @@ class ArtigosApp extends window.BaseModule {
         this.artigoData.value = this.formatarDataBr(dataIso);
         this.artigoDuracao.value = duracao;
 
+        const artigoExistente = Boolean(this.artigoId.value);
+        const artigoIdAntesDeSalvar = Number(this.artigoId.value || 0);
+        const estadoAtual = this.coletarEstadoAtualArtigo(dataIso, duracao);
+        const estadoOriginal = this.coletarEstadoOriginalArtigo();
         const payload = {
-            acao: this.artigoId.value ? 'atualizar' : 'inserir',
-            id: this.artigoId.value || '',
-            titulo,
-            thumb_titulo: this.artigoAtual?.thumb_titulo || '',
-            path: this.artigoPath.value.trim(),
-            subtitulo: this.artigoSubtitulo.value.trim(),
-            data: dataIso,
-            keywords: this.artigoKeywords.value.trim(),
-            duracao,
-            conteudo: this.artigoConteudo.value.trim(),
-            publicado: this.flagPublicado.checked ? 1 : 0,
-            ultimos: this.flagUltimos.checked ? 1 : 0,
-            root: this.flagRoot.checked ? 1 : 0,
-            search: this.flagSearch.checked ? 1 : 0,
-            amp: this.flagAmp.checked ? 1 : 0
+            acao: artigoExistente ? 'atualizar' : 'inserir',
+            id: this.artigoId.value || ''
         };
+
+        if (artigoExistente) {
+            Object.entries(estadoAtual).forEach(([campo, valor]) => {
+                if (estadoOriginal[campo] !== valor) {
+                    payload[campo] = valor;
+                }
+            });
+        } else {
+            Object.assign(payload, estadoAtual);
+        }
+
+        const tagsAtuais = Array.from(this.tagsSelecionadas).sort((a, b) => a - b);
+        const tagsOriginais = this.obterTagsOriginais();
+        const tagsOriginaisSet = new Set(tagsOriginais);
+        const tagsAtuaisSet = new Set(tagsAtuais);
+        const tagsACadastrar = tagsAtuais.filter((id) => !tagsOriginaisSet.has(id));
+        const tagsAExcluir = tagsOriginais.filter((id) => !tagsAtuaisSet.has(id));
+        const destaqueAtual = this.normalizarDestaque(this.destaqueAtual);
+        const destaqueOriginal = this.obterDestaqueOriginal();
+
+        if (tagsACadastrar.length) {
+            payload.tags_a_cadastrar = tagsACadastrar;
+        }
+
+        if (tagsAExcluir.length) {
+            payload.tags_a_excluir = tagsAExcluir;
+        }
+
+        if (destaqueAtual && destaqueAtual !== destaqueOriginal) {
+            payload.destaque = destaqueAtual;
+        }
+
+        if (artigoExistente && Object.keys(payload).length === 2 && !payload.tags_a_cadastrar && !payload.tags_a_excluir && !payload.destaque) {
+            this.showToast('Nenhuma alteração para salvar', 'success');
+            return;
+        }
 
         try {
             const res = await fetch(`${this.apiBase}/artigos.php`, {
@@ -344,10 +527,29 @@ class ArtigosApp extends window.BaseModule {
                 this.artigoAtual.id = data.id;
                 if (this.artigoAtual.thumb === undefined) this.artigoAtual.thumb = 0;
             }
+            if (!this.artigoAtual) this.artigoAtual = {};
+            this.artigoAtual.tag_ids = Array.from(this.tagsSelecionadas).sort((a, b) => a - b);
+            this.artigoAtual.thumb_titulo = this.thumbTituloAtual;
+            this.artigoAtual.destaque_id = payload.destaque ? destaqueAtual : this.obterDestaqueOriginal();
+            this.artigoOriginal = this.criarSnapshotPersistidoArtigo(data.id || this.artigoId.value, estadoAtual, this.artigoAtual.destaque_id, this.artigoAtual.thumb);
+            this.sincronizarArtigoNaLista({
+                id: Number(data.id || this.artigoId.value || 0),
+                titulo: estadoAtual.titulo,
+                subtitulo: estadoAtual.subtitulo,
+                path: estadoAtual.path ? `/${estadoAtual.path}` : '',
+                keywords: estadoAtual.keywords,
+                duracao: estadoAtual.duracao,
+                publicado: estadoAtual.publicado,
+                ultimos: estadoAtual.ultimos,
+                root: estadoAtual.root,
+                search: estadoAtual.search,
+                amp: estadoAtual.amp,
+                datePublished: this.artigoOriginal?.datePublished || `${estadoAtual.data} 00:00:00`,
+                thumb: this.artigoAtual.thumb || 0
+            }, { inserirNoTopo: !artigoExistente, idAnterior: artigoIdAntesDeSalvar });
 
             this.showToast('Artigo salvo com sucesso!', 'success');
-            this.atualizarEstadoThumb(this.artigoAtual || {});
-            await this.carregarArtigos(this.artigoSearch.value.trim());
+            this.filtrarLista();
         } catch (err) {
             console.error('Erro ao salvar artigo:', err);
             this.showToast('Erro ao salvar artigo', 'error');
@@ -547,7 +749,7 @@ class ArtigosApp extends window.BaseModule {
 
     async abrirConfiguracoesArtigo() {
         if (this.artigoConfigThumbTitulo) {
-            this.artigoConfigThumbTitulo.value = this.artigoAtual?.thumb_titulo || '';
+            this.artigoConfigThumbTitulo.value = this.thumbTituloAtual || '';
         }
         this.renderizarConfiguracoesArtigo();
 
@@ -558,148 +760,191 @@ class ArtigosApp extends window.BaseModule {
             closeOnEscape: true,
             onEscape: () => this.fecharConfiguracoesArtigo()
         });
-
-        await this.carregarConfiguracoesArtigo();
     }
 
     fecharConfiguracoesArtigo() {
         window.AppUtils.closeModal(this.artigoConfigModal);
     }
 
-    async carregarConfiguracoesArtigo() {
-        const params = new URLSearchParams({ acao: 'listar_destaques' });
-        if (this.artigoId?.value) {
-            params.set('id', this.artigoId.value);
-        }
-
-        try {
-            const res = await fetch(`${this.apiBase}/artigos.php?${params}`);
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            const data = await res.json();
-            if (!data.sucesso) throw new Error(data.mensagem || 'Erro ao carregar configurações');
-
-            this.destaquesConfig = Array.isArray(data.destaques) ? data.destaques : [];
-            if (this.artigoConfigThumbTitulo) {
-                this.artigoConfigThumbTitulo.value = data.thumb_titulo || '';
-            }
-            if (this.artigoAtual) {
-                this.artigoAtual.thumb_titulo = data.thumb_titulo || '';
-            }
-            this.renderizarConfiguracoesArtigo();
-        } catch (err) {
-            console.error('Erro ao carregar configurações do artigo:', err);
-            this.showToast('Erro ao carregar configurações', 'error');
-        }
-    }
-
     renderizarConfiguracoesArtigo() {
-        if (!this.artigoConfigDestaques || !this.artigoConfigNotice) return;
+        if (!this.artigoConfigDestaques) return;
 
-        const artigoId = Number(this.artigoId?.value || 0);
-        const artigoSalvo = artigoId > 0;
+        const destaqueAtual = this.normalizarDestaque(this.destaqueAtual);
+        const opcoes = [
+            { id: 100, nome: 'Esquerda' },
+            { id: 200, nome: 'Direita' }
+        ];
 
-        this.artigoConfigNotice.textContent = artigoSalvo
-            ? 'Escolha em quais posições de destaque este artigo deve aparecer.'
-            : 'Salve o artigo antes de definir posição de destaque.';
-        this.artigoConfigNotice.classList.remove('hidden');
-
-        if (this.artigoConfigThumbTitulo) {
-            this.artigoConfigThumbTitulo.disabled = !artigoSalvo;
-        }
-
-        if (this.artigoConfigSave) {
-            this.artigoConfigSave.disabled = !artigoSalvo;
-        }
-
-        if (!this.destaquesConfig.length) {
-            this.artigoConfigDestaques.innerHTML = '<div class="config-option"><div class="config-option-body"><span class="config-option-title">Nenhuma posição cadastrada.</span><span class="config-option-meta">Cadastre registros em links_destaques para habilitar esta configuração.</span></div></div>';
-            return;
-        }
-
-        this.artigoConfigDestaques.innerHTML = this.destaquesConfig
+        this.artigoConfigDestaques.innerHTML = opcoes
             .map((item) => {
-                const selecionado = Number(item.selecionado) === 1;
-                const ocupadoPorOutro = Number(item.linkID) > 0 && Number(item.linkID) !== artigoId;
-                const classes = [
-                    'config-option',
-                    selecionado ? 'is-selected' : '',
-                    !artigoSalvo ? 'is-disabled' : ''
-                ].filter(Boolean).join(' ');
-
-                let meta = `ID da posição: ${this.escapeHtml(String(item.id))}`;
-                if (ocupadoPorOutro) {
-                    const titulo = item.artigoTitulo ? ` (${this.escapeHtml(item.artigoTitulo)})` : '';
-                    meta += ` · atualmente no artigo ${this.escapeHtml(String(item.linkID))}${titulo}`;
-                } else if (selecionado) {
-                    meta += ' · já vinculada a este artigo';
-                } else {
-                    meta += ' · disponível';
-                }
+                const selecionado = destaqueAtual === item.id;
+                const classes = ['config-option', selecionado ? 'is-selected' : ''].filter(Boolean).join(' ');
 
                 return `
                     <label class="${classes}">
-                        <input type="checkbox" class="config-destaque-checkbox" value="${this.escapeHtml(String(item.id))}" ${selecionado ? 'checked' : ''} ${artigoSalvo ? '' : 'disabled'}>
+                        <input type="checkbox" class="config-destaque-checkbox" value="${item.id}" ${selecionado ? 'checked' : ''}>
                         <div class="config-option-body">
-                            <span class="config-option-title">${this.escapeHtml(item.nome || `Posição ${item.id}`)}</span>
-                            <span class="config-option-meta">${meta}</span>
+                            <span class="config-option-title">${item.nome}</span>
+                            <span class="config-option-meta">Posição ${item.id}</span>
                         </div>
                     </label>
                 `;
             })
             .join('');
+
+        this.artigoConfigDestaques.querySelectorAll('.config-destaque-checkbox').forEach((input) => {
+            input.addEventListener('change', (event) => this.handleConfiguracaoDestaqueChange(event));
+        });
     }
 
-    async salvarConfiguracoesArtigo() {
-        const artigoId = Number(this.artigoId?.value || 0);
-        if (!artigoId) {
-            this.showToast('Salve o artigo antes de alterar os destaques', 'error');
+    handleConfiguracaoDestaqueChange(event) {
+        const target = event.target;
+        if (!target?.classList.contains('config-destaque-checkbox')) return;
+
+        if (!target.checked) return;
+
+        this.artigoConfigDestaques?.querySelectorAll('.config-destaque-checkbox').forEach((input) => {
+            if (input !== target) {
+                input.checked = false;
+            }
+        });
+    }
+
+    salvarConfiguracoesArtigo() {
+        const destaqueSelecionado = this.artigoConfigDestaques?.querySelector('.config-destaque-checkbox:checked');
+        const thumbTitulo = this.artigoConfigThumbTitulo?.value.trim() || '';
+        const destaque = this.normalizarDestaque(destaqueSelecionado?.value || null);
+
+        this.thumbTituloAtual = thumbTitulo;
+        this.destaqueAtual = destaque;
+
+        if (!this.artigoAtual) {
+            this.artigoAtual = {};
+        }
+        this.artigoAtual.thumb_titulo = thumbTitulo;
+        this.artigoAtual.destaque_id = destaque;
+
+        this.showToast('Configurações aplicadas ao formulário', 'success');
+        this.fecharConfiguracoesArtigo();
+    }
+
+    clonarArtigoOriginal(artigo) {
+        return JSON.parse(JSON.stringify(artigo || null));
+    }
+
+    coletarEstadoAtualArtigo(dataIso, duracao) {
+        return {
+            titulo: this.artigoTitulo.value.trim(),
+            thumb_titulo: this.thumbTituloAtual || '',
+            path: this.normalizarPathComparacao(this.artigoPath.value),
+            subtitulo: this.artigoSubtitulo.value.trim(),
+            data: dataIso,
+            keywords: this.artigoKeywords.value.trim(),
+            duracao,
+            conteudo: this.artigoConteudo.value.trim(),
+            publicado: this.flagPublicado.checked ? 1 : 0,
+            ultimos: this.flagUltimos.checked ? 1 : 0,
+            root: this.flagRoot.checked ? 1 : 0,
+            search: this.flagSearch.checked ? 1 : 0,
+            amp: this.flagAmp.checked ? 1 : 0
+        };
+    }
+
+    coletarEstadoOriginalArtigo() {
+        const artigo = this.artigoOriginal || {};
+        return {
+            titulo: String(artigo.titulo || '').trim(),
+            thumb_titulo: String(artigo.thumb_titulo || '').trim(),
+            path: this.normalizarPathComparacao(artigo.path || ''),
+            subtitulo: String(artigo.subtitulo || '').trim(),
+            data: artigo.datePublished ? String(artigo.datePublished).substring(0, 10) : '',
+            keywords: String(artigo.keywords || '').trim(),
+            duracao: this.normalizarDuracao(artigo.duracao || '') || '00:00:00',
+            conteudo: String(artigo.conteudo || '').trim(),
+            publicado: Number(artigo.publicado) === 1 ? 1 : 0,
+            ultimos: Number(artigo.ultimos) === 1 ? 1 : 0,
+            root: Number(artigo.root) === 1 ? 1 : 0,
+            search: Number(artigo.search) === 1 ? 1 : 0,
+            amp: Number(artigo.amp) === 1 ? 1 : 0
+        };
+    }
+
+    obterTagsOriginais() {
+        return Array.isArray(this.artigoOriginal?.tag_ids)
+            ? this.artigoOriginal.tag_ids.map((id) => Number(id)).filter((id) => id > 0).sort((a, b) => a - b)
+            : [];
+    }
+
+    obterDestaqueOriginal() {
+        return this.normalizarDestaque(this.artigoOriginal?.destaque_id);
+    }
+
+    normalizarPathComparacao(valor) {
+        return String(valor || '').trim().replace(/^\/+/, '');
+    }
+
+    criarSnapshotPersistidoArtigo(id, estadoAtual, destaqueId, thumb = 0) {
+        const artigoBase = this.clonarArtigoOriginal(this.artigoOriginal || {});
+
+        artigoBase.id = Number(id) || 0;
+        artigoBase.titulo = estadoAtual.titulo;
+        artigoBase.thumb_titulo = estadoAtual.thumb_titulo;
+        artigoBase.subtitulo = estadoAtual.subtitulo;
+        artigoBase.path = estadoAtual.path ? `/${estadoAtual.path}` : '';
+        artigoBase.keywords = estadoAtual.keywords;
+        artigoBase.conteudo = estadoAtual.conteudo;
+        artigoBase.duracao = estadoAtual.duracao;
+        artigoBase.publicado = estadoAtual.publicado;
+        artigoBase.ultimos = estadoAtual.ultimos;
+        artigoBase.root = estadoAtual.root;
+        artigoBase.search = estadoAtual.search;
+        artigoBase.amp = estadoAtual.amp;
+        artigoBase.datePublished = estadoAtual.data ? `${estadoAtual.data} 00:00:00` : '';
+        artigoBase.tag_ids = Array.from(this.tagsSelecionadas).sort((a, b) => a - b);
+        artigoBase.destaque_id = destaqueId ?? null;
+        artigoBase.thumb = thumb;
+
+        return artigoBase;
+    }
+
+    sincronizarArtigoNaLista(artigo, { inserirNoTopo = false, idAnterior = 0 } = {}) {
+        const id = Number(artigo?.id || idAnterior || 0);
+        if (!id) return;
+
+        const artigoNormalizado = {
+            id,
+            titulo: artigo.titulo || '',
+            subtitulo: artigo.subtitulo || '',
+            path: artigo.path || '',
+            keywords: artigo.keywords || '',
+            thumb: Number(artigo.thumb) || 0,
+            duracao: artigo.duracao || '00:00:00',
+            publicado: Number(artigo.publicado) === 1 ? 1 : 0,
+            ultimos: Number(artigo.ultimos) === 1 ? 1 : 0,
+            root: Number(artigo.root) === 1 ? 1 : 0,
+            search: Number(artigo.search) === 1 ? 1 : 0,
+            amp: Number(artigo.amp) === 1 ? 1 : 0,
+            datePublished: artigo.datePublished || ''
+        };
+
+        const indiceExistente = this.artigos.findIndex((item) => Number(item.id) === id);
+
+        if (indiceExistente >= 0) {
+            this.artigos[indiceExistente] = {
+                ...this.artigos[indiceExistente],
+                ...artigoNormalizado
+            };
             return;
         }
 
-        const destaqueIds = Array.from(this.artigoConfigDestaques?.querySelectorAll('.config-destaque-checkbox:checked') || [])
-            .map((input) => Number(input.value))
-            .filter((id) => id > 0);
-        const thumbTitulo = this.artigoConfigThumbTitulo?.value.trim() || '';
-
-        if (this.artigoConfigSave) {
-            this.artigoConfigSave.disabled = true;
+        if (inserirNoTopo) {
+            this.artigos.unshift(artigoNormalizado);
         }
+    }
 
-        try {
-            const res = await fetch(`${this.apiBase}/artigos.php`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    acao: 'salvar_destaques',
-                    id: artigoId,
-                    destaque_ids: destaqueIds,
-                    thumb_titulo: thumbTitulo
-                })
-            });
-
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            const data = await res.json();
-            if (!data.sucesso) throw new Error(data.mensagem || 'Erro ao salvar configurações');
-
-            this.destaquesConfig = Array.isArray(data.destaques) ? data.destaques : this.destaquesConfig;
-            if (this.artigoConfigThumbTitulo) {
-                this.artigoConfigThumbTitulo.value = data.thumb_titulo || '';
-            }
-            if (!this.artigoAtual) {
-                this.artigoAtual = {};
-            }
-            this.artigoAtual.thumb_titulo = data.thumb_titulo || '';
-            this.renderizarConfiguracoesArtigo();
-            this.showToast('Configurações salvas com sucesso!', 'success');
-            this.fecharConfiguracoesArtigo();
-        } catch (err) {
-            console.error('Erro ao salvar configurações do artigo:', err);
-            this.showToast(err.message || 'Erro ao salvar configurações', 'error');
-        } finally {
-            if (this.artigoConfigSave) {
-                this.artigoConfigSave.disabled = false;
-            }
-        }
+    normalizarDestaque(valor) {
+        const id = Number(valor);
+        return id === 100 || id === 200 ? id : null;
     }
 
     resetThumbModal({ preserveFile = false } = {}) {
@@ -948,7 +1193,7 @@ class ArtigosApp extends window.BaseModule {
             return;
         }
 
-        if (this.thumbStatus) this.thumbStatus.textContent = `Artigo ${id} salvo. Faça o upload da thumb.`;
+        if (this.thumbStatus) this.thumbStatus.textContent = '';
         this.setThumbPreviewVisible(false);
     }
 
