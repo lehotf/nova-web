@@ -2,16 +2,13 @@
 
 function minPathExtend($arquivo, $tipo)
 {
-    preg_match('#^(comum|config)\/(.*)#', $arquivo, $nome);
+    preg_match('#^(comum)\/(.*)#', $arquivo, $nome);
 
     $path = (count($nome) > 1) ? $nome[1] : '';
 
     switch ($path) {
         case 'comum':
             return '/comum/estatico/' . $tipo . '/' . $nome[2] . '.' . $tipo;
-
-        case 'config':
-            return '/config/' . $nome[2] . '.' . $tipo;
 
         default:
             return '/site/estatico/' . $tipo . '/' . $arquivo . '.' . $tipo;
@@ -24,7 +21,7 @@ function pathExtendedToCache($filePath, $tipo = null)
         $tipo = pathinfo($filePath, PATHINFO_EXTENSION);
     }
 
-    return preg_replace('#\/(?:(?:comum|site)\/estatico\/' . $tipo . '|\/config)#', "/cache/$tipo", $filePath);
+    return preg_replace('#\/(?:(?:comum)\/estatico\/' . $tipo . '|\/config)#', "/cache/$tipo", $filePath);
 }
 
 function minPathToCache($filePath, $tipo)
