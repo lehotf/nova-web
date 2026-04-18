@@ -1,5 +1,5 @@
 <?php
-require $_SERVER['DOCUMENT_ROOT'] . '/config/config.php';
+require $_SERVER['DOCUMENT_ROOT'] . '/config.php';
 
 function class_autoload($class)
 {

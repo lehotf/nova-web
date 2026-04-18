@@ -14,7 +14,7 @@ function adminCurrentCacheState(): array
 
 function adminConfigFile(): string
 {
-    return $_SERVER['DOCUMENT_ROOT'] . '/config/config.php';
+    return $_SERVER['DOCUMENT_ROOT'] . '/config.php';
 }
 
 function adminSetCacheState(bool $active): bool

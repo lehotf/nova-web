@@ -21,7 +21,7 @@ RewriteRule (.*) index.php
 - Assuma que modulos, recursos e diretorios sempre existem; nao faça verificacoes de existencia para eles.
 
 ## Configuracao
-- Cada site terá um unico arquivo `config.php` dentro do seu diretorio `config`(ex.: `eupenso.com/config/config.php`).
+- Cada site terá um unico arquivo `config.php` em sua raíz.
 - O `config.php` do site deve conter apenas dados especificos daquele site (ex.: IDs, titulo, descricao, flags).
 - As configuracoes comuns a todos os sites ficam em `shared/comum/config/` (na estrutura antiga havia `config.php`; atualmente existe `shared/comum/config/ad.php`).
 - O carregamento de configuracao acontece no `index.php` do site, incluindo o config comum e o config do site via `comum/`.
@@ -88,7 +88,7 @@ RewriteRule (.*) index.php
 - Ponto de entrada do site: `index.php` do dominio.
 - Bootstrap atual:
   - `index.php` inclui `comum/php/autoload.php`.
-  - `autoload.php` inclui `config/config.php` do site e registra autoload das classes em `shared/comum/php/src/`.
+  - `autoload.php` inclui `config.php` do site e registra autoload das classes em `shared/comum/php/src/`.
 - Ordem geral de execucao:
   1. `controlador` cria `guardiao` (quando habilitado) logo no inicio.
   2. `guardiao` sanitiza URL/IP e aplica bloqueio inicial (lista negra/PNF).

@@ -1,7 +1,7 @@
 <?php
 
 define('TEMPLATE_BASE_DIR', $_SERVER['DOCUMENT_ROOT'] . '/comum/php/template');
-define('ROOT_TEMPLATE_DIR', $_SERVER['DOCUMENT_ROOT'] . '/config');
+define('ROOT_TEMPLATE_DIR', $_SERVER['DOCUMENT_ROOT'] . '/comum/php/template/base');
 
 $lista = '';
 $root = [];
@@ -311,20 +311,18 @@ function montaObjetoRoot($path, $tipo)
 
 function minPathExtendRoot($arquivo, $tipo)
 {
-    preg_match('#^(comum|config)/(.*)#', $arquivo, $nome);
+    preg_match('#^(comum)/(.*)#', $arquivo, $nome);
     $path = (count($nome) > 1) ? $nome[1] : '';
 
     switch ($path) {
         case 'comum':
             return '/comum/estatico/' . $tipo . '/' . $nome[2] . '.' . $tipo;
-        case 'config':
-            return '/config/' . $nome[2] . '.' . $tipo;
         default:
-            return '/site/estatico/' . $tipo . '/' . $arquivo . '.' . $tipo;
+            return '/comum/estatico/' . $tipo . '/' . $arquivo . '.' . $tipo;
     }
 }
 
 function minPathToCacheRoot($filePath, $tipo)
 {
-    return '/cache/' . $tipo . '/' . preg_replace('#^(comum|config)/#', '', $filePath) . '.' . $tipo;
+    return '/cache/' . $tipo . '/' . preg_replace('#^(comum)/#', '', $filePath) . '.' . $tipo;
 }
