@@ -85,6 +85,7 @@ function calcularImpostoPrevidencia(array $baldes, string $modalidadeTributacao)
 {
     $imposto = 0.0;
     $detalhamento = [];
+    $agrupado = [];
 
     foreach ($baldes as $idade => $balde) {
         if ($balde['saldo'] <= 0) {
@@ -104,15 +105,32 @@ function calcularImpostoPrevidencia(array $baldes, string $modalidadeTributacao)
         $imposto += $impostoBalde;
 
         if ($modalidadeTributacao === 'regressiva') {
+            $faixa = $idade <= 24 ? 'Até 2 anos (35%)'
+                : ($idade <= 48 ? 'De 2 a 4 anos (30%)'
+                : ($idade <= 72 ? 'De 4 a 6 anos (25%)'
+                : ($idade <= 96 ? 'De 6 a 8 anos (20%)'
+                : ($idade <= 120 ? 'De 8 a 10 anos (15%)' : 'Acima de 10 anos (10%)'))));
+            
+            if (!isset($agrupado[$faixa])) {
+                $agrupado[$faixa] = [
+                    'faixa' => $faixa,
+                    'lucro' => 0.0,
+                    'imposto' => 0.0,
+                    'aliquota' => round($aliquota * 100, 2)
+                ];
+            }
+            $agrupado[$faixa]['lucro'] += $lucro;
+            $agrupado[$faixa]['imposto'] += $impostoBalde;
+        }
+    }
+
+    if ($modalidadeTributacao === 'regressiva') {
+        foreach ($agrupado as $item) {
             $detalhamento[] = [
-                'faixa' => $idade <= 24 ? 'Até 2 anos (35%)'
-                    : ($idade <= 48 ? 'De 2 a 4 anos (30%)'
-                    : ($idade <= 72 ? 'De 4 a 6 anos (25%)'
-                    : ($idade <= 96 ? 'De 6 a 8 anos (20%)'
-                    : ($idade <= 120 ? 'De 8 a 10 anos (15%)' : 'Acima de 10 anos (10%)')))),
-                'lucro' => round($lucro, 2),
-                'imposto' => round($impostoBalde, 2),
-                'aliquota' => round($aliquota * 100, 2)
+                'faixa' => $item['faixa'],
+                'lucro' => round($item['lucro'], 2),
+                'imposto' => round($item['imposto'], 2),
+                'aliquota' => $item['aliquota']
             ];
         }
     }
