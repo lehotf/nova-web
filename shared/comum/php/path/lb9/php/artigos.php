@@ -398,7 +398,7 @@ function uploadThumb(database $db, array $data): void
     $tmp = imagecreatetruecolor($width, $newHeight);
     imagecopyresampled($tmp, $imagemOrigem, $bx, $by, 0, 0, $width, $newHeight, $origWidth, $origHeight);
 
-    $crop = imagecrop($tmp, ['x' => 0, 'y' => 0, 'width' => 1280, 'height' => 720]);
+    $crop = imagecrop($tmp, ['x' => 0, 'y' => 0, 'width' => 585, 'height' => 329]);
     imagedestroy($tmp);
     imagedestroy($imagemOrigem);
 

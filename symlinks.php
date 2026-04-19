@@ -110,17 +110,11 @@ if (!is_dir($SHARED_DIR)) {
     exit(1);
 }
 
-if ($SITE_NAME === 'calculatudo.com') {
-    output("--- Configurando calculatudo.com ---", 'info');
-    foreach ($SYMLINKS_CALCULATUDO as $link => $target) {
-        createSymlink($target, $link);
-    }
-} else {
-    output("--- Configurando site de artigos ---", 'info');
-    foreach ($SYMLINKS_ARTIGOS as $link => $target) {
-        createSymlink($target, $link);
-    }
+foreach ($SYMLINKS_ARTIGOS as $link => $target) {
+    echo "Criando symlink: $link → $target >> ";
+    createSymlink($target, $link);
 }
+
 
 echo $isCliMode ? "\n" : "<br>";
 

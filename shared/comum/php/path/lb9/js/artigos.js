@@ -1006,8 +1006,8 @@ class ArtigosApp extends window.BaseModule {
         return {
             file: null,
             imageLoaded: false,
-            displayWidth: 1280,
-            displayHeight: 720,
+            displayWidth: 585,
+            displayHeight: 329,
             prop: 1,
             bx: 0,
             by: 0,
@@ -1041,13 +1041,13 @@ class ArtigosApp extends window.BaseModule {
 
         try {
             const image = await this.carregarImagem(this.thumbObjectUrl);
-            const baseWidth = 1280;
+            const baseWidth = 585;
             let displayWidth = baseWidth;
             let displayHeight = image.height * (displayWidth / image.width);
             const prop = displayHeight / displayWidth;
 
-            if (displayHeight < 720) {
-                displayHeight = 720;
+            if (displayHeight < 329) {
+                displayHeight = 329;
                 displayWidth = displayHeight / prop;
             }
 
@@ -1082,12 +1082,12 @@ class ArtigosApp extends window.BaseModule {
 
         event.preventDefault();
 
-        let displayWidth = this.thumbCropState.displayWidth - Math.floor(event.deltaY / (event.shiftKey ? 6 : 1));
-        if (displayWidth < 1280) displayWidth = 1280;
+        let displayWidth = this.thumbCropState.displayWidth - Math.floor(event.deltaY / (event.shiftKey ? 20 : 5));
+        if (displayWidth < 585) displayWidth = 585;
 
         let displayHeight = displayWidth * this.thumbCropState.prop;
-        if (displayHeight < 720) {
-            displayHeight = 720;
+        if (displayHeight < 329) {
+            displayHeight = 329;
             displayWidth = displayHeight / this.thumbCropState.prop;
         }
 
@@ -1130,8 +1130,8 @@ class ArtigosApp extends window.BaseModule {
     clampThumbOffsets() {
         if (!this.thumbCropState.imageLoaded) return;
 
-        const minX = 1280 - this.thumbCropState.displayWidth;
-        const minY = 720 - this.thumbCropState.displayHeight;
+        const minX = 585 - this.thumbCropState.displayWidth;
+        const minY = 329 - this.thumbCropState.displayHeight;
 
         if (this.thumbCropState.bx > 0) this.thumbCropState.bx = 0;
         if (this.thumbCropState.by > 0) this.thumbCropState.by = 0;
@@ -1152,10 +1152,14 @@ class ArtigosApp extends window.BaseModule {
         }
 
         this.thumbCropPlaceholder?.classList.add('hidden');
+
+        const rect = this.thumbCropArea.getBoundingClientRect();
+        const scale = rect.width / 585;
+
         this.thumbCropArea.style.backgroundImage = `url("${this.thumbCropState.sourceUrl}")`;
-        this.thumbCropArea.style.backgroundSize = `${this.thumbCropState.displayWidth}px ${this.thumbCropState.displayHeight}px`;
-        this.thumbCropArea.style.backgroundPositionX = `${this.thumbCropState.bx}px`;
-        this.thumbCropArea.style.backgroundPositionY = `${this.thumbCropState.by}px`;
+        this.thumbCropArea.style.backgroundSize = `${this.thumbCropState.displayWidth * scale}px ${this.thumbCropState.displayHeight * scale}px`;
+        this.thumbCropArea.style.backgroundPositionX = `${this.thumbCropState.bx * scale}px`;
+        this.thumbCropArea.style.backgroundPositionY = `${this.thumbCropState.by * scale}px`;
     }
 
     async enviarThumb() {
