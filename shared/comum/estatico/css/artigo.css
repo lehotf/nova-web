@@ -17,8 +17,8 @@
     padding-bottom: 3px;
 }
 #indice {
-    font-size: 14px;
-    line-height: 25px;
+    font-size: 19px;
+    line-height: 27px;
     columns: 2;
     /* background-color: #f9f9f9; */
     /* margin-top: 20px; */
@@ -144,7 +144,7 @@ article h3 {
     font-size: 1.3em;
     margin-bottom: -12px;
     margin-top: 50px;
-    color: #c684d2;
+    color: #f2abff;
     font-family: Arial;
     /* border-bottom: 1px solid #efefef; */
     padding-bottom: 3px;
