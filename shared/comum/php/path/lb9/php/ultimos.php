@@ -18,7 +18,6 @@ $links = $db->v_select(
      FROM links
      WHERE publicado = 1
        AND ultimos = 1
-       AND thumb > 0
      ORDER BY datePublished DESC, id DESC
      LIMIT 2"
 );
@@ -54,8 +53,11 @@ function renderUltimosHtml(array $links, monta_artigo $renderer, bool $amp): str
             $path .= '/amp';
         }
 
+        $thumb = (int) ($link['thumb'] ?? 0);
+        $thumb = $thumb > 0 ? (string) $thumb : '';
+
         $conteudo .= '<div class="ultimos_artigos"><a href="' . $path . '#content">'
-            . $renderer->image('c25', (string) ($link['thumb'] ?? ''), (string) ($link['duracao'] ?? ''), (string) ($link['titulo'] ?? ''), $renderer->renderThumbTitleHtml((string) ($link['thumb_titulo'] ?? '')))
+            . $renderer->image('c25', $thumb, (string) ($link['duracao'] ?? ''), (string) ($link['titulo'] ?? ''), $renderer->renderThumbTitleHtml((string) ($link['thumb_titulo'] ?? '')))
             . '<div class="legenda"><div>' . (string) ($link['titulo'] ?? '') . '</div><div>' . (string) ($link['subtitulo'] ?? '') . '</div></div></a></div>';
     }
 

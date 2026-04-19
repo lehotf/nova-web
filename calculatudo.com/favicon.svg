@@ -1,0 +1,15 @@
+<svg viewBox="0 0 92.462448 92.462448" xmlns="http://www.w3.org/2000/svg">
+  <g transform="translate(-241.89915,-933.82676)">
+    <circle style="fill:#555555;fill-opacity:1;stroke:none" cx="288.13037" cy="980.05798" r="46.231224" />
+    <rect style="fill:#aad400;fill-opacity:1;stroke:none" width="34.267723" height="35.219604" x="250.67999" y="942.34253" rx="7.2943707" />
+    <rect style="fill:#ff6600;fill-opacity:1;stroke:none" width="34.267723" height="35.219604" x="289.64975" y="942.34253" rx="7.2943707" />
+  </g>
+  <g transform="translate(-241.89915,-31.464599)">
+    <text xml:space="preserve" style="font-style:normal;font-weight:normal;line-height:1.25;font-family:sans-serif;font-size:42.4166px;fill:#aaf100;fill-opacity:1;stroke:none" x="249.59003" y="71.256531">+</text>
+    <text xml:space="preserve" style="font-style:normal;font-weight:normal;line-height:1.25;font-family:sans-serif;font-size:79.7794px;fill:#ff9100;fill-opacity:1;stroke:none" x="212.54961" y="99.416382" transform="scale(1.3511314,0.74012047)">-</text>
+    <rect style="fill:#ffb600;fill-opacity:1;stroke:none" width="34.267723" height="35.219604" x="250.67999" y="80.580399" rx="7.2943707" />
+    <rect style="fill:#c0c2bd;fill-opacity:1;stroke:none" width="34.267723" height="35.219604" x="289.64999" y="80.580399" rx="7.2943707" />
+    <text xml:space="preserve" style="font-style:normal;font-weight:normal;line-height:1.25;font-family:sans-serif;font-size:37.2022px;fill:#ffcf00;fill-opacity:1;stroke:none" x="228.59985" y="124.8857" transform="scale(1.1401644,0.87706651)">/</text>
+    <text xml:space="preserve" style="font-style:normal;font-weight:normal;line-height:1.25;font-family:sans-serif;font-size:40.0407px;fill:#ffffff;fill-opacity:1;stroke:none" x="391.70163" y="86.162796" transform="scale(0.75058023,1.3323026)">=</text>
+  </g>
+</svg>

@@ -94,7 +94,9 @@ class monta_artigo
             $nomes = array_filter(array_map('trim', explode(',', $match[1])), 'strlen');
 
             if ($nomes) {
-                $this->script = array_merge($this->script, $nomes);
+                foreach ($nomes as $nome) {
+                    $this->script[] = 'calc/' . $nome;
+                }
             }
 
             return '';

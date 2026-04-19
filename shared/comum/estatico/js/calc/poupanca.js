@@ -1,14 +1,16 @@
 (function () {
-    var WIDGET_ID = 'calc-renda-fixa-widget';
-    var RESULT_ID = 'calc-renda-fixa-resultado';
-    var ENDPOINT_ACTION = 'comum/calc/fundo_renda_fixa';
+    var WIDGET_ID = 'calc-poupanca-widget';
+    var RESULT_ID = 'calc-poupanca-resultado';
+    var ENDPOINT_ACTION = 'comum/calc/poupanca';
+    
     var currencyFormatter = new Intl.NumberFormat('pt-BR', {
         style: 'currency',
         currency: 'BRL'
     });
+    
     var numberFormatter = new Intl.NumberFormat('pt-BR', {
         minimumFractionDigits: 2,
-        maximumFractionDigits: 2
+        maximumFractionDigits: 4
     });
 
     function boot() {
@@ -41,7 +43,7 @@
             '<form class="calc-rf__form" novalidate>' +
             '  <div class="calc-rf__grid">' +
             '    <label class="calc-rf__field">' +
-            '      <span class="calc-rf__label">Investimento inicial</span>' +
+            '      <span class="calc-rf__label">Aplicação inicial</span>' +
             '      <input class="calc-rf__input" type="text" name="investimento_inicial" inputmode="decimal" placeholder="Ex.: 10.000,00" />' +
             '    </label>' +
             '    <label class="calc-rf__field">' +
@@ -49,16 +51,12 @@
             '      <input class="calc-rf__input" type="text" name="aplicacao_mensal" inputmode="decimal" placeholder="Ex.: 500,00" />' +
             '    </label>' +
             '    <label class="calc-rf__field">' +
-            '      <span class="calc-rf__label">Número de meses</span>' +
+            '      <span class="calc-rf__label">Prazo (em meses)</span>' +
             '      <input class="calc-rf__input" type="number" name="numero_meses" min="1" step="1" placeholder="Ex.: 24" />' +
-            '    </label>' +
-            '    <label class="calc-rf__field">' +
-            '      <span class="calc-rf__label">Taxa de juros mensal (%)</span>' +
-            '      <input class="calc-rf__input" type="text" name="taxa_juros_mensal" inputmode="decimal" placeholder="Ex.: 0,85" />' +
             '    </label>' +
             '  </div>' +
             '  <div class="calc-rf__actions">' +
-            '    <button class="calc-rf__button" type="submit">Calcular</button>' +
+            '    <button class="calc-rf__button" type="submit">Calcular Rendimento</button>' +
             '    <div class="calc-rf__status" aria-live="polite"></div>' +
             '  </div>' +
             '</form>' +
@@ -66,8 +64,8 @@
             '  <div class="calc-rf__result-main">Valor projetado ao final do período <span class="calc-rf__result-value">-</span></div>' +
             '  <div class="calc-rf__cards">' +
             '    <div class="calc-rf__card"><span class="calc-rf__card-label">Total investido</span><span class="calc-rf__card-value" data-role="investido">-</span></div>' +
-            '    <div class="calc-rf__card"><span class="calc-rf__card-label">Juros acumulados</span><span class="calc-rf__card-value" data-role="juros">-</span></div>' +
-            '    <div class="calc-rf__card"><span class="calc-rf__card-label">Taxa mensal usada</span><span class="calc-rf__card-value" data-role="taxa">-</span></div>' +
+            '    <div class="calc-rf__card"><span class="calc-rf__card-label">Rendimento da Poupança</span><span class="calc-rf__card-value" data-role="juros">-</span></div>' +
+            '    <div class="calc-rf__card"><span class="calc-rf__card-label">Taxa mensal da poupança</span><span class="calc-rf__card-value" data-role="taxa">-</span></div>' +
             '  </div>' +
             '  <div class="calc-rf__footnote" data-role="resumo"></div>' +
             '</div>';
@@ -82,16 +80,17 @@
         var button = wrapper.querySelector('.calc-rf__button');
         var status = wrapper.querySelector('.calc-rf__status');
         var results = wrapper.querySelector('.calc-rf__results');
+        
         var resultValue = wrapper.querySelector('.calc-rf__result-value');
         var investedValue = wrapper.querySelector('[data-role="investido"]');
         var earnedValue = wrapper.querySelector('[data-role="juros"]');
         var rateValue = wrapper.querySelector('[data-role="taxa"]');
         var summary = wrapper.querySelector('[data-role="resumo"]');
+        
         var currencyFields = [
             form.elements.investimento_inicial,
             form.elements.aplicacao_mensal
         ];
-        var rateField = form.elements.taxa_juros_mensal;
 
         currencyFields.forEach(function (field) {
             field.addEventListener('input', function () {
@@ -100,13 +99,6 @@
             field.addEventListener('blur', function () {
                 field.value = formatCurrencyInput(field.value);
             });
-        });
-
-        rateField.addEventListener('input', function () {
-            rateField.value = formatRateInput(rateField.value);
-        });
-        rateField.addEventListener('blur', function () {
-            rateField.value = formatRateInput(rateField.value);
         });
 
         form.addEventListener('submit', function (event) {
@@ -129,22 +121,27 @@
                     button.disabled = false;
 
                     if (!response || !response.cabecalho || response.cabecalho.status !== 'ok' || !response.dados || !response.dados.resultado) {
-                        setStatus(status, extractMessage(response) || 'Não foi possível calcular agora.', true);
+                        setStatus(status, extractMessage(response) || 'Não foi possível calcular a rentabilidade.', true);
                         results.classList.remove('is-visible');
                         return;
                     }
 
                     var result = response.dados.resultado;
+                    
                     resultValue.textContent = currencyFormatter.format(result.valor_futuro || 0);
                     investedValue.textContent = currencyFormatter.format(result.total_investido || 0);
                     earnedValue.textContent = currencyFormatter.format(result.juros_acumulados || 0);
+                    
+                    // A taxa que o backend encontrou no DB
                     rateValue.textContent = numberFormatter.format(result.taxa_juros_mensal || 0) + '%';
+                    
                     summary.textContent = 'Em ' + result.numero_meses + ' meses, com aporte inicial de ' +
                         currencyFormatter.format(result.investimento_inicial || 0) +
                         ' e aplicações mensais de ' + currencyFormatter.format(result.aplicacao_mensal || 0) +
-                        ', considerando aportes no início de cada mês.';
+                        ', na Poupança.';
+                        
                     results.classList.add('is-visible');
-                    setStatus(status, response.cabecalho.msg || 'Cálculo concluído.', false);
+                    setStatus(status, response.cabecalho.msg || 'Cálculo concluído com sucesso.', false);
                     scrollToResults(results);
                 }
             });
@@ -181,7 +178,6 @@
         var investimentoInicial = parseLocaleNumber(form.elements.investimento_inicial.value);
         var aplicacaoMensal = parseLocaleNumber(form.elements.aplicacao_mensal.value);
         var numeroMeses = parseInt(form.elements.numero_meses.value, 10);
-        var taxaJurosMensal = parseLocaleNumber(form.elements.taxa_juros_mensal.value);
 
         if (!isFinite(investimentoInicial) || investimentoInicial < 0) {
             return null;
@@ -195,15 +191,10 @@
             return null;
         }
 
-        if (!isFinite(taxaJurosMensal) || taxaJurosMensal < 0) {
-            return null;
-        }
-
         return {
             investimento_inicial: investimentoInicial,
             aplicacao_mensal: aplicacaoMensal,
-            numero_meses: numeroMeses,
-            taxa_juros_mensal: taxaJurosMensal
+            numero_meses: numeroMeses
         };
     }
 
@@ -238,20 +229,13 @@
         var decimalPart = digits.slice(-2).padStart(2, '0');
         integerPart = integerPart.replace(/^0+(?=\d)/, '');
 
-        return integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.') + ',' + decimalPart;
-    }
-
-    function formatRateInput(value) {
-        var digits = onlyDigits(value);
-        if (!digits) {
-            return '';
+        if (!integerPart && decimalPart !== '00') {
+           integerPart = '0';
+        } else if (!integerPart) {
+           integerPart = '';
         }
 
-        var integerPart = digits.slice(0, -2) || '0';
-        var decimalPart = digits.slice(-2).padStart(2, '0');
-        integerPart = integerPart.replace(/^0+(?=\d)/, '');
-
-        return integerPart + ',' + decimalPart;
+        return integerPart ? integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.') + ',' + decimalPart : '';
     }
 
     boot();
