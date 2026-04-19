@@ -12,10 +12,12 @@
  */
 
 header('Content-Type: application/json; charset=utf-8');
-header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+header('Cache-Control: private, no-store, no-cache, must-revalidate, max-age=0');
 header('Cache-Control: post-check=0, pre-check=0', false);
 header('Pragma: no-cache');
-header('Expires: Thu, 01 Jan 1970 00:00:00 GMT');
+header('Expires: 0');
+header('Surrogate-Control: no-store');
+header('Vary: Accept');
 
 $docRoot = $_SERVER['DOCUMENT_ROOT'] ?: dirname(__DIR__, 6);
 $autoload = $docRoot . '/comum/php/autoload.php';
@@ -214,6 +216,7 @@ function inserirTag(database $db, array $data): void
 function inserir(database $db, array $data): void
 {
     $titulo = trim($data['titulo'] ?? '');
+    $thumb = normalizarThumb($data['thumb'] ?? null);
     $thumbTitulo = trim($data['thumb_titulo'] ?? '');
     $subtitulo = trim($data['subtitulo'] ?? '');
     $path = normalizePath($data['path'] ?? '');
@@ -240,16 +243,16 @@ function inserir(database $db, array $data): void
                  publicado, ultimos, root, search, amp)
             VALUES
                 (?, ?, ?, ?,
-                 ?, ?, ?, NOW(), 0, ?,
+                 ?, ?, ?, NOW(), ?, ?,
                  ?, ?, ?, ?, ?)";
 
     $db->link->begin_transaction();
 
     try {
-        $db->query($sql, 'ssssssssiiiii', [
+        $db->query($sql, 'sssssssisiiiii', [
             $titulo, $thumbTitulo,
             $subtitulo, $path,
-            $keywords, $conteudo, $dataPub, $duracao,
+            $keywords, $conteudo, $dataPub, $thumb, $duracao,
             $publicado, $ultimos, $root, $search, $amp
         ]);
 
@@ -262,7 +265,7 @@ function inserir(database $db, array $data): void
         throw $e;
     }
 
-    echo json_encode(['sucesso' => true, 'id' => $novoId]);
+    echo json_encode(['sucesso' => true, 'id' => $novoId, 'thumb' => $thumb]);
 }
 
 function atualizar(database $db, array $data): void
@@ -328,6 +331,7 @@ function excluir(database $db, array $data): void
 function uploadThumb(database $db, array $data): void
 {
     $id = (int) ($data['id'] ?? 0);
+    $thumbNome = normalizarThumb($data['thumb_nome'] ?? null);
     $width = (int) ($data['width'] ?? 0);
     $bx = (int) ($data['bx'] ?? 0);
     $by = (int) ($data['by'] ?? 0);
@@ -336,6 +340,11 @@ function uploadThumb(database $db, array $data): void
 
     if (!$id) {
         echo json_encode(['sucesso' => false, 'mensagem' => 'ID inválido para upload da thumb.']);
+        return;
+    }
+
+    if ($thumbNome <= 0) {
+        echo json_encode(['sucesso' => false, 'mensagem' => 'Número da thumb inválido.']);
         return;
     }
 
@@ -401,9 +410,9 @@ function uploadThumb(database $db, array $data): void
     $uploadDirectory = $GLOBALS['docRoot'] . '/cache/img/upload/t/';
     ensureDirectory($uploadDirectory);
 
-    $ampFile = $uploadDirectory . $id . 'amp.jpg';
-    $smallFile = $uploadDirectory . $id . '.jpg';
-    $largeFile = $uploadDirectory . $id . 'g.jpg';
+    $ampFile = $uploadDirectory . $thumbNome . 'amp.jpg';
+    $smallFile = $uploadDirectory . $thumbNome . '.jpg';
+    $largeFile = $uploadDirectory . $thumbNome . 'g.jpg';
 
     if (!imagejpeg($crop, $ampFile, 60)) {
         imagedestroy($crop);
@@ -419,11 +428,12 @@ function uploadThumb(database $db, array $data): void
 
     imagedestroy($crop);
 
-    $db->query("UPDATE links SET thumb = ?, dateModified = NOW() WHERE id = ?", 'ii', [$id, $id]);
+    $db->query("UPDATE links SET thumb = ?, dateModified = NOW() WHERE id = ?", 'ii', [$thumbNome, $id]);
 
     echo json_encode([
         'sucesso' => true,
         'id' => $id,
+        'thumb' => $thumbNome,
         'timestamp' => time()
     ]);
 }
@@ -559,6 +569,16 @@ function normalizarDestaque($valor): ?int
     return in_array($id, [100, 200], true) ? $id : null;
 }
 
+function normalizarThumb($valor): int
+{
+    $thumb = preg_replace('/\D+/', '', (string) ($valor ?? ''));
+    if ($thumb === '') {
+        return 0;
+    }
+
+    return (int) $thumb;
+}
+
 function montarCamposAtualizacaoArtigo(array $data): array
 {
     $set = [];
@@ -566,6 +586,7 @@ function montarCamposAtualizacaoArtigo(array $data): array
     $params = [];
     $campos = [
         'titulo' => ['coluna' => 'titulo', 'tipo' => 's', 'transform' => static fn ($valor) => trim((string) $valor), 'required' => true],
+        'thumb' => ['coluna' => 'thumb', 'tipo' => 'i', 'transform' => static fn ($valor) => normalizarThumb($valor)],
         'thumb_titulo' => ['coluna' => 'thumb_titulo', 'tipo' => 's', 'transform' => static fn ($valor) => trim((string) $valor)],
         'subtitulo' => ['coluna' => 'subtitulo', 'tipo' => 's', 'transform' => static fn ($valor) => trim((string) $valor)],
         'path' => ['coluna' => 'path', 'tipo' => 's', 'transform' => static fn ($valor) => normalizePath((string) $valor)],

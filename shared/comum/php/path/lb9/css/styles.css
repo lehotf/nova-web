@@ -293,14 +293,14 @@ body {
     height: 100vh;
 }
 
-/* ── Layout principal ── */
+/* â”€â”€ Layout principal â”€â”€ */
 .main-content {
-    grid-template-columns: 400px 1fr;
+    grid-template-columns: 420px 1fr;
     gap: 0;
     flex: 1;
 }
 
-/* ── Sidebar ── */
+/* â”€â”€ Sidebar â”€â”€ */
 .sidebar {
     backdrop-filter: blur(20px);
     height: 100vh;
@@ -318,7 +318,7 @@ body {
     gap: var(--spacing-sm);
 }
 
-/* ── Search ── */
+/* â”€â”€ Search â”€â”€ */
 .search-input {
     width: 100%;
     padding: var(--spacing-sm);
@@ -335,7 +335,7 @@ body {
     box-shadow: 0 0 0 3px rgba(138, 99, 255, 0.1);
 }
 
-/* ── Lista de artigos ── */
+/* â”€â”€ Lista de artigos â”€â”€ */
 .model-list {
     margin-top: var(--spacing-lg);
     overflow-y: auto;
@@ -383,7 +383,7 @@ body {
     padding: 8px 2px;
 }
 
-/* ── Editor placeholder ── */
+/* â”€â”€ Editor placeholder â”€â”€ */
 .editor-placeholder {
     align-items: center;
     justify-content: center;
@@ -568,19 +568,19 @@ body {
     line-height: 1.5;
 }
 
-/* ── Formulário ── */
+/* â”€â”€ FormulÃ¡rio â”€â”€ */
 .full-width {
     width: 100%;
 }
 
-/* form-row usa grid de 2 colunas iguais por padrão */
+/* form-row usa grid de 2 colunas iguais por padrÃ£o */
 .form-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 16px;
 }
 
-/* Linha 1: Título (50%) | URL (35%) | Data (15%) */
+/* Linha 1: TÃ­tulo (50%) | URL (35%) | Data (15%) */
 .form-row-3col {
     display: grid;
     grid-template-columns: minmax(0, 50fr) minmax(0, 35fr) minmax(0, 15fr);
@@ -759,7 +759,7 @@ body {
     margin-top: auto;
 }
 
-/* ── Coluna direita: flags + botão salvar ── */
+/* â”€â”€ Coluna direita: flags + botÃ£o salvar â”€â”€ */
 .form-group-flags-column {
     width: 200px;
     flex-shrink: 0;
@@ -776,7 +776,7 @@ body {
     justify-content: flex-start;
 }
 
-/* Flag-option: visual idêntico ao priority-option do original */
+/* Flag-option: visual idÃªntico ao priority-option do original */
 .flag-option {
     position: relative;
     display: flex;
@@ -834,7 +834,7 @@ body {
     font-weight: 600;
 }
 
-/* Botão salvar no fundo */
+/* BotÃ£o salvar no fundo */
 .form-group-buttons {
     display: flex;
     flex-direction: column;
@@ -858,12 +858,33 @@ body {
     gap: 4px;
 }
 
+.thumb-panel-title-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
 .thumb-panel-title {
     font-size: 0.8rem;
     font-weight: 700;
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: #e4e4e4;
+}
+
+.thumb-number-input {
+    width: 72px;
+    padding: 5px 8px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(0, 0, 0, 0.24);
+    color: #f3f3f3;
+    font-size: 0.82rem;
+    line-height: 1.1;
+}
+
+.thumb-number-input::placeholder {
+    color: #8d8d8d;
 }
 
 .thumb-status {
@@ -901,7 +922,7 @@ body {
     font-size: 0.88rem;
 }
 
-/* Espaçador: empurra as flags para baixo do label, alinhando com o textarea */
+/* EspaÃ§ador: empurra as flags para baixo do label, alinhando com o textarea */
 .flags-spacer-label {
     display: block;
     font-size: 12px;
@@ -910,7 +931,7 @@ body {
     pointer-events: none;
 }
 
-/* ── Modais ── */
+/* â”€â”€ Modais â”€â”€ */
 .modal {
     position: fixed;
     inset: 0;
@@ -1120,7 +1141,7 @@ body {
         );
 }
 
-/* ── Launcher color overrides ── */
+/* â”€â”€ Launcher color overrides â”€â”€ */
 .launcher-item-artigos {
     color: #4fa3ff;
 }
@@ -1144,7 +1165,7 @@ body {
     color: #9ff0b8;
 }
 
-/* ── Responsive ── */
+/* â”€â”€ Responsive â”€â”€ */
 @media (max-width: 1024px) {
     .main-content {
         grid-template-columns: 1fr;

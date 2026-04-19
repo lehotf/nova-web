@@ -45,6 +45,7 @@ class ArtigosApp extends window.BaseModule {
         this.artigoTagsList = this.root.querySelector('#artigoTagsList');
         this.btnImagemArtigo = this.root.querySelector('#btnImagemArtigo');
         this.artigoImagemUpload = this.root.querySelector('#artigoImagemUpload');
+        this.artigoThumb = this.root.querySelector('#artigoThumb');
 
         // Flags
         this.flagUltimos = this.root.querySelector('#flagUltimos');
@@ -114,6 +115,7 @@ class ArtigosApp extends window.BaseModule {
         this.artigoNovaTag?.addEventListener('keydown', (e) => this.handleNovaTagKeydown(e));
         this.thumbUploadInput?.addEventListener('change', (e) => this.handleThumbFileChange(e));
         this.artigoImagemUpload?.addEventListener('change', (e) => this.handleArtigoImageChange(e));
+        this.thumbPreview?.addEventListener('error', () => this.setThumbPreviewVisible(false));
         this.thumbUploadAction?.addEventListener('click', () => this.enviarThumb());
         this.artigoConfigSave?.addEventListener('click', () => this.salvarConfiguracoesArtigo());
 
@@ -129,6 +131,8 @@ class ArtigosApp extends window.BaseModule {
         this.artigoDuracao?.addEventListener('input', () => {
             this.artigoDuracao.value = this.aplicarMascaraDuracao(this.artigoDuracao.value);
         });
+        this.artigoThumb?.addEventListener('input', () => this.handleThumbInput());
+        this.artigoThumb?.addEventListener('blur', () => this.handleThumbBlur());
 
         this.artigoConteudo?.addEventListener('click', () => this.salvarSelecaoConteudo());
         this.artigoConteudo?.addEventListener('keyup', () => this.salvarSelecaoConteudo());
@@ -154,13 +158,29 @@ class ArtigosApp extends window.BaseModule {
         await this.carregarArtigos();
     }
 
+    async apiFetch(path, options = {}) {
+        const config = {
+            cache: 'no-store',
+            credentials: 'same-origin',
+            ...options
+        };
+
+        const headers = new Headers(options.headers || {});
+        headers.set('Accept', 'application/json');
+        headers.set('Cache-Control', 'no-store, no-cache, max-age=0');
+        headers.set('Pragma', 'no-cache');
+        config.headers = headers;
+
+        return fetch(`${this.apiBase}/${path}`, config);
+    }
+
     async carregarTags() {
         if (!this.artigoTagsList) return;
 
         this.artigoTagsList.innerHTML = '<p class="artigo-tags-empty">Carregando tags...</p>';
 
         try {
-            const res = await fetch(`${this.apiBase}/artigos.php?acao=listar_tags`);
+            const res = await this.apiFetch('artigos.php?acao=listar_tags');
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
             const data = await res.json();
@@ -243,7 +263,7 @@ class ArtigosApp extends window.BaseModule {
         }
 
         try {
-            const res = await fetch(`${this.apiBase}/artigos.php`, {
+            const res = await this.apiFetch('artigos.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -291,7 +311,7 @@ class ArtigosApp extends window.BaseModule {
             const params = new URLSearchParams({ acao: 'listar' });
             if (termo) params.set('termo', termo);
 
-            const res = await fetch(`${this.apiBase}/artigos.php?${params}`);
+            const res = await this.apiFetch(`artigos.php?${params}`);
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
             const data = await res.json();
@@ -341,7 +361,7 @@ class ArtigosApp extends window.BaseModule {
 
     async abrirArtigo(id) {
         try {
-            const res = await fetch(`${this.apiBase}/artigos.php?acao=obter&id=${encodeURIComponent(id)}`);
+            const res = await this.apiFetch(`artigos.php?acao=obter&id=${encodeURIComponent(id)}`);
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const data = await res.json();
             if (!data.sucesso) throw new Error(data.mensagem || 'Erro ao carregar artigo');
@@ -373,6 +393,9 @@ class ArtigosApp extends window.BaseModule {
         this.artigoKeywords.value = artigo.keywords || '';
         this.artigoDuracao.value = artigo.duracao && artigo.duracao !== '00:00:00' ? artigo.duracao : '';
         this.artigoConteudo.value = artigo.conteudo || '';
+        if (this.artigoThumb) {
+            this.artigoThumb.value = this.normalizarThumbValor(artigo.thumb);
+        }
         this.tagsSelecionadas = new Set(
             Array.isArray(artigo.tag_ids)
                 ? artigo.tag_ids.map((id) => Number(id)).filter((id) => id > 0)
@@ -414,6 +437,9 @@ class ArtigosApp extends window.BaseModule {
         this.artigoKeywords.value = '';
         this.artigoDuracao.value = '';
         this.artigoConteudo.value = '';
+        if (this.artigoThumb) {
+            this.artigoThumb.value = '';
+        }
         this.tagsSelecionadas = new Set();
         this.artigoOriginal = null;
 
@@ -509,7 +535,7 @@ class ArtigosApp extends window.BaseModule {
         }
 
         try {
-            const res = await fetch(`${this.apiBase}/artigos.php`, {
+            const res = await this.apiFetch('artigos.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
@@ -523,9 +549,9 @@ class ArtigosApp extends window.BaseModule {
                 this.artigoId.value = data.id;
                 if (!this.artigoAtual) this.artigoAtual = {};
                 this.artigoAtual.id = data.id;
-                if (this.artigoAtual.thumb === undefined) this.artigoAtual.thumb = 0;
             }
             if (!this.artigoAtual) this.artigoAtual = {};
+            this.artigoAtual.thumb = Number(estadoAtual.thumb || data.thumb) || 0;
             this.artigoAtual.tag_ids = Array.from(this.tagsSelecionadas).sort((a, b) => a - b);
             this.artigoAtual.thumb_titulo = this.thumbTituloAtual;
             this.artigoAtual.destaque_id = payload.destaque ? destaqueAtual : this.obterDestaqueOriginal();
@@ -546,6 +572,7 @@ class ArtigosApp extends window.BaseModule {
                 thumb: this.artigoAtual.thumb || 0
             }, { inserirNoTopo: !artigoExistente, idAnterior: artigoIdAntesDeSalvar });
 
+            this.atualizarEstadoThumb(this.artigoAtual);
             this.showToast('Artigo salvo com sucesso!', 'success');
             this.filtrarLista();
         } catch (err) {
@@ -572,7 +599,7 @@ class ArtigosApp extends window.BaseModule {
         if (!id) return;
 
         try {
-            const res = await fetch(`${this.apiBase}/artigos.php`, {
+            const res = await this.apiFetch('artigos.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ acao: 'excluir', id })
@@ -663,7 +690,7 @@ class ArtigosApp extends window.BaseModule {
         if (this.btnImagemArtigo) this.btnImagemArtigo.disabled = true;
 
         try {
-            const res = await fetch(`${this.apiBase}/artigos.php`, {
+            const res = await this.apiFetch('artigos.php', {
                 method: 'POST',
                 body: formData
             });
@@ -725,10 +752,20 @@ class ArtigosApp extends window.BaseModule {
     }
 
     abrirUploadThumb() {
-        if (!this.artigoId.value) {
+        const id = this.normalizarThumbValor(this.artigoId?.value);
+        if (!id) {
             this.showToast('Salve o artigo antes de enviar a thumb', 'error');
             return;
         }
+
+        if (this.artigoThumb) {
+            this.artigoThumb.value = id;
+        }
+        if (!this.artigoAtual) {
+            this.artigoAtual = {};
+        }
+        this.artigoAtual.id = id;
+        this.artigoAtual.thumb = Number(id) || 0;
 
         this.resetThumbModal({ preserveFile: false });
         window.AppUtils.openModal({
@@ -833,6 +870,7 @@ class ArtigosApp extends window.BaseModule {
     coletarEstadoAtualArtigo(dataIso, duracao) {
         return {
             titulo: this.artigoTitulo.value.trim(),
+            thumb: this.normalizarThumbValor(this.artigoThumb?.value),
             thumb_titulo: this.thumbTituloAtual || '',
             path: this.normalizarPathComparacao(this.artigoPath.value),
             subtitulo: this.artigoSubtitulo.value.trim(),
@@ -852,6 +890,7 @@ class ArtigosApp extends window.BaseModule {
         const artigo = this.artigoOriginal || {};
         return {
             titulo: String(artigo.titulo || '').trim(),
+            thumb: this.normalizarThumbValor(artigo.thumb),
             thumb_titulo: String(artigo.thumb_titulo || '').trim(),
             path: this.normalizarPathComparacao(artigo.path || ''),
             subtitulo: String(artigo.subtitulo || '').trim(),
@@ -900,7 +939,7 @@ class ArtigosApp extends window.BaseModule {
         artigoBase.datePublished = estadoAtual.data ? `${estadoAtual.data} 00:00:00` : '';
         artigoBase.tag_ids = Array.from(this.tagsSelecionadas).sort((a, b) => a - b);
         artigoBase.destaque_id = destaqueId ?? null;
-        artigoBase.thumb = thumb;
+        artigoBase.thumb = Number(estadoAtual.thumb || thumb) || 0;
 
         return artigoBase;
     }
@@ -1126,6 +1165,18 @@ class ArtigosApp extends window.BaseModule {
             return;
         }
 
+        let thumbNumero = this.normalizarThumbValor(this.artigoThumb?.value);
+        if (Number(thumbNumero) <= 0) {
+            thumbNumero = this.normalizarThumbValor(id);
+            if (this.artigoThumb) {
+                this.artigoThumb.value = thumbNumero;
+            }
+            if (!this.artigoAtual) {
+                this.artigoAtual = {};
+            }
+            this.artigoAtual.thumb = Number(thumbNumero) || 0;
+        }
+
         if (!this.thumbCropState.file || !this.thumbCropState.imageLoaded) {
             this.showToast('Selecione uma imagem para a thumb', 'error');
             return;
@@ -1137,6 +1188,7 @@ class ArtigosApp extends window.BaseModule {
         const formData = new FormData();
         formData.append('acao', 'upload_thumb');
         formData.append('id', id);
+        formData.append('thumb_nome', thumbNumero);
         formData.append('bx', String(Math.round(this.thumbCropState.bx)));
         formData.append('by', String(Math.round(this.thumbCropState.by)));
         formData.append('width', String(Math.round(this.thumbCropState.displayWidth)));
@@ -1147,7 +1199,7 @@ class ArtigosApp extends window.BaseModule {
         this.thumbUploadAction.disabled = true;
 
         try {
-            const res = await fetch(`${this.apiBase}/artigos.php`, {
+            const res = await this.apiFetch('artigos.php', {
                 method: 'POST',
                 body: formData
             });
@@ -1158,7 +1210,7 @@ class ArtigosApp extends window.BaseModule {
 
             if (!this.artigoAtual) this.artigoAtual = {};
             this.artigoAtual.id = id;
-            this.artigoAtual.thumb = data.id || id;
+            this.artigoAtual.thumb = Number(data.thumb || thumbNumero) || 0;
 
             this.atualizarEstadoThumb(this.artigoAtual, data.timestamp || Date.now());
             this.showToast('Thumb enviada com sucesso!', 'success');
@@ -1173,8 +1225,8 @@ class ArtigosApp extends window.BaseModule {
 
     atualizarEstadoThumb(artigo = {}, cacheBuster = Date.now()) {
         const id = artigo?.id || this.artigoId?.value || '';
-        const thumb = artigo?.thumb || 0;
-        const possuiThumb = Boolean(Number(thumb) > 0 || String(thumb) === String(id));
+        const thumb = this.normalizarThumbValor(artigo?.thumb ?? this.artigoThumb?.value);
+        const possuiThumb = Number(thumb) > 0;
 
         if (!id) {
             if (this.thumbStatus) this.thumbStatus.textContent = 'Salve o artigo para liberar o upload.';
@@ -1185,7 +1237,7 @@ class ArtigosApp extends window.BaseModule {
         if (possuiThumb) {
             if (this.thumbStatus) this.thumbStatus.textContent = '';
             if (this.thumbPreview) {
-                this.thumbPreview.src = `/cache/img/upload/t/${id}.jpg?v=${cacheBuster}`;
+                this.thumbPreview.src = `/cache/img/upload/t/${thumb}.jpg?v=${cacheBuster}`;
             }
             this.setThumbPreviewVisible(true);
             return;
@@ -1208,6 +1260,41 @@ class ArtigosApp extends window.BaseModule {
             URL.revokeObjectURL(this.thumbObjectUrl);
             this.thumbObjectUrl = null;
         }
+    }
+
+    handleThumbInput() {
+        if (!this.artigoThumb) return;
+
+        const thumb = this.normalizarThumbValor(this.artigoThumb.value);
+        this.artigoThumb.value = thumb;
+
+        if (!this.artigoAtual) {
+            this.artigoAtual = {};
+        }
+        this.artigoAtual.thumb = Number(thumb) || 0;
+    }
+
+    handleThumbBlur() {
+        if (!this.artigoThumb) return;
+
+        const thumb = this.normalizarThumbValor(this.artigoThumb.value);
+        this.artigoThumb.value = thumb;
+
+        if (!this.artigoAtual) {
+            this.artigoAtual = {};
+        }
+        this.artigoAtual.thumb = Number(thumb) || 0;
+        this.atualizarEstadoThumb(this.artigoAtual);
+    }
+
+    normalizarThumbValor(valor) {
+        const somenteDigitos = String(valor ?? '').replace(/\D+/g, '');
+        if (somenteDigitos === '') {
+            return '';
+        }
+
+        const semZeros = somenteDigitos.replace(/^0+(?=\d)/, '');
+        return semZeros === '' ? '0' : semZeros;
     }
 
     gerarSlug(texto) {

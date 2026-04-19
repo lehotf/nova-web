@@ -160,7 +160,10 @@ require $_SERVER['DOCUMENT_ROOT'] . '/comum/php/autoload.php';
 
                                     <div class="thumb-panel">
                                         <div class="thumb-panel-header">
-                                            <span class="thumb-panel-title">Thumb</span>
+                                            <div class="thumb-panel-title-row">
+                                                <span class="thumb-panel-title">Thumb</span>
+                                                <input id="artigoThumb" class="thumb-number-input" type="text" inputmode="numeric" placeholder="ID" aria-label="Número da thumb">
+                                            </div>
                                             <span id="thumbStatus" class="thumb-status">Salve o artigo para liberar o upload.</span>
                                         </div>
                                         <div class="thumb-panel-body">
@@ -223,7 +226,7 @@ require $_SERVER['DOCUMENT_ROOT'] . '/comum/php/autoload.php';
                     </div>
                     <h2 class="modal-title">Upload da Thumb</h2>
                 </div>
-                <p class="modal-message">Selecione a imagem, ajuste a posição com o mouse e use a roda para zoom. A thumb final será salva com o nome do ID do artigo.</p>
+                <p class="modal-message">Selecione a imagem, ajuste a posição com o mouse e use a roda para zoom. A thumb final será salva com o número informado no campo THUMB.</p>
 
                 <div class="thumb-modal-grid">
                     <div class="form-group">
