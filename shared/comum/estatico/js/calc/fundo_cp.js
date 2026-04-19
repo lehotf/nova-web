@@ -64,12 +64,12 @@
             '  </div>' +
             '</form>' +
             '<div class="calc-rf__results" id="' + RESULT_ID + '" aria-live="polite">' +
-            '  <div class="calc-rf__result-main">Valor líquido projetado ao final do período no fundo de renda fixa de curto prazo <span class="calc-rf__result-value">-</span></div>' +
+            '  <div class="calc-rf__result-main">Valor líquido projetado <span class="calc-rf__result-value">-</span></div>' +
             '  <div class="calc-rf__cards">' +
             '    <div class="calc-rf__card"><span class="calc-rf__card-label">Total investido</span><span class="calc-rf__card-value" data-role="investido">-</span></div>' +
             '    <div class="calc-rf__card"><span class="calc-rf__card-label">Rentabilidade do Fundo</span><span class="calc-rf__card-value" data-role="juros">-</span></div>' +
             '    <div class="calc-rf__card"><span class="calc-rf__card-label">IR no Resgate (a deduzir)</span><span class="calc-rf__card-value" data-role="imposto_resgate">-</span></div>' +
-            '    <div class="calc-rf__card" style="opacity: 0.55;"><span class="calc-rf__card-label">Come-cotas (já retido)</span><span class="calc-rf__card-value" data-role="come_cotas">-</span></div>' +
+            '    <div class="calc-rf__card"><span class="calc-rf__card-label">Come-cotas (já retido)</span><span class="calc-rf__card-value" data-role="come_cotas">-</span></div>' +
             '  </div>' +
             '  <div class="calc-rf__footnote" data-role="resumo"></div>' +
             '  <div class="calc-rf__report" data-role="relatorio" style="margin-top: 20px; font-size: 14px;"></div>' +
@@ -160,41 +160,58 @@
                     var saldoAntesDoResgate = result.total_investido + result.juros_acumulados;
                     var percentualGanhoRelativo = result.total_investido > 0 ? (result.juros_acumulados / result.total_investido) * 100 : 0;
 
-                    var htmlRelatorio = '<div style="font-size: 16px; line-height: 1.6; margin-top: 30px;">' +
-                        '<h3 style="margin-bottom: 15px; font-size: 20px;">Explicação Detalhada</h3>' +
+                    var jurosFmt = result.juros_acumulados > 0 ? '<strong class="calc-rf__text-green">' + currencyFormatter.format(result.juros_acumulados) + '</strong>' : '<strong>' + currencyFormatter.format(result.juros_acumulados) + '</strong>';
+                    var percGanhoFmt = result.juros_acumulados > 0 ? '<strong class="calc-rf__text-green">' + numberFormatter.format(percentualGanhoRelativo) + '%</strong>' : '<strong>' + numberFormatter.format(percentualGanhoRelativo) + '%</strong>';
+                    var comeCotasFmt = result.total_descontado_come_cotas > 0 ? '<strong class="calc-rf__text-red">' + currencyFormatter.format(result.total_descontado_come_cotas) + '</strong>' : '<strong>' + currencyFormatter.format(result.total_descontado_come_cotas) + '</strong>';
+                    var impostoFmt = result.imposto_resgate > 0 ? '<strong class="calc-rf__text-red">' + currencyFormatter.format(result.imposto_resgate) + '</strong>' : '<strong>' + currencyFormatter.format(result.imposto_resgate) + '</strong>';
+                    var rentLiqFmt = rentabilidadeLiquida > 0 ? '<strong class="calc-rf__text-green">' + currencyFormatter.format(rentabilidadeLiquida) + '</strong>' : '<strong>' + currencyFormatter.format(rentabilidadeLiquida) + '</strong>';
+                    var percRentLiqFmt = rentabilidadeLiquida > 0 ? '<strong class="calc-rf__text-green">' + numberFormatter.format(percentualRentabilidadeLiquida) + '%</strong>' : '<strong>' + numberFormatter.format(percentualRentabilidadeLiquida) + '%</strong>';
+                    var rentRealFmt = result.rentabilidade_real_liquida > 0 ? '<strong class="calc-rf__text-green">' + currencyFormatter.format(result.rentabilidade_real_liquida) + '</strong>' : (result.rentabilidade_real_liquida < 0 ? '<strong class="calc-rf__text-red">' + currencyFormatter.format(result.rentabilidade_real_liquida) + '</strong>' : '<strong>' + currencyFormatter.format(result.rentabilidade_real_liquida) + '</strong>');
+                    var percRentRealFmt = result.rentabilidade_real_liquida > 0 ? '<strong class="calc-rf__text-green">' + numberFormatter.format(percentualRentabilidadeRealLiquida) + '%</strong>' : (result.rentabilidade_real_liquida < 0 ? '<strong class="calc-rf__text-red">' + numberFormatter.format(percentualRentabilidadeRealLiquida) + '%</strong>' : '<strong>' + numberFormatter.format(percentualRentabilidadeRealLiquida) + '%</strong>');
+
+                    if (result.juros_acumulados > 0) earnedValue.classList.add('calc-rf__text-green'); else earnedValue.classList.remove('calc-rf__text-green');
+                    if (result.total_descontado_come_cotas > 0) comeCotasValue.classList.add('calc-rf__text-red'); else comeCotasValue.classList.remove('calc-rf__text-red');
+                    if (result.imposto_resgate > 0) impostoResgateValue.classList.add('calc-rf__text-red'); else impostoResgateValue.classList.remove('calc-rf__text-red');
+
+                    earnedValue.style.color = '';
+                    comeCotasValue.style.color = '';
+                    impostoResgateValue.style.color = '';
+
+                    var htmlRelatorio = '<div class="calc-rf__report-content">' +
+                        '<h3>Explicação Detalhada</h3>' +
                         '<p><strong>Importante:</strong> esta calculadora foi modelada para <strong>fundo de renda fixa de curto prazo</strong>. O imposto regressivo foi aproximado em meses, embora a legislação use contagem em dias, e a inflação foi projetada pela repetição da última taxa mensal de IGP-M disponível na base.</p>' +
                         '<p>Caso você resolva investir um valor inicial de <strong>' + currencyFormatter.format(result.investimento_inicial) + '</strong> e realizar aplicações mensais de <strong>' + currencyFormatter.format(result.aplicacao_mensal) + '</strong> a uma rentabilidade de <strong>' + numberFormatter.format(result.taxa_juros_mensal) + '%</strong> ao mês, teremos o seguinte:</p>' +
                         '<p>Ao final do período de <strong>' + result.numero_meses + ' meses</strong> você terá investido um total de <strong>' + currencyFormatter.format(result.total_investido) + '</strong>.</p>' +
-                        '<p>Este investimento lhe dará uma rentabilidade de <strong>' + currencyFormatter.format(result.juros_acumulados) + '</strong>; totalizando um valor final no fundo de <strong>' + currencyFormatter.format(saldoAntesDoResgate) + '</strong>. Esta rentabilidade representaria um ganho de <strong>' + numberFormatter.format(percentualGanhoRelativo) + '%</strong> em relação ao valor investido.</p>' +
-                        '<p>Para fundos de renda fixa de curto prazo sujeitos a come-cotas, a legislação prevê antecipação semestral de IR, normalmente no último dia útil de maio e novembro. Nesta simulação mensal, essa cobrança foi aproximada nesses dois meses e calculada à alíquota de <strong>20%</strong> sobre o rendimento acumulado desde o último evento de come-cotas. A quantidade estimada de cotas perdidas no período foi equivalente a <strong>' + currencyFormatter.format(result.total_descontado_come_cotas) + '</strong>.</p>' +
-                        '<p>No resgate, pode existir um imposto complementar de <strong>' + currencyFormatter.format(result.imposto_resgate) + '</strong>. Esse valor representa a diferença entre a alíquota final regressiva aplicável ao prazo do aporte e o que já foi antecipado pelo come-cotas. Nesta calculadora, essa tabela foi aproximada por meses: até 6 meses, 22,5%; acima de 6 meses, 20%. A alíquota média efetiva de IR neste exemplo foi de <strong>' + numberFormatter.format(aliquotaMediaIr) + '%</strong> sobre o ganho bruto estimado do fundo.</p>' +
-                        '<p>Portanto, a rentabilidade líquida do investimento será de <strong>' + currencyFormatter.format(rentabilidadeLiquida) + '</strong>. Percentualmente falando, isto corresponde a <strong>' + numberFormatter.format(percentualRentabilidadeLiquida) + '%</strong> do valor investido. O valor líquido que você receberá na conta é de <strong>' + currencyFormatter.format(result.valor_liquido) + '</strong>.</p>' +
-                        '<h4 style="margin-top: 25px; margin-bottom: 10px; font-size: 18px;">Considerando a Inflação:</h4>' +
+                        '<p>Este investimento lhe dará uma rentabilidade de ' + jurosFmt + '; totalizando um valor final no fundo de <strong>' + currencyFormatter.format(saldoAntesDoResgate) + '</strong>. Esta rentabilidade representaria um ganho de ' + percGanhoFmt + ' em relação ao valor investido.</p>' +
+                        '<p>Para fundos de renda fixa de curto prazo sujeitos a come-cotas, a legislação prevê antecipação semestral de IR, normalmente no último dia útil de maio e novembro. Nesta simulação mensal, essa cobrança foi aproximada nesses dois meses e calculada à alíquota de <strong>20%</strong> sobre o rendimento acumulado desde o último evento de come-cotas. A quantidade estimada de cotas perdidas no período foi equivalente a ' + comeCotasFmt + '.</p>' +
+                        '<p>No resgate, calcula-se imposto complementar de ' + impostoFmt + '. Esse valor representa a diferença entre a alíquota final regressiva aplicável ao prazo do aporte e o que já foi antecipado pelo come-cotas. Nesta calculadora, essa tabela foi aproximada por meses: até 6 meses, 22,5%; acima de 6 meses, 20%. A alíquota média efetiva de IR neste exemplo foi de <strong>' + numberFormatter.format(aliquotaMediaIr) + '%</strong> sobre o ganho bruto estimado do fundo.</p>' +
+                        '<p>Portanto, a rentabilidade líquida do investimento será de ' + rentLiqFmt + '. Percentualmente falando, isto corresponde a ' + percRentLiqFmt + ' do valor investido. O valor líquido que você receberá na conta é de <strong>' + currencyFormatter.format(result.valor_liquido) + '</strong>.</p>' +
+                        '<h4>Considerando a Inflação:</h4>' +
                         '<p>Mas é preciso levar em consideração a inflação do período. Considerando o IGP-M mensal mais recente disponível na base, de <strong>' + numberFormatter.format(result.igpm_mensal) + '%</strong> (' + result.igpm_data + '), a inflação projetada para o período, por repetição dessa taxa ao longo de toda a simulação, é de aproximadamente <strong>' + numberFormatter.format(inflacaoPeriodoPercentual) + '%</strong>.</p>' +
                         '<p>Isto significa que o valor real do seu dinheiro, já descontando os impostos e a inflação, no final do período, terá o poder de compra equivalente a <strong>' + currencyFormatter.format(result.valor_real_final) + '</strong> nos dias de hoje. <small><em>(Nota: Em matemática financeira, para encontrar o valor real ou poder de compra de um montante futuro, não realizamos uma subtração simples da porcentagem. O correto é descapitalizar o valor, dividindo-o pelo fator de correção da inflação: <code>' + currencyFormatter.format(result.valor_liquido) + ' / (1 + ' + numberFormatter.format(inflacaoPeriodoPercentual) + '%)</code>).</em></small></p>' +
                         '<p>Em contrapartida, o valor total real investido não coincide com os <strong>' + currencyFormatter.format(result.total_investido) + '</strong> nominais aportados ao longo do tempo, porque cada aporte mensal é trazido a valor presente com base nessa mesma hipótese simplificadora de inflação mensal constante.</p>' +
                         '<p>Considerando essa metodologia, o valor total real investido será de <strong>' + currencyFormatter.format(result.valor_real_investido) + '</strong>.</p>' +
-                        '<p>A rentabilidade real líquida, então, será de <strong>' + currencyFormatter.format(result.rentabilidade_real_liquida) + '</strong>, já considerando o valor líquido final e a projeção inflacionária adotada.</p>' +
-                        '<p>Isto significa uma rentabilidade real líquida, considerando impostos e inflação, de <strong>' + numberFormatter.format(percentualRentabilidadeRealLiquida) + '%</strong> no período de <strong>' + result.numero_meses + ' meses</strong>.</p>' +
+                        '<p>A rentabilidade real líquida, então, será de ' + rentRealFmt + ', já considerando o valor líquido final e a projeção inflacionária adotada.</p>' +
+                        '<p>Isto significa uma rentabilidade real líquida, considerando impostos e inflação, de ' + percRentRealFmt + ' no período de <strong>' + result.numero_meses + ' meses</strong>.</p>' +
                         '</div>';
 
                     if (result.relatorio && result.relatorio.length > 0) {
                         var hasComeCotas = result.relatorio.some(function(l) { return l.desconto_come_cotas > 0; });
                         
                         if (hasComeCotas) {
-                            htmlRelatorio += '<h4 style="margin-top: 30px;">Detalhamento da Cobrança de Come-cotas</h4>' +
-                                '<div style="overflow-x: auto;">' +
-                                '<table style="width: 100%; border-collapse: collapse; text-align: left; margin-top: 10px;">' +
+                            htmlRelatorio += '<h4 class="calc-rf__mt-30">Detalhamento da Cobrança de Come-cotas</h4>' +
+                                '<div class="calc-rf__table-wrapper">' +
+                                '<table class="calc-rf__table">' +
                                 '<thead>' +
-                                '<tr><th style="padding: 8px; border-bottom: 1px solid #ccc;">Mês/Ano</th><th style="padding: 8px; border-bottom: 1px solid #ccc;">Come-cotas (20%)</th><th style="padding: 8px; border-bottom: 1px solid #ccc;">Saldo Pós-Retenção</th></tr>' +
+                                '<tr><th>Mês/Ano</th><th>Come-cotas (20%)</th><th>Saldo Pós-Retenção</th></tr>' +
                                 '</thead><tbody>';
                             
                             result.relatorio.forEach(function (linha) {
                                 if (linha.desconto_come_cotas > 0) {
                                     htmlRelatorio += '<tr>' +
-                                        '<td style="padding: 8px; border-bottom: 1px solid #eee;">' + linha.mes_ano + '</td>' +
-                                        '<td style="padding: 8px; border-bottom: 1px solid #eee; color: red; font-weight: bold;">-' + currencyFormatter.format(linha.desconto_come_cotas) + '</td>' +
-                                        '<td style="padding: 8px; border-bottom: 1px solid #eee;">' + currencyFormatter.format(linha.saldo_final) + '</td>' +
+                                        '<td>' + linha.mes_ano + '</td>' +
+                                        '<td class="calc-rf__text-red">-' + currencyFormatter.format(linha.desconto_come_cotas) + '</td>' +
+                                        '<td>' + currencyFormatter.format(linha.saldo_final) + '</td>' +
                                         '</tr>';
                                 }
                             });
@@ -202,9 +219,10 @@
                             htmlRelatorio += '</tbody></table></div>';
                         }
                     }
-                    
-                    relatorioContainer.innerHTML = htmlRelatorio;
 
+                    htmlRelatorio += '<p style="margin-top: 30px; font-size: 14px; color: #dbdbdb; padding: 15px; border-radius: 8px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1);"><strong>Atenção:</strong> Esta calculadora foi desenvolvida exclusivamente para fins educacionais e de simulação. Caso necessite de cálculos exatos para tomada de decisão financeira ou cumprimento de obrigações fiscais, consulte um especialista qualificado.</p>';
+
+                    relatorioContainer.innerHTML = htmlRelatorio;
                     results.classList.add('is-visible');
                     setStatus(status, response.cabecalho.msg || 'Cálculo concluído.', false);
                     scrollToResults(results);
