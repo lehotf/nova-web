@@ -149,19 +149,6 @@ function gera_root($debug, $forcar = false, $type = 'canonical')
     $rootFile = ($type === 'amp') ? 'amp.html' : 'root.html';
     $cacheFile = $_SERVER['DOCUMENT_ROOT'] . '/cache/template/' . $rootFile;
 
-    $rootTime = 0;
-    foreach (rootFiles($type) as $file) {
-        $rootTime = max($rootTime, rootTemplateMTime($file));
-    }
-    $rootTime = max($rootTime, rootDependencyTime());
-
-    $cacheTime = @filemtime($cacheFile);
-    $cacheTime = $cacheTime ? $cacheTime : 0;
-
-    if (! $forcar && $rootTime && $rootTime <= $cacheTime) {
-        return;
-    }
-
     $mudouRoot = true;
     $conteudo = rootTemplate($type, $debug);
     file_put_contents($cacheFile, $conteudo);
@@ -169,8 +156,6 @@ function gera_root($debug, $forcar = false, $type = 'canonical')
 
 function verifica($dir, $debug)
 {
-    global $mudouRoot;
-
     $items = @scandir($dir);
     if (!is_array($items)) {
         return;
@@ -194,14 +179,8 @@ function verifica($dir, $debug)
             continue;
         }
 
-        $cacheFile = $_SERVER['DOCUMENT_ROOT'] . '/cache/template/' . $file;
-        $cacheTime = @filemtime($cacheFile);
-        $cacheTime = $cacheTime ? $cacheTime : 0;
-
-        if ($mudouRoot || filemtime($path) > $cacheTime) {
-            gera($file, $dir, $debug);
-            gera($file, $dir, $debug, 'amp');
-        }
+        gera($file, $dir, $debug);
+        gera($file, $dir, $debug, 'amp');
     }
 }
 
