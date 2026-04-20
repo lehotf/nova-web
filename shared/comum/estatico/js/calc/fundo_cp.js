@@ -78,6 +78,7 @@
         articleBody.insertBefore(wrapper, articleBody.firstChild);
 
         bindCalculator(wrapper);
+        focusFirstField(wrapper);
     }
 
     function bindCalculator(wrapper) {
@@ -241,6 +242,27 @@
                 behavior: 'smooth',
                 block: 'start'
             });
+        });
+    }
+
+    function focusFirstField(wrapper) {
+        var form = wrapper && wrapper.querySelector('.calc-rf__form');
+        var firstField;
+
+        if (!form || !form.elements || !form.elements.length) {
+            return;
+        }
+
+        firstField = Array.prototype.find.call(form.elements, function (field) {
+            return field && typeof field.focus === 'function' && !field.disabled && field.type !== 'hidden';
+        });
+
+        if (!firstField) {
+            return;
+        }
+
+        window.requestAnimationFrame(function () {
+            firstField.focus();
         });
     }
 
