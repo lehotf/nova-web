@@ -1,6 +1,8 @@
 class ArtigosApp extends window.BaseModule {
     constructor(root = document) {
         super(root);
+        this.thumbCropBaseWidth = 1280;
+        this.thumbCropBaseHeight = 720;
         this.apiBase = '/comum/php/path/lb9/php';
         this.isActive = true;
         this.artigos = [];
@@ -986,6 +988,7 @@ class ArtigosApp extends window.BaseModule {
 
     resetThumbModal({ preserveFile = false } = {}) {
         this.encerrarArrasteThumb();
+        this.revokeThumbObjectUrl();
         this.thumbCropState = this.getThumbCropDefaults();
         this.renderizarCropThumb();
 
@@ -994,11 +997,11 @@ class ArtigosApp extends window.BaseModule {
         }
 
         if (this.thumbQualidadeG && !this.thumbQualidadeG.value) {
-            this.thumbQualidadeG.value = '75';
+            this.thumbQualidadeG.value = '65';
         }
 
         if (this.thumbQualidadeP && !this.thumbQualidadeP.value) {
-            this.thumbQualidadeP.value = '75';
+            this.thumbQualidadeP.value = '65';
         }
     }
 
@@ -1006,8 +1009,8 @@ class ArtigosApp extends window.BaseModule {
         return {
             file: null,
             imageLoaded: false,
-            displayWidth: 585,
-            displayHeight: 329,
+            displayWidth: this.thumbCropBaseWidth,
+            displayHeight: this.thumbCropBaseHeight,
             prop: 1,
             bx: 0,
             by: 0,
@@ -1041,13 +1044,13 @@ class ArtigosApp extends window.BaseModule {
 
         try {
             const image = await this.carregarImagem(this.thumbObjectUrl);
-            const baseWidth = 585;
+            const baseWidth = this.thumbCropBaseWidth;
             let displayWidth = baseWidth;
             let displayHeight = image.height * (displayWidth / image.width);
             const prop = displayHeight / displayWidth;
 
-            if (displayHeight < 329) {
-                displayHeight = 329;
+            if (displayHeight < this.thumbCropBaseHeight) {
+                displayHeight = this.thumbCropBaseHeight;
                 displayWidth = displayHeight / prop;
             }
 
@@ -1082,12 +1085,12 @@ class ArtigosApp extends window.BaseModule {
 
         event.preventDefault();
 
-        let displayWidth = this.thumbCropState.displayWidth - Math.floor(event.deltaY / (event.shiftKey ? 20 : 5));
-        if (displayWidth < 585) displayWidth = 585;
+        let displayWidth = this.thumbCropState.displayWidth - Math.floor(event.deltaY / (event.shiftKey ? 6 : 1));
+        if (displayWidth < this.thumbCropBaseWidth) displayWidth = this.thumbCropBaseWidth;
 
         let displayHeight = displayWidth * this.thumbCropState.prop;
-        if (displayHeight < 329) {
-            displayHeight = 329;
+        if (displayHeight < this.thumbCropBaseHeight) {
+            displayHeight = this.thumbCropBaseHeight;
             displayWidth = displayHeight / this.thumbCropState.prop;
         }
 
@@ -1101,11 +1104,14 @@ class ArtigosApp extends window.BaseModule {
         if (!this.thumbCropState.imageLoaded) return;
 
         event.preventDefault();
+        const rect = this.thumbCropArea?.getBoundingClientRect();
+        const previewScale = rect?.width ? rect.width / this.thumbCropBaseWidth : 1;
         this.thumbDragState = {
             startX: event.clientX,
             startY: event.clientY,
             baseX: this.thumbCropState.bx,
-            baseY: this.thumbCropState.by
+            baseY: this.thumbCropState.by,
+            previewScale: previewScale > 0 ? previewScale : 1
         };
         this.thumbCropArea?.classList.add('is-dragging');
     }
@@ -1113,8 +1119,9 @@ class ArtigosApp extends window.BaseModule {
     moverThumb(event) {
         if (!this.thumbDragState || !this.thumbCropState.imageLoaded) return;
 
-        this.thumbCropState.bx = this.thumbDragState.baseX + (event.clientX - this.thumbDragState.startX);
-        this.thumbCropState.by = this.thumbDragState.baseY + (event.clientY - this.thumbDragState.startY);
+        const scale = this.thumbDragState.previewScale || 1;
+        this.thumbCropState.bx = this.thumbDragState.baseX + ((event.clientX - this.thumbDragState.startX) / scale);
+        this.thumbCropState.by = this.thumbDragState.baseY + ((event.clientY - this.thumbDragState.startY) / scale);
         this.clampThumbOffsets();
         this.renderizarCropThumb();
     }
@@ -1130,8 +1137,8 @@ class ArtigosApp extends window.BaseModule {
     clampThumbOffsets() {
         if (!this.thumbCropState.imageLoaded) return;
 
-        const minX = 585 - this.thumbCropState.displayWidth;
-        const minY = 329 - this.thumbCropState.displayHeight;
+        const minX = this.thumbCropBaseWidth - this.thumbCropState.displayWidth;
+        const minY = this.thumbCropBaseHeight - this.thumbCropState.displayHeight;
 
         if (this.thumbCropState.bx > 0) this.thumbCropState.bx = 0;
         if (this.thumbCropState.by > 0) this.thumbCropState.by = 0;
@@ -1154,7 +1161,7 @@ class ArtigosApp extends window.BaseModule {
         this.thumbCropPlaceholder?.classList.add('hidden');
 
         const rect = this.thumbCropArea.getBoundingClientRect();
-        const scale = rect.width / 585;
+        const scale = rect.width / this.thumbCropBaseWidth;
 
         this.thumbCropArea.style.backgroundImage = `url("${this.thumbCropState.sourceUrl}")`;
         this.thumbCropArea.style.backgroundSize = `${this.thumbCropState.displayWidth * scale}px ${this.thumbCropState.displayHeight * scale}px`;

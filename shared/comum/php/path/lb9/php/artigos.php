@@ -395,17 +395,11 @@ function uploadThumb(database $db, array $data): void
     [$origWidth, $origHeight] = $dimensoes;
     $newHeight = (int) round(($origHeight / $origWidth) * $width);
 
-    $tmp = imagecreatetruecolor($width, $newHeight);
-    imagecopyresampled($tmp, $imagemOrigem, $bx, $by, 0, 0, $width, $newHeight, $origWidth, $origHeight);
-
-    $crop = imagecrop($tmp, ['x' => 0, 'y' => 0, 'width' => 585, 'height' => 329]);
-    imagedestroy($tmp);
+    $frame = imagecreatetruecolor(1280, 720);
+    $background = imagecolorallocate($frame, 255, 255, 255);
+    imagefill($frame, 0, 0, $background);
+    imagecopyresampled($frame, $imagemOrigem, $bx, $by, 0, 0, $width, $newHeight, $origWidth, $origHeight);
     imagedestroy($imagemOrigem);
-
-    if (!$crop) {
-        echo json_encode(['sucesso' => false, 'mensagem' => 'Não foi possível gerar o corte da thumb.']);
-        return;
-    }
 
     $uploadDirectory = $GLOBALS['docRoot'] . '/cache/img/upload/t/';
     ensureDirectory($uploadDirectory);
@@ -414,19 +408,19 @@ function uploadThumb(database $db, array $data): void
     $smallFile = $uploadDirectory . $thumbNome . '.jpg';
     $largeFile = $uploadDirectory . $thumbNome . 'g.jpg';
 
-    if (!imagejpeg($crop, $ampFile, 60)) {
-        imagedestroy($crop);
+    if (!imagejpeg($frame, $ampFile, 60)) {
+        imagedestroy($frame);
         echo json_encode(['sucesso' => false, 'mensagem' => 'Falha ao salvar a thumb AMP.']);
         return;
     }
 
-    if (!salvarResizeJpeg($crop, 283, $smallFile, $qualidadeP) || !salvarResizeJpeg($crop, 586, $largeFile, $qualidadeG)) {
-        imagedestroy($crop);
+    if (!salvarResizeJpeg($frame, 283, $smallFile, $qualidadeP) || !salvarResizeJpeg($frame, 586, $largeFile, $qualidadeG)) {
+        imagedestroy($frame);
         echo json_encode(['sucesso' => false, 'mensagem' => 'Falha ao gerar os tamanhos da thumb.']);
         return;
     }
 
-    imagedestroy($crop);
+    imagedestroy($frame);
 
     $db->query("UPDATE links SET thumb = ?, dateModified = NOW() WHERE id = ?", 'ii', [$thumbNome, $id]);
 

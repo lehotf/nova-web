@@ -1081,7 +1081,7 @@ body {
 }
 
 .thumb-modal-content {
-    width: min(680px, calc(100% - 32px));
+    width: min(980px, calc(100% - 32px));
 }
 
 .thumb-modal-grid {
@@ -1104,8 +1104,8 @@ body {
 .thumb-crop-area {
     position: relative;
     width: 100%;
-    max-width: 585px;
-    aspect-ratio: 585 / 329;
+    max-width: 900px;
+    aspect-ratio: 1280 / 720;
     margin: 0 auto;
     overflow: hidden;
     border-radius: var(--radius-md);
@@ -1115,6 +1115,7 @@ body {
     background-position: 0 0;
     cursor: grab;
     user-select: none;
+    background-size: cover;
 }
 
 .thumb-crop-area.is-dragging {

@@ -226,7 +226,7 @@ require $_SERVER['DOCUMENT_ROOT'] . '/comum/php/autoload.php';
                     </div>
                     <h2 class="modal-title">Upload da Thumb</h2>
                 </div>
-                <p class="modal-message">Selecione a imagem, ajuste a posição com o mouse e use a roda para zoom. A thumb final será salva com o número informado no campo THUMB.</p>
+                <p class="modal-message">Selecione a imagem, mesmo menor que 1280x720 se preciso. O modal ajusta automaticamente para cobrir o frame, cortando o excedente, e você ainda pode reposicionar com o mouse e zoom.</p>
 
                 <div class="thumb-modal-grid">
                     <div class="form-group">
@@ -236,11 +236,11 @@ require $_SERVER['DOCUMENT_ROOT'] . '/comum/php/autoload.php';
                     <div class="thumb-quality-grid">
                         <div class="form-group">
                             <label for="thumbQualidadeG">Qualidade G</label>
-                            <input id="thumbQualidadeG" type="number" min="20" max="100" value="75">
+                            <input id="thumbQualidadeG" type="number" min="20" max="100" value="65">
                         </div>
                         <div class="form-group">
                             <label for="thumbQualidadeP">Qualidade P</label>
-                            <input id="thumbQualidadeP" type="number" min="20" max="100" value="75">
+                            <input id="thumbQualidadeP" type="number" min="20" max="100" value="65">
                         </div>
                     </div>
                 </div>
