@@ -47,7 +47,6 @@ if ($dados) {
         'titulo'      => $dados['titulo'],
         'subtitulo'   => $subtitulo,
         'timestamp'   => $timestamp,
-        'description' => $description,
         'image'       => $image,
         'artigo'      => $artigo_html . $montador->showTags() . $contato,
         'modulos'     => $add . $modulos,            

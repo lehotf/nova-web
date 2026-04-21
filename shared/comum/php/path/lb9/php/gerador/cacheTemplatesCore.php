@@ -225,6 +225,7 @@ function resolveRootTerms($arquivo, $type, $debug)
         'js_root' => '',
         'destaque_tags' => buildTagLinks('nome, path FROM tags where destaque = 1 order by nome LIMIT 6', $type),
         'sidebar_tags' => buildTagLinks('nome, path FROM tags order by nome', $type),
+        'logo' => LOGO,
     ];
 
     return preg_replace_callback('#\[([a-zA-Z_]{3,})\]#', function ($matches) use ($termo) {

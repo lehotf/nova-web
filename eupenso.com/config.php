@@ -12,10 +12,10 @@ define('ANALYTICS', 'UA-78519801-1');
 define('YOUTUBE_CHANNEL', 'eupenso');
 define('SITE_TITULO', 'Eu Penso');
 define('SITE_NAME', 'Eu Penso');
-define('DESCRICAO', 'Uma conversa sobre os fatos sociais e políticos.');
 define('MAX_IN_ROOT', 8);
 define('SEARCH','013594555885008672798:pvaspepxciw');
 define('AMP', true);
+define('DESCRICAO', 'Uma conversa sobre os fatos sociais e políticos.');
 
 #MUDAR
 define('CACHE_ATIVO', false);

@@ -1,5 +1,6 @@
 <?php
 require $_SERVER['DOCUMENT_ROOT'] . '/comum/php/autoload.php';
+require $_SERVER['DOCUMENT_ROOT'] . '/config_template.php';
 require 'cacheTemplatesCore.php';
 
 $c = new controlador(observador: true, autenticador: true);

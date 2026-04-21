@@ -17,7 +17,7 @@ Ou seja, o link pode ser publicado, mas não ser root. Significa que o artigo ap
 $conteudo .= $montador->listaItem($this->db, ['max' => MAX_IN_ROOT, 'root' => true]);
 
 if ($montador->next_page) {
-    $conteudo .= '<div class="divisor_fixo pagebar centered"><a href="/p/1'.($this->amp ? '/amp' : '').'#content" class="nextpage">TODOS OS ARTIGOS</a></div>';
+    $conteudo .= '<div class="divisor_fixo pagebar centered"><a href="/p/1'.($this->amp ? '/amp' : '').'#content" class="nextpage">EXIBIR TODOS</a></div>';
 }
 
 $conteudo .= '<div class="divisor">' . adsense('article') . '</div>';
