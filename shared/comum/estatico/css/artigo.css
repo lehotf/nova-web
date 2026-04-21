@@ -142,15 +142,16 @@ article h2:first-child {
 }
 article h3 {
     font-size: 1.3em;
-    margin-bottom: -12px;
+    margin-bottom: 20px;
     margin-top: 50px;
     color: #f2abff;
     font-family: Arial;
     /* border-bottom: 1px solid #efefef; */
-    padding-bottom: 3px;
     display: block;
     line-height: 1.3em;
     /* border-bottom: 1px solid #ececec; */
+    background-color: #151515;
+    padding: 20px;
 }
 article p {
     text-align: justify;
@@ -160,6 +161,8 @@ article p {
     font-size: 20px; 
     color: #e5e5e5;
     letter-spacing: 0.2px;
+    margin-left: 25px;
+    margin-right: 25px;
 }
 article div> :first-child {
     margin-top: 0px;
@@ -303,6 +306,8 @@ article .nota {
     border-radius: 6px;
     margin-top: 20px;
     margin-bottom: 20px;
+    margin-left: 25px;
+    margin-right: 25px;
     box-shadow: 0px 3px 20px 0 rgba(0, 0, 0, 0.075);
 }
 article .nota:before {
@@ -370,6 +375,8 @@ article .atencao {
     border-radius: 6px;
     margin-bottom: 20px;
     margin-top: 20px;
+    margin-left: 25px;
+    margin-right: 25px;
     box-shadow: 0px 3px 20px 0 rgba(0, 0, 0, 0.075);
 }
 article .atencao:before {
