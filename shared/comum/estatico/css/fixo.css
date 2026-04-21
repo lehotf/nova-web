@@ -52,8 +52,13 @@ nav {
      margin-top: 0.1em;
  }
  .th_l1, .th_l2, .th_l3 {
-     margin-bottom: 0.15em;
+     margin-bottom: 0.6em;
  }
+
+.c50 .th_l1, .c50 .th_l2, .c50 .th_l3 {
+     margin-bottom: 0.75em;
+ }
+
  .th_s1 {
      font-size: 0.7em;
      line-height: 0.95em;

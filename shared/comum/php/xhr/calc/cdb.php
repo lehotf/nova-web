@@ -9,15 +9,37 @@ $payload = $o->valida([
     'aplicacao_mensal' => ['tipo' => 'numero', 'min' => 0],
     'numero_meses' => ['tipo' => 'numero', 'min' => 1, 'max' => 120],
     'taxa_juros_mensal' => ['tipo' => 'numero', 'min' => 0, 'max' => 2],
+    'percentual_cdi' => ['tipo' => 'numero', 'min' => 0, 'max' => 150],
+    'modo_taxa' => ['tipo' => 'texto'],
     'prazo_vencimento_anos' => ['tipo' => 'numero', 'min' => 1, 'max' => 10]
 ]);
 
 $investimentoInicial = (float) ($payload['investimento_inicial'] ?? 0);
 $aplicacaoMensal = (float) ($payload['aplicacao_mensal'] ?? 0);
 $numeroMeses = (int) ($payload['numero_meses'] ?? 0);
-$taxaJurosMensal = (float) ($payload['taxa_juros_mensal'] ?? 0);
+$modoTaxa = ($payload['modo_taxa'] ?? 'taxa') === 'cdi' ? 'cdi' : 'taxa';
+$taxaJurosMensalInformada = (float) ($payload['taxa_juros_mensal'] ?? 0);
+$percentualCdi = (float) ($payload['percentual_cdi'] ?? 0);
 $prazoVencimentoAnos = (int) ($payload['prazo_vencimento_anos'] ?? 5);
 $prazoVencimentoMeses = $prazoVencimentoAnos * 12;
+
+$db = $c->db;
+$cdiMensal = 0.0;
+$cdiData = '';
+$taxaJurosMensal = $taxaJurosMensalInformada;
+
+if ($modoTaxa === 'cdi') {
+    $res = $db->query("SELECT valor, data FROM indices WHERE codigo = 4391 LIMIT 1");
+
+    if (!($res instanceof mysqli_result) || !($row = $res->fetch_assoc())) {
+        $o->erro('O CDI atual não pôde ser encontrado no banco de dados.');
+    }
+
+    $cdiMensal = (float) $row['valor'];
+    $time = strtotime($row['data']);
+    $cdiData = $time ? date('m/Y', $time) : $row['data'];
+    $taxaJurosMensal = $cdiMensal * ($percentualCdi / 100);
+}
 
 $taxaDecimal = $taxaJurosMensal / 100;
 $totalInvestido = $investimentoInicial + ($aplicacaoMensal * $numeroMeses);
@@ -252,7 +274,6 @@ $jurosAcumulados = $valorFuturo - $totalInvestido;
 $impactoResgatesObrigatorios = $valorLiquido - $simulacaoSemVencimentos['saldo_liquido_final'];
 
 // Consulta IGP-M.
-$db = $c->db;
 $res = $db->query("SELECT valor, data FROM indices WHERE codigo = 189 LIMIT 1");
 $igpmMensal = 0;
 $igpmData = '';
@@ -278,6 +299,11 @@ $o->r['resultado'] = [
     'numero_meses' => $numeroMeses,
     'prazo_vencimento_anos' => $prazoVencimentoAnos,
     'prazo_vencimento_meses' => $prazoVencimentoMeses,
+    'modo_taxa' => $modoTaxa,
+    'taxa_juros_mensal_informada' => round($taxaJurosMensalInformada, 4),
+    'percentual_cdi' => round($percentualCdi, 4),
+    'cdi_mensal' => round($cdiMensal, 4),
+    'cdi_data' => $cdiData,
     'taxa_juros_mensal' => round($taxaJurosMensal, 4),
     'taxa_decimal' => round($taxaDecimal, 8),
     'total_investido' => round($totalInvestido, 2),
@@ -306,6 +332,9 @@ $o->r['resultado'] = [
         'Simulação voltada para CDB com tributação regressiva de longo prazo aproximada em meses.',
         'Não há come-cotas; o imposto é apurado nos resgates obrigatórios por vencimento e no resgate final.',
         'Quando o horizonte ultrapassa o vencimento, a simulação força resgate líquido e reinvestimento no mesmo mês.',
+        $modoTaxa === 'cdi'
+            ? 'A taxa mensal usada na simulação foi obtida a partir do percentual do CDI informado e do último CDI mensal encontrado na tabela indices (código 4391).'
+            : 'A taxa mensal usada na simulação foi a taxa de juros mensal informada diretamente pelo usuário.',
         'A inflação foi projetada com repetição da última taxa mensal de IGP-M encontrada na base.'
     ],
     'metodologia' => 'aportes_no_inicio_do_mes',

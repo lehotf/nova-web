@@ -1,6 +1,7 @@
 class ArtigosApp extends window.BaseModule {
     constructor(root = document) {
         super(root);
+        this.defaultPageTitle = 'Gerenciador de Conteúdo — Painel Admin';
         this.thumbCropBaseWidth = 1280;
         this.thumbCropBaseHeight = 720;
         this.apiBase = '/comum/php/path/lb9/php';
@@ -120,6 +121,7 @@ class ArtigosApp extends window.BaseModule {
         this.thumbPreview?.addEventListener('error', () => this.setThumbPreviewVisible(false));
         this.thumbUploadAction?.addEventListener('click', () => this.enviarThumb());
         this.artigoConfigSave?.addEventListener('click', () => this.salvarConfiguracoesArtigo());
+        this.artigoConfigThumbTitulo?.addEventListener('keydown', (e) => this.handleArtigoConfigThumbTituloKeydown(e));
 
         this.thumbCropArea?.addEventListener('wheel', (e) => this.handleThumbWheel(e), { passive: false });
         this.thumbCropArea?.addEventListener('mousedown', (e) => this.iniciarArrasteThumb(e));
@@ -134,6 +136,8 @@ class ArtigosApp extends window.BaseModule {
             this.artigoDuracao.value = this.aplicarMascaraDuracao(this.artigoDuracao.value);
         });
         this.artigoThumb?.addEventListener('input', () => this.handleThumbInput());
+        this.artigoThumb?.addEventListener('focus', () => this.selecionarThumbInteira());
+        this.artigoThumb?.addEventListener('click', () => this.selecionarThumbInteira());
         this.artigoThumb?.addEventListener('blur', () => this.handleThumbBlur());
 
         this.artigoConteudo?.addEventListener('click', () => this.salvarSelecaoConteudo());
@@ -425,6 +429,7 @@ class ArtigosApp extends window.BaseModule {
 
         this.atualizarEstadoThumb(artigo);
         this.renderizarTags();
+        this.atualizarTituloPagina(artigo.id);
 
         this.editorPlaceholder.classList.add('hidden');
         this.artigoForm.classList.remove('hidden');
@@ -462,6 +467,7 @@ class ArtigosApp extends window.BaseModule {
             this.artigoAtual.destaque_id = null;
         }
         this.renderizarTags();
+        this.atualizarTituloPagina();
     }
 
     async salvarArtigo(event) {
@@ -551,6 +557,7 @@ class ArtigosApp extends window.BaseModule {
                 this.artigoId.value = data.id;
                 if (!this.artigoAtual) this.artigoAtual = {};
                 this.artigoAtual.id = data.id;
+                this.atualizarTituloPagina(data.id);
             }
             if (!this.artigoAtual) this.artigoAtual = {};
             this.artigoAtual.thumb = Number(estadoAtual.thumb || data.thumb) || 0;
@@ -792,7 +799,7 @@ class ArtigosApp extends window.BaseModule {
 
         window.AppUtils.openModal({
             modal: this.artigoConfigModal,
-            focusTarget: this.artigoConfigSave,
+            focusTarget: this.artigoConfigThumbTitulo,
             focusDelayMs: 40,
             closeOnEscape: true,
             onEscape: () => this.fecharConfiguracoesArtigo()
@@ -800,7 +807,8 @@ class ArtigosApp extends window.BaseModule {
     }
 
     fecharConfiguracoesArtigo() {
-        window.AppUtils.closeModal(this.artigoConfigModal);
+        window.AppUtils.closeModal(this.artigoConfigModal, { restoreFocus: false });
+        setTimeout(() => this.artigoConteudo?.focus(), 0);
     }
 
     renderizarConfiguracoesArtigo() {
@@ -863,6 +871,23 @@ class ArtigosApp extends window.BaseModule {
 
         this.showToast('Configurações aplicadas ao formulário', 'success');
         this.fecharConfiguracoesArtigo();
+    }
+
+    handleArtigoConfigThumbTituloKeydown(e) {
+        if (e.key !== 'Tab' || e.shiftKey) return;
+
+        e.preventDefault();
+        this.salvarConfiguracoesArtigo();
+    }
+
+    selecionarThumbInteira() {
+        if (!this.artigoThumb) return;
+        setTimeout(() => this.artigoThumb?.select(), 0);
+    }
+
+    atualizarTituloPagina(id = '') {
+        const artigoId = String(id || '').trim();
+        document.title = artigoId ? `Artigo: ${artigoId}` : this.defaultPageTitle;
     }
 
     clonarArtigoOriginal(artigo) {

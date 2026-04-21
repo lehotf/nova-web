@@ -24,6 +24,45 @@
     grid-column: 1 / -1
 }
 
+.calc-rf__toggle {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap
+}
+
+.calc-rf__toggle-button {
+    border: 1px solid #4c4c4c;
+    border-radius: 14px;
+    background: #0c0c0c;
+    color: #dcdcdc;
+    font-size: 16px;
+    line-height: 1.2;
+    cursor: pointer;
+    transition: border-color .2s ease,box-shadow .2s ease,background-color .2s ease,color .2s ease,transform .15s ease;
+    padding: 14px 16px
+}
+
+.calc-rf__toggle-button:hover {
+    border-color: #676767
+}
+
+.calc-rf__toggle-button:focus-visible {
+    border-color: #d89fe9 !important;
+    box-shadow: 0 0 0 3px rgba(216,159,233,.16) !important;
+    outline: none !important
+}
+
+.calc-rf__toggle-button:active {
+    transform: translateY(1px)
+}
+
+.calc-rf__toggle-button.is-active {
+    border-color: #d89fe9;
+    background: rgba(216,159,233,.12);
+    color: #fff;
+    box-shadow: inset 0 0 0 1px rgba(216,159,233,.18)
+}
+
 .calc-rf__label {
     font-size: 16px;
     font-weight: 400;
@@ -57,6 +96,16 @@
 
 .calc-rf__input::placeholder {
     color: #858585
+}
+
+.calc-rf__input[type=number] {
+    -moz-appearance: textfield;
+}
+
+.calc-rf__input[type=number]::-webkit-outer-spin-button,
+.calc-rf__input[type=number]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
 }
 
 .calc-rf__actions {

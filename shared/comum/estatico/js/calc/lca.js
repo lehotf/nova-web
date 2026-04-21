@@ -10,6 +10,10 @@
         minimumFractionDigits: 2,
         maximumFractionDigits: 2
     });
+    var preciseRateFormatter = new Intl.NumberFormat('pt-BR', {
+        minimumFractionDigits: 4,
+        maximumFractionDigits: 4
+    });
 
     function boot() {
         if (document.readyState === 'loading') {
@@ -53,8 +57,16 @@
             '      <input class="calc-rf__input" type="number" name="numero_meses" min="1" max="600" step="1" placeholder="Ex.: 24" />' +
             '    </label>' +
             '    <label class="calc-rf__field">' +
-            '      <span class="calc-rf__label">Taxa de juros mensal (%)</span>' +
-            '      <input class="calc-rf__input" type="text" name="taxa_juros_mensal" inputmode="decimal" placeholder="Ex.: 0,85" />' +
+            '      <span class="calc-rf__label">Base da rentabilidade</span>' +
+            '      <input type="hidden" name="modo_taxa" value="cdi" />' +
+            '      <div class="calc-rf__toggle" role="group" aria-label="Base da rentabilidade">' +
+            '        <button class="calc-rf__toggle-button" type="button" data-rate-mode="taxa" aria-pressed="false" tabindex="-1">Taxa Mensal</button>' +
+            '        <button class="calc-rf__toggle-button is-active" type="button" data-rate-mode="cdi" aria-pressed="true" tabindex="-1">% do CDI</button>' +
+            '      </div>' +
+            '    </label>' +
+            '    <label class="calc-rf__field">' +
+            '      <span class="calc-rf__label" data-role="taxa-label">Percentual do CDI (%)</span>' +
+            '      <input class="calc-rf__input" type="text" name="valor_taxa" inputmode="decimal" placeholder="Ex.: 110,00" />' +
             '    </label>' +
             '  </div>' +
             '  <p class="calc-rf__disclaimer" style="margin: 8px 0 0; font-size: 13px; line-height: 1.5; opacity: 0.85;">Simulação educacional para <strong>LCI/LCA</strong>, <strong>sem prazo final obrigatório</strong> e <strong>isenta de imposto de renda</strong>. Por isso, a rentabilidade projetada já representa o valor líquido.</p>' +
@@ -92,11 +104,14 @@
         var rateValue = wrapper.querySelector('[data-role="taxa"]');
         var summary = wrapper.querySelector('[data-role="resumo"]');
         var relatorioContainer = wrapper.querySelector('[data-role="relatorio"]');
+        var rateLabel = wrapper.querySelector('[data-role="taxa-label"]');
+        var rateModeButtons = wrapper.querySelectorAll('[data-rate-mode]');
         var currencyFields = [
             form.elements.investimento_inicial,
             form.elements.aplicacao_mensal
         ];
-        var rateField = form.elements.taxa_juros_mensal;
+        var rateModeField = form.elements.modo_taxa;
+        var rateField = form.elements.valor_taxa;
 
         currencyFields.forEach(function (field) {
             field.addEventListener('input', function () {
@@ -113,6 +128,18 @@
         rateField.addEventListener('blur', function () {
             rateField.value = formatRateInput(rateField.value);
         });
+        rateModeButtons.forEach(function (buttonNode) {
+            buttonNode.addEventListener('click', function () {
+                var nextMode = buttonNode.getAttribute('data-rate-mode');
+                if (rateModeField.value !== nextMode) {
+                    rateField.value = '';
+                }
+                setRateMode(rateModeField, rateModeButtons, nextMode);
+                syncRateFieldUi(rateModeField, rateField, rateLabel);
+            });
+        });
+        setRateMode(rateModeField, rateModeButtons, rateModeField.value);
+        syncRateFieldUi(rateModeField, rateField, rateLabel);
 
         form.addEventListener('submit', function (event) {
             event.preventDefault();
@@ -175,19 +202,20 @@
         nodes.investedValue.textContent = currencyFormatter.format(totalInvestido);
         nodes.earnedValue.textContent = currencyFormatter.format(jurosAcumulados);
         nodes.impostoResgateValue.textContent = currencyFormatter.format(result.imposto_resgate || 0);
-        nodes.rateValue.textContent = numberFormatter.format(result.taxa_juros_mensal || 0) + '%';
+        nodes.rateValue.textContent = buildRateReferenceText(result);
 
         nodes.earnedValue.classList.toggle('calc-rf__text-green', jurosAcumulados > 0);
 
         nodes.summary.textContent = 'Em ' + result.numero_meses + ' meses, com aporte inicial de ' +
             currencyFormatter.format(result.investimento_inicial || 0) +
             ' e aplicações mensais de ' + currencyFormatter.format(result.aplicacao_mensal || 0) +
-            ', a simulação considera LCI/LCA isenta de IR. Por isso, o valor projetado já é líquido.';
+            ', a simulação considera LCI/LCA isenta de IR com rentabilidade base de ' + buildRateReferenceText(result) + '. Por isso, o valor projetado já é líquido.';
 
         nodes.relatorioContainer.innerHTML = '<div class="calc-rf__report-content">' +
             '<h3>Explicação Detalhada</h3>' +
             '<p><strong>Importante:</strong> esta calculadora foi modelada para <strong>LCI/LCA</strong> sem prazo final obrigatório e com <strong>isenção de imposto de renda</strong>. Por isso, não há cálculo de IR nem necessidade de separar aportes por faixas tributárias.</p>' +
-            '<p>Caso você resolva investir um valor inicial de <strong>' + currencyFormatter.format(result.investimento_inicial || 0) + '</strong> e realizar aplicações mensais de <strong>' + currencyFormatter.format(result.aplicacao_mensal || 0) + '</strong> a uma rentabilidade de <strong>' + numberFormatter.format(result.taxa_juros_mensal || 0) + '%</strong> ao mês, teremos o seguinte:</p>' +
+            '<p>Caso você resolva investir um valor inicial de <strong>' + currencyFormatter.format(result.investimento_inicial || 0) + '</strong> e realizar aplicações mensais de <strong>' + currencyFormatter.format(result.aplicacao_mensal || 0) + '</strong> a uma rentabilidade efetiva de <strong>' + preciseRateFormatter.format(result.taxa_juros_mensal || 0) + '%</strong> ao mês, teremos o seguinte:</p>' +
+            '<p>A base informada para a taxa foi <strong>' + buildRateReferenceText(result) + '</strong>.</p>' +
             '<p>Ao final do período de <strong>' + result.numero_meses + ' meses</strong> você terá investido um total de <strong>' + currencyFormatter.format(totalInvestido) + '</strong>.</p>' +
             '<p>Como o produto foi tratado como isento de imposto, a rentabilidade obtida já é líquida. Neste exemplo, o ganho projetado é de ' + rentLiqFmt + ', e o valor líquido final é de <strong>' + currencyFormatter.format(valorLiquido) + '</strong>. Isso corresponde a <strong>' + numberFormatter.format(percentualRentabilidadeLiquida) + '%</strong> do valor investido.</p>' +
             '<h4>Considerando a Inflação:</h4>' +
@@ -254,7 +282,8 @@
         var investimentoInicial = parseLocaleNumber(form.elements.investimento_inicial.value);
         var aplicacaoMensal = parseLocaleNumber(form.elements.aplicacao_mensal.value);
         var numeroMeses = parseInt(form.elements.numero_meses.value, 10);
-        var taxaJurosMensal = parseLocaleNumber(form.elements.taxa_juros_mensal.value);
+        var modoTaxa = form.elements.modo_taxa.value === 'cdi' ? 'cdi' : 'taxa';
+        var valorTaxa = parseLocaleNumber(form.elements.valor_taxa.value);
 
         if (!isFinite(investimentoInicial) || investimentoInicial < 0) {
             return null;
@@ -268,16 +297,32 @@
             return null;
         }
 
-        if (!isFinite(taxaJurosMensal) || taxaJurosMensal < 0 || taxaJurosMensal > 2) {
+        if (!isFinite(valorTaxa)) {
             return null;
         }
 
-        return {
+        if (modoTaxa === 'taxa' && (valorTaxa < 0 || valorTaxa > 2)) {
+            return null;
+        }
+
+        if (modoTaxa === 'cdi' && (valorTaxa < 0 || valorTaxa > 150)) {
+            return null;
+        }
+
+        var payload = {
             investimento_inicial: investimentoInicial,
             aplicacao_mensal: aplicacaoMensal,
             numero_meses: numeroMeses,
-            taxa_juros_mensal: taxaJurosMensal
+            modo_taxa: modoTaxa
         };
+
+        if (modoTaxa === 'cdi') {
+            payload.percentual_cdi = valorTaxa;
+        } else {
+            payload.taxa_juros_mensal = valorTaxa;
+        }
+
+        return payload;
     }
 
     function parseLocaleNumber(value) {
@@ -325,6 +370,41 @@
         integerPart = integerPart.replace(/^0+(?=\d)/, '');
 
         return integerPart + ',' + decimalPart;
+    }
+
+    function syncRateFieldUi(rateModeField, rateField, rateLabel) {
+        var isCdi = rateModeField && rateModeField.value === 'cdi';
+
+        if (rateLabel) {
+            rateLabel.textContent = isCdi ? 'Percentual do CDI (%)' : 'Taxa de juros mensal (%)';
+        }
+
+        if (rateField) {
+            rateField.placeholder = isCdi ? 'Ex.: 110,00' : 'Ex.: 0,85';
+        }
+    }
+
+    function setRateMode(rateModeField, rateModeButtons, mode) {
+        var normalizedMode = mode === 'cdi' ? 'cdi' : 'taxa';
+
+        if (rateModeField) {
+            rateModeField.value = normalizedMode;
+        }
+
+        Array.prototype.forEach.call(rateModeButtons || [], function (buttonNode) {
+            var isActive = buttonNode.getAttribute('data-rate-mode') === normalizedMode;
+            buttonNode.classList.toggle('is-active', isActive);
+            buttonNode.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+        });
+    }
+
+    function buildRateReferenceText(result) {
+        if (result.modo_taxa === 'cdi') {
+            return numberFormatter.format(result.percentual_cdi || 0) + '% do CDI de ' +
+                preciseRateFormatter.format(result.cdi_mensal || 0) + '% a.m. (' + (result.cdi_data || '-') + ')';
+        }
+
+        return numberFormatter.format(result.taxa_juros_mensal || 0) + '% ao mês';
     }
 
     boot();

@@ -8,13 +8,34 @@ $payload = $o->valida([
     'investimento_inicial' => ['tipo' => 'numero', 'min' => 0],
     'aplicacao_mensal' => ['tipo' => 'numero', 'min' => 0],
     'numero_meses' => ['tipo' => 'numero', 'min' => 1, 'max' => 120],
-    'taxa_juros_mensal' => ['tipo' => 'numero', 'min' => 0, 'max' => 2]
+    'taxa_juros_mensal' => ['tipo' => 'numero', 'min' => 0, 'max' => 2],
+    'percentual_cdi' => ['tipo' => 'numero', 'min' => 0, 'max' => 150],
+    'modo_taxa' => ['tipo' => 'texto']
 ]);
 
 $investimentoInicial = (float) ($payload['investimento_inicial'] ?? 0);
 $aplicacaoMensal = (float) ($payload['aplicacao_mensal'] ?? 0);
 $numeroMeses = (int) ($payload['numero_meses'] ?? 0);
-$taxaJurosMensal = (float) ($payload['taxa_juros_mensal'] ?? 0);
+$modoTaxa = ($payload['modo_taxa'] ?? 'taxa') === 'cdi' ? 'cdi' : 'taxa';
+$taxaJurosMensalInformada = (float) ($payload['taxa_juros_mensal'] ?? 0);
+$percentualCdi = (float) ($payload['percentual_cdi'] ?? 0);
+$db = $c->db;
+$cdiMensal = 0.0;
+$cdiData = '';
+$taxaJurosMensal = $taxaJurosMensalInformada;
+
+if ($modoTaxa === 'cdi') {
+    $res = $db->query("SELECT valor, data FROM indices WHERE codigo = 4391 LIMIT 1");
+
+    if (!($res instanceof mysqli_result) || !($row = $res->fetch_assoc())) {
+        $o->erro('O CDI atual não pôde ser encontrado no banco de dados.');
+    }
+
+    $cdiMensal = (float) $row['valor'];
+    $time = strtotime($row['data']);
+    $cdiData = $time ? date('m/Y', $time) : $row['data'];
+    $taxaJurosMensal = $cdiMensal * ($percentualCdi / 100);
+}
 
 $taxaDecimal = $taxaJurosMensal / 100;
 $totalInvestido = $investimentoInicial + ($aplicacaoMensal * $numeroMeses);
@@ -35,7 +56,6 @@ for ($mes = 1; $mes <= $numeroMeses; $mes++) {
 $rentabilidadeBrutaTotal = $valorFuturoBruto - $totalInvestido;
 
 // Consulta o valor do IGPM no banco de dados (codigo = 189)
-$db = $c->db;
 $res = $db->query("SELECT valor, data FROM indices WHERE codigo = 189 LIMIT 1");
 $igpmMensal = 0;
 $igpmData = '';
@@ -162,6 +182,11 @@ $o->r['resultado'] = [
     'investimento_inicial' => round($investimentoInicial, 2),
     'aplicacao_mensal' => round($aplicacaoMensal, 2),
     'numero_meses' => $numeroMeses,
+    'modo_taxa' => $modoTaxa,
+    'taxa_juros_mensal_informada' => round($taxaJurosMensalInformada, 4),
+    'percentual_cdi' => round($percentualCdi, 4),
+    'cdi_mensal' => round($cdiMensal, 4),
+    'cdi_data' => $cdiData,
     'taxa_juros_mensal' => round($taxaJurosMensal, 4),
     'taxa_decimal' => round($taxaDecimal, 8),
     'total_investido' => round($totalInvestido, 2),
@@ -183,6 +208,9 @@ $o->r['resultado'] = [
     'observacoes_modelo' => [
         'Simulação voltada para fundo de renda fixa de longo prazo sujeito a come-cotas.',
         'A tabela regressiva foi aproximada em meses, embora a legislação tributária utilize contagem em dias.',
+        $modoTaxa === 'cdi'
+            ? 'A taxa mensal usada na simulação foi obtida a partir do percentual do CDI informado e do último CDI mensal encontrado na tabela indices (código 4391).'
+            : 'A taxa mensal usada na simulação foi a taxa de juros mensal informada diretamente pelo usuário.',
         'A inflação foi projetada com repetição da última taxa mensal de IGP-M encontrada na base.'
     ],
     'metodologia' => 'aportes_no_inicio_do_mes',
