@@ -227,7 +227,7 @@ article blockquote .underline {
     border-bottom: 2px solid #68ea6f;
 }
 article .amarelo {
-    background-color: #e5d526;
+    background-color: #daca1d;
     color: #000;
     padding-left: 4px;
     padding-right: 4px;
@@ -243,7 +243,8 @@ article .monospace {
     border-radius: 4px;
 }
 article .verde {
-    background-color: #99ea68;
+    background-color: #7eed3b;
+    color: #000;
     padding-left: 4px;
     padding-right: 4px;
 }
@@ -295,10 +296,10 @@ article .enum p:last-child {
     margin: 0;
 }
 article .nota {
-    background-color: #e3d09d;
+    background-color: #373737;
     border-left: 5px solid #c3ac6d;
+    color: #e5e892;    
     padding: 1em;
-    color: #000;
     border-radius: 6px;
     margin-top: 20px;
     margin-bottom: 20px;
@@ -361,13 +362,13 @@ article a:hover {
     content: none;
 }
 article .atencao {
+    color: #79e38c;
+    border-left: 5px solid #35a148;
+    background-color: #373737;
     padding: 1em;
     position: relative;
     border-radius: 6px;
-    color: #000;
     margin-bottom: 20px;
-    border-left: 5px solid #35a148;
-    background-color: #b0da97;
     margin-top: 20px;
     box-shadow: 0px 3px 20px 0 rgba(0, 0, 0, 0.075);
 }
