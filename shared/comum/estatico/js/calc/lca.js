@@ -81,7 +81,6 @@
             '    <div class="calc-rf__card"><span class="calc-rf__card-label">Total investido</span><span class="calc-rf__card-value" data-role="investido">-</span></div>' +
             '    <div class="calc-rf__card"><span class="calc-rf__card-label">Rentabilidade líquida</span><span class="calc-rf__card-value" data-role="juros">-</span></div>' +
             '    <div class="calc-rf__card"><span class="calc-rf__card-label">IR no resgate</span><span class="calc-rf__card-value" data-role="imposto_resgate">-</span></div>' +
-            '    <div class="calc-rf__card"><span class="calc-rf__card-label">Taxa mensal</span><span class="calc-rf__card-value" data-role="taxa">-</span></div>' +
             '  </div>' +
             '  <div class="calc-rf__footnote" data-role="resumo"></div>' +
             '  <div class="calc-rf__report" data-role="relatorio" style="margin-top: 20px; font-size: 14px;"></div>' +
@@ -101,7 +100,6 @@
         var investedValue = wrapper.querySelector('[data-role="investido"]');
         var earnedValue = wrapper.querySelector('[data-role="juros"]');
         var impostoResgateValue = wrapper.querySelector('[data-role="imposto_resgate"]');
-        var rateValue = wrapper.querySelector('[data-role="taxa"]');
         var summary = wrapper.querySelector('[data-role="resumo"]');
         var relatorioContainer = wrapper.querySelector('[data-role="relatorio"]');
         var rateLabel = wrapper.querySelector('[data-role="taxa-label"]');
@@ -173,7 +171,6 @@
                         investedValue: investedValue,
                         earnedValue: earnedValue,
                         impostoResgateValue: impostoResgateValue,
-                        rateValue: rateValue,
                         summary: summary,
                         relatorioContainer: relatorioContainer,
                         status: status,
@@ -202,7 +199,6 @@
         nodes.investedValue.textContent = currencyFormatter.format(totalInvestido);
         nodes.earnedValue.textContent = currencyFormatter.format(jurosAcumulados);
         nodes.impostoResgateValue.textContent = currencyFormatter.format(result.imposto_resgate || 0);
-        nodes.rateValue.textContent = buildRateReferenceText(result);
 
         nodes.earnedValue.classList.toggle('calc-rf__text-green', jurosAcumulados > 0);
 
