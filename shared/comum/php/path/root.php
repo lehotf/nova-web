@@ -25,7 +25,7 @@ $conteudo .= '<div class="divisor">' . adsense('article') . '</div>';
 $conteudo .= $montador->showTextLinks($this->db, 7);
 
 
-$conteudo .= '<div><div class="c50 divisor_fixo">'.adsense('feed').'</div><div class="c50 divisor_fixo">'.adsense('feed').'</div></div>';
+#$conteudo .= '<div><div class="c50 divisor_fixo">'.adsense('feed').'</div><div class="c50 divisor_fixo">'.adsense('feed').'</div></div>';
 
 $this->prepara('index', [
     'titulo'      => SITE_TITULO,
