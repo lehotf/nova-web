@@ -13,7 +13,7 @@ define('SITE_TITULO', 'CalculaTUDO - Calculadoras Gratuitas - Calculadoras Finan
 define('SITE_NAME', 'CalculaTUDO');
 define('MAX_IN_ROOT', 8);
 define('SEARCH','013594555885008672798:pvaspepxciw');
-define('AMP', true);
+define('AMP', false);
 define('DESCRICAO', 'Uma maneira mais simples e precisa de calcular o que você precisa. Calculadora Financeira. Finanças.');
 define('LOCALHOST', $_SERVER['SERVER_NAME'] != 'calculatudo.com' ? 1 : 0);
 
