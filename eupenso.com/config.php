@@ -8,7 +8,6 @@ define('BD', 'eupens16_eupenso');
 define('BD_LOGIN', 'eupens16_site');
 define('DNS_SITE', 'https://' . SITE);
 define('BD_SENHA', 'segredo');
-define('ANALYTICS', 'UA-78519801-1');
 define('YOUTUBE_CHANNEL', 'eupenso');
 define('SITE_TITULO', 'Eu Penso');
 define('SITE_NAME', 'Eu Penso');

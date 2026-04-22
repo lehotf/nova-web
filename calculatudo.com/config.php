@@ -8,7 +8,6 @@ define('BD', 'eupens16_calculatudo');
 define('BD_LOGIN', 'eupens16_site');
 define('DNS_SITE', 'https://' . SITE);
 define('BD_SENHA', 'segredo');
-define('ANALYTICS', 'UA-78519801-3');
 define('YOUTUBE_CHANNEL', 'calculatudo');
 define('SITE_TITULO', 'CalculaTUDO - Calculadoras Gratuitas - Calculadoras Financeiras');
 define('SITE_NAME', 'CalculaTUDO');
