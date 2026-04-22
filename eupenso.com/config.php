@@ -4,10 +4,10 @@
 date_default_timezone_set('America/Sao_Paulo');
 
 define('SITE', $_SERVER['SERVER_NAME']);
-define('BD', 'eupens16_eupenso');
-define('BD_LOGIN', 'eupens16_site');
+define('BD', 'leo19961_eupenso');
+define('BD_LOGIN', 'leo19961_db');
+define('BD_SENHA', 'SenhaDoBD');
 define('DNS_SITE', 'https://' . SITE);
-define('BD_SENHA', 'segredo');
 define('YOUTUBE_CHANNEL', 'eupenso');
 define('SITE_TITULO', 'Eu Penso');
 define('SITE_NAME', 'Eu Penso');
