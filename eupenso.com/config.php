@@ -15,10 +15,10 @@ define('MAX_IN_ROOT', 8);
 define('SEARCH','013594555885008672798:pvaspepxciw');
 define('AMP', true);
 define('DESCRICAO', 'Uma conversa sobre os fatos sociais e políticos.');
+define('LOCALHOST', $_SERVER['SERVER_NAME'] != 'eupenso.com' ? 1 : 0);
 
 #MUDAR
 define('CACHE_ATIVO', false);
 define('DEBUG', false);
-define('LOCALHOST',true);
 
 #APAGAR
