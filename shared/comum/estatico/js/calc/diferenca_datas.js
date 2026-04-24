@@ -1,7 +1,7 @@
 (function () {
     var WIDGET_ID = 'calc-diferenca-datas-widget';
     var RESULT_ID = 'calc-diferenca-datas-resultado';
-    var ENDPOINT_ACTION = 'comum/calc/diferenca_datas';
+    var ENDPOINT_URL = '/comum/php/xhr/calc/diferenca_datas.php';
 
     function boot() {
         if (document.readyState === 'loading') {
@@ -89,7 +89,7 @@
             setStatus(status, 'Calculando...', false);
 
             try {
-                var response = await window.send(buildEndpointUrl(ENDPOINT_ACTION), {
+                var response = await window.send(ENDPOINT_URL, {
                     data_inicial: d1,
                     data_final: d2
                 });
@@ -116,10 +116,6 @@
                 button.disabled = false;
             }
         });
-    }
-
-    function buildEndpointUrl(action) {
-        return '/comum/php/xhr/' + String(action || '').replace(/^comum\//, '') + '.php';
     }
 
     function formatDateInput(value) {

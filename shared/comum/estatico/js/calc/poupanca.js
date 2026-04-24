@@ -1,7 +1,7 @@
 (function () {
     var WIDGET_ID = 'calc-poupanca-widget';
     var RESULT_ID = 'calc-poupanca-resultado';
-    var ENDPOINT_ACTION = 'comum/calc/poupanca';
+    var ENDPOINT_URL = '/comum/php/xhr/calc/poupanca.php';
     
     var currencyFormatter = new Intl.NumberFormat('pt-BR', {
         style: 'currency',
@@ -116,7 +116,7 @@
             setStatus(status, 'Calculando...', false);
 
             try {
-                var response = await window.send(buildEndpointUrl(ENDPOINT_ACTION), payload);
+                var response = await window.send(ENDPOINT_URL, payload);
 
                 if (!response || !response.cabecalho || response.cabecalho.status !== 'ok' || !response.dados || !response.dados.resultado) {
                     setStatus(status, extractMessage(response) || 'Não foi possível calcular a rentabilidade.', true);
@@ -146,10 +146,6 @@
                 button.disabled = false;
             }
         });
-    }
-
-    function buildEndpointUrl(action) {
-        return '/comum/php/xhr/' + String(action || '').replace(/^comum\//, '') + '.php';
     }
 
     function scrollToResults(results) {

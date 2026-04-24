@@ -1,7 +1,7 @@
 (function () {
     var WIDGET_ID = 'calc-cdb-widget';
     var RESULT_ID = 'calc-cdb-resultado';
-    var ENDPOINT_ACTION = 'comum/calc/cdb';
+    var ENDPOINT_URL = '/comum/php/xhr/calc/cdb.php';
     var currencyFormatter = new Intl.NumberFormat('pt-BR', {
         style: 'currency',
         currency: 'BRL'
@@ -159,7 +159,7 @@
             setStatus(status, 'Calculando...', false);
 
             try {
-                var response = await window.send(buildEndpointUrl(ENDPOINT_ACTION), payload);
+                var response = await window.send(ENDPOINT_URL, payload);
 
                 if (!response || !response.cabecalho || response.cabecalho.status !== 'ok' || !response.dados || !response.dados.resultado) {
                     setStatus(status, extractMessage(response) || 'Não foi possível calcular agora.', true);
@@ -187,10 +187,6 @@
                 button.disabled = false;
             }
         });
-    }
-
-    function buildEndpointUrl(action) {
-        return '/comum/php/xhr/' + String(action || '').replace(/^comum\//, '') + '.php';
     }
 
     function renderResult(result, nodes) {

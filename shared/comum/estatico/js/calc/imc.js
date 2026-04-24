@@ -1,7 +1,7 @@
 (function () {
     var WIDGET_ID = 'calc-imc-widget';
     var RESULT_ID = 'calc-imc-resultado';
-    var ENDPOINT_ACTION = 'comum/calc/imc';
+    var ENDPOINT_URL = '/comum/php/xhr/calc/imc.php';
 
     function boot() {
         if (document.readyState === 'loading') {
@@ -105,7 +105,7 @@
             setStatus(status, 'Calculando...', false);
 
             try {
-                var response = await window.send(buildEndpointUrl(ENDPOINT_ACTION), {
+                var response = await window.send(ENDPOINT_URL, {
                     peso: parseInt(peso, 10),
                     altura: parseInt(altura, 10)
                 });
@@ -135,10 +135,6 @@
                 button.disabled = false;
             }
         });
-    }
-
-    function buildEndpointUrl(action) {
-        return '/comum/php/xhr/' + String(action || '').replace(/^comum\//, '') + '.php';
     }
 
     function scrollToResults(results) {
