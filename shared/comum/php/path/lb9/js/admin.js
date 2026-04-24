@@ -631,19 +631,19 @@
                 const typeClass = item.tipo === 'acessos_negados' ? ' denied' : '';
                 const status = item.status ? `<span class="admin-access-status">${this.escapeHtml(item.status)}</span>` : '';
 
-                return `
-                    <div class="admin-access-row${typeClass}">
-                        <div class="admin-access-main">
-                            <span class="admin-access-type">${this.escapeHtml(item.tipo_label || '')}</span>
-                            <span class="admin-access-route">${this.escapeHtml(item.rota || item.raw || '')}</span>
-                            ${status}
+                    return `
+                        <div class="admin-access-row${typeClass}">
+                            <div class="admin-access-main">
+                                <span class="admin-access-type">${this.escapeHtml(item.tipo_label || '')}</span>
+                                <span class="admin-access-route">${this.escapeHtml(item.rota || item.raw || '')}</span>
+                                ${status}
+                            </div>
+                            <div class="admin-access-meta">
+                                <span>${this.escapeHtml(item.ip || '')}</span>
+                                <span>${this.escapeHtml(`${item.data || ''} ${item.hora || ''}`.trim())}</span>
+                            </div>
                         </div>
-                        <div class="admin-access-meta">
-                            <span>${this.escapeHtml(`${item.data || ''} ${item.hora || ''}`.trim())}</span>
-                            <span>${this.escapeHtml(item.ip || '')}</span>
-                        </div>
-                    </div>
-                `;
+                    `;
                     }).join('')}
                 </section>
             `;
