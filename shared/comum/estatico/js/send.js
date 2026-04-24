@@ -28,8 +28,6 @@ async function send(url, payload, options) {
         throw new Error('Destino de envio não informado.');
     }
 
-    startSendProgress();
-
     try {
         var fetchOptions = buildSendFetchOptions(payload, config);
         var response = await fetch(requestUrl, fetchOptions);
@@ -42,8 +40,6 @@ async function send(url, payload, options) {
     } catch (error) {
         notifySendMessage(error.message || 'Falha no envio.', 'erro', 1);
         throw error;
-    } finally {
-        stopSendProgress();
     }
 }
 
@@ -125,24 +121,6 @@ function normalizeSendResponsePayload(payload) {
     }
 
     return normalized;
-}
-
-/**
- * Inicia o indicador visual de progresso se a implementação existir.
- */
-function startSendProgress() {
-    if (typeof create_line_progress === 'function') {
-        create_line_progress();
-    }
-}
-
-/**
- * Finaliza o indicador visual de progresso se a implementação existir.
- */
-function stopSendProgress() {
-    if (typeof hide_line_progress === 'function') {
-        hide_line_progress();
-    }
 }
 
 /**
