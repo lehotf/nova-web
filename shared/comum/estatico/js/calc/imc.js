@@ -89,7 +89,7 @@
             });
         });
 
-        form.addEventListener('submit', function (event) {
+        form.addEventListener('submit', async function (event) {
             event.preventDefault();
 
             var peso = onlyDigits(form.elements.peso.value);
@@ -104,33 +104,41 @@
             button.disabled = true;
             setStatus(status, 'Calculando...', false);
 
-            window.send({
-                a: ENDPOINT_ACTION,
-                dados: { peso: parseInt(peso, 10), altura: parseInt(altura, 10) },
-                f: function (response) {
-                    button.disabled = false;
+            try {
+                var response = await window.send(buildEndpointUrl(ENDPOINT_ACTION), {
+                    peso: parseInt(peso, 10),
+                    altura: parseInt(altura, 10)
+                });
 
-                    if (!response || !response.cabecalho || response.cabecalho.status !== 'ok' || !response.dados || !response.dados.resultado) {
-                        setStatus(status, extractMessage(response) || 'Erro ao calcular.', true);
-                        results.classList.remove('is-visible');
-                        return;
-                    }
-
-                    var res = response.dados.resultado;
-                    
-                    resultValue.textContent = res.imc.toLocaleString('pt-BR');
-                    classValue.textContent = res.classificacao;
-                    pesoValue.textContent = res.peso.toLocaleString('pt-BR') + ' kg';
-                    alturaValue.textContent = res.altura.toLocaleString('pt-BR') + ' m';
-                    
-                    summary.textContent = 'Com ' + res.peso.toLocaleString('pt-BR') + 'kg e ' + res.altura.toLocaleString('pt-BR') + 'm, seu IMC indica: ' + res.classificacao + '.';
-                        
-                    results.classList.add('is-visible');
-                    setStatus(status, response.cabecalho.msg || 'Cálculo concluído.', false);
-                    scrollToResults(results);
+                if (!response || !response.cabecalho || response.cabecalho.status !== 'ok' || !response.dados || !response.dados.resultado) {
+                    setStatus(status, extractMessage(response) || 'Erro ao calcular.', true);
+                    results.classList.remove('is-visible');
+                    return;
                 }
-            });
+
+                var res = response.dados.resultado;
+
+                resultValue.textContent = res.imc.toLocaleString('pt-BR');
+                classValue.textContent = res.classificacao;
+                pesoValue.textContent = res.peso.toLocaleString('pt-BR') + ' kg';
+                alturaValue.textContent = res.altura.toLocaleString('pt-BR') + ' m';
+
+                summary.textContent = 'Com ' + res.peso.toLocaleString('pt-BR') + 'kg e ' + res.altura.toLocaleString('pt-BR') + 'm, seu IMC indica: ' + res.classificacao + '.';
+
+                results.classList.add('is-visible');
+                setStatus(status, response.cabecalho.msg || 'Cálculo concluído.', false);
+                scrollToResults(results);
+            } catch (error) {
+                setStatus(status, error.message || 'Erro ao calcular.', true);
+                results.classList.remove('is-visible');
+            } finally {
+                button.disabled = false;
+            }
         });
+    }
+
+    function buildEndpointUrl(action) {
+        return '/comum/php/xhr/' + String(action || '').replace(/^comum\//, '') + '.php';
     }
 
     function scrollToResults(results) {

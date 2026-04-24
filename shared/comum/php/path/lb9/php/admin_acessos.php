@@ -7,6 +7,7 @@ header('Expires: 0');
 require $_SERVER['DOCUMENT_ROOT'] . '/comum/php/autoload.php';
 $c = new controlador(observador: true, autenticador: true);
 $c->autenticador->acesso(2);
+$o = $c->observador;
 
 $docRoot = $_SERVER['DOCUMENT_ROOT'] ?: dirname(__DIR__, 6);
 $baseDir = rtrim($docRoot, '/') . '/cache/sistema';
@@ -26,17 +27,11 @@ try {
         ];
     }
 
-    echo json_encode([
-        'sucesso' => true,
-        'arquivos' => $payload,
-    ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    $o->r['arquivos'] = $payload;
+    $o->envia('Logs de acesso carregados.');
 } catch (Throwable $e) {
-    http_response_code(500);
-    echo json_encode([
-        'sucesso' => false,
-        'mensagem' => 'Erro ao carregar logs de acesso.',
-        'detalhe' => $e->getMessage(),
-    ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    $o->r['detalhe'] = $e->getMessage();
+    $o->envia('Erro ao carregar logs de acesso.', 'erro');
 }
 
 function readAccessFile(string $path): string

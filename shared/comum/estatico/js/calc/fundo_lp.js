@@ -142,7 +142,7 @@
         setRateMode(rateModeField, rateModeButtons, rateModeField.value);
         syncRateFieldUi(rateModeField, rateField, rateLabel);
 
-        form.addEventListener('submit', function (event) {
+        form.addEventListener('submit', async function (event) {
             event.preventDefault();
 
             var payload = buildPayload(form);
@@ -155,38 +155,35 @@
             button.disabled = true;
             setStatus(status, 'Calculando...', false);
 
-            window.send({
-                a: ENDPOINT_ACTION,
-                dados: payload,
-                f: function (response) {
-                    button.disabled = false;
+            try {
+                var response = await window.send(buildEndpointUrl(ENDPOINT_ACTION), payload);
 
-                    if (!response || !response.cabecalho || response.cabecalho.status !== 'ok' || !response.dados || !response.dados.resultado) {
-                        setStatus(status, extractMessage(response) || 'Não foi possível calcular agora.', true);
-                        results.classList.remove('is-visible');
-                        return;
-                    }
+                if (!response || !response.cabecalho || response.cabecalho.status !== 'ok' || !response.dados || !response.dados.resultado) {
+                    setStatus(status, extractMessage(response) || 'Não foi possível calcular agora.', true);
+                    results.classList.remove('is-visible');
+                    return;
+                }
 
-                    var result = response.dados.resultado;
-                    resultValue.textContent = currencyFormatter.format(result.valor_liquido || 0);
-                    investedValue.textContent = currencyFormatter.format(result.total_investido || 0);
-                    earnedValue.textContent = currencyFormatter.format(result.juros_acumulados || 0);
-                    comeCotasValue.textContent = currencyFormatter.format(result.total_descontado_come_cotas || 0);
-                    impostoResgateValue.textContent = currencyFormatter.format(result.imposto_resgate || 0);
-                        summary.textContent = 'Em ' + result.numero_meses + ' meses, com aporte inicial de ' +
-                        currencyFormatter.format(result.investimento_inicial || 0) +
-                        ' e aplicações mensais de ' + currencyFormatter.format(result.aplicacao_mensal || 0) +
-                        ', esta estimativa considera um fundo de renda fixa de longo prazo com rentabilidade base de ' + buildRateReferenceText(result) + '. A "Rentabilidade do Fundo" já reflete a perda de cotas e o custo de oportunidade do come-cotas semestral de 15%.';
-                    
-                    var totalImposto = result.total_descontado_come_cotas + result.imposto_resgate;
-                    var aliquotaMediaIr = result.rentabilidade_bruta_total > 0 ? (totalImposto / result.rentabilidade_bruta_total) * 100 : 0;
-                    var rentabilidadeLiquida = result.valor_liquido - result.total_investido;
-                    var percentualRentabilidadeLiquida = result.total_investido > 0 ? (rentabilidadeLiquida / result.total_investido) * 100 : 0;
-                    var inflacaoPeriodoPercentual = result.inflacao_periodo_decimal * 100;
-                    var percentualRentabilidadeRealLiquida = result.valor_real_investido > 0 ? (result.rentabilidade_real_liquida / result.valor_real_investido) * 100 : 0;
-                    
-                    var saldoAntesDoResgate = result.total_investido + result.juros_acumulados;
-                    var percentualGanhoRelativo = result.total_investido > 0 ? (result.juros_acumulados / result.total_investido) * 100 : 0;
+                var result = response.dados.resultado;
+                resultValue.textContent = currencyFormatter.format(result.valor_liquido || 0);
+                investedValue.textContent = currencyFormatter.format(result.total_investido || 0);
+                earnedValue.textContent = currencyFormatter.format(result.juros_acumulados || 0);
+                comeCotasValue.textContent = currencyFormatter.format(result.total_descontado_come_cotas || 0);
+                impostoResgateValue.textContent = currencyFormatter.format(result.imposto_resgate || 0);
+                summary.textContent = 'Em ' + result.numero_meses + ' meses, com aporte inicial de ' +
+                    currencyFormatter.format(result.investimento_inicial || 0) +
+                    ' e aplicações mensais de ' + currencyFormatter.format(result.aplicacao_mensal || 0) +
+                    ', esta estimativa considera um fundo de renda fixa de longo prazo com rentabilidade base de ' + buildRateReferenceText(result) + '. A "Rentabilidade do Fundo" já reflete a perda de cotas e o custo de oportunidade do come-cotas semestral de 15%.';
+
+                var totalImposto = result.total_descontado_come_cotas + result.imposto_resgate;
+                var aliquotaMediaIr = result.rentabilidade_bruta_total > 0 ? (totalImposto / result.rentabilidade_bruta_total) * 100 : 0;
+                var rentabilidadeLiquida = result.valor_liquido - result.total_investido;
+                var percentualRentabilidadeLiquida = result.total_investido > 0 ? (rentabilidadeLiquida / result.total_investido) * 100 : 0;
+                var inflacaoPeriodoPercentual = result.inflacao_periodo_decimal * 100;
+                var percentualRentabilidadeRealLiquida = result.valor_real_investido > 0 ? (result.rentabilidade_real_liquida / result.valor_real_investido) * 100 : 0;
+
+                var saldoAntesDoResgate = result.total_investido + result.juros_acumulados;
+                var percentualGanhoRelativo = result.total_investido > 0 ? (result.juros_acumulados / result.total_investido) * 100 : 0;
 
                     var jurosFmt = result.juros_acumulados > 0 ? '<strong class="calc-rf__text-green">' + currencyFormatter.format(result.juros_acumulados) + '</strong>' : '<strong>' + currencyFormatter.format(result.juros_acumulados) + '</strong>';
                     var percGanhoFmt = result.juros_acumulados > 0 ? '<strong class="calc-rf__text-green">' + numberFormatter.format(percentualGanhoRelativo) + '%</strong>' : '<strong>' + numberFormatter.format(percentualGanhoRelativo) + '%</strong>';
@@ -252,12 +249,20 @@
                     htmlRelatorio += '<p style="margin-top: 30px; font-size: 14px; color: #dbdbdb; padding: 15px; border-radius: 8px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1);"><strong>Atenção:</strong> Esta calculadora foi desenvolvida exclusivamente para fins educacionais e de simulação. Caso necessite de cálculos exatos para tomada de decisão financeira ou cumprimento de obrigações fiscais, consulte um especialista qualificado.</p>';
 
                     relatorioContainer.innerHTML = htmlRelatorio;
-                    results.classList.add('is-visible');
-                    setStatus(status, response.cabecalho.msg || 'Cálculo concluído.', false);
-                    scrollToResults(results);
-                }
-            });
+                results.classList.add('is-visible');
+                setStatus(status, response.cabecalho.msg || 'Cálculo concluído.', false);
+                scrollToResults(results);
+            } catch (error) {
+                setStatus(status, error.message || 'Não foi possível calcular agora.', true);
+                results.classList.remove('is-visible');
+            } finally {
+                button.disabled = false;
+            }
         });
+    }
+
+    function buildEndpointUrl(action) {
+        return '/comum/php/xhr/' + String(action || '').replace(/^comum\//, '') + '.php';
     }
 
     function scrollToResults(results) {

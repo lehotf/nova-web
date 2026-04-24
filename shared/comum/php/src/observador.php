@@ -12,7 +12,7 @@ class observador
     {
         $this->db = $db;
         $this->input = $this->carregar_json();
-        $this->dados = $this->sanitiza($this->input);
+        $this->dados = $this->normaliza($this->input);
         $this->r = [];
     }
 
@@ -27,18 +27,14 @@ class observador
         return is_array($json) ? $json : [];
     }
 
-    private function sanitiza($valor)
+    private function normaliza($valor)
     {
         if (is_array($valor)) {
             $limpo = [];
             foreach ($valor as $chave => $item) {
-                $limpo[$chave] = $this->sanitiza($item);
+                $limpo[$chave] = $this->normaliza($item);
             }
             return $limpo;
-        }
-
-        if (is_string($valor)) {
-            return $this->db->protege($valor);
         }
 
         return $valor;

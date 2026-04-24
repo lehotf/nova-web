@@ -164,20 +164,66 @@ class ArtigosApp extends window.BaseModule {
         await this.carregarArtigos();
     }
 
-    async apiFetch(path, options = {}) {
-        const config = {
-            cache: 'no-store',
-            credentials: 'same-origin',
-            ...options
+    async apiSend(dados = {}, extra = {}) {
+        var payload = dados;
+
+        if (extra.formData instanceof FormData) {
+            payload = { formData: extra.formData };
+        } else if (extra.file || extra.files) {
+            payload = { formData: this.montarFormDataArtigos(dados, extra) };
+        }
+
+        const payloadResposta = await send(`${this.apiBase}/artigos.php`, payload);
+        return this.normalizarRespostaApi(payloadResposta);
+    }
+
+    normalizarRespostaApi(payload) {
+        if (!payload || typeof payload !== 'object') {
+            return {
+                sucesso: false,
+                mensagem: 'Resposta inválida do servidor'
+            };
+        }
+
+        if (!payload.cabecalho || typeof payload.cabecalho !== 'object') {
+            return {
+                sucesso: false,
+                mensagem: 'Resposta fora do padrão do observador'
+            };
+        }
+
+        const cabecalho = payload.cabecalho || {};
+        const dados = payload.dados || {};
+
+        return {
+            sucesso: cabecalho.status === 'ok',
+            mensagem: cabecalho.msg || '',
+            ...dados
         };
+    }
 
-        const headers = new Headers(options.headers || {});
-        headers.set('Accept', 'application/json');
-        headers.set('Cache-Control', 'no-store, no-cache, max-age=0');
-        headers.set('Pragma', 'no-cache');
-        config.headers = headers;
+    montarFormDataArtigos(dados = {}, extra = {}) {
+        const formData = new FormData();
 
-        return fetch(`${this.apiBase}/${path}`, config);
+        Object.keys(dados).forEach((key) => {
+            const valor = dados[key];
+            if (valor !== undefined && valor !== null) {
+                formData.append(key, String(valor));
+            }
+        });
+
+        if (extra.file?.files?.[0]) {
+            formData.append(extra.fileFieldName || 'arquivo', extra.file.files[0], extra.file.files[0].name);
+        }
+
+        if (Array.isArray(extra.files)) {
+            extra.files.forEach((item) => {
+                if (!item?.file) return;
+                formData.append(item.fieldName || 'arquivo', item.file, item.fileName || item.file.name);
+            });
+        }
+
+        return formData;
     }
 
     async carregarTags() {
@@ -186,10 +232,7 @@ class ArtigosApp extends window.BaseModule {
         this.artigoTagsList.innerHTML = '<p class="artigo-tags-empty">Carregando tags...</p>';
 
         try {
-            const res = await this.apiFetch('artigos.php?acao=listar_tags');
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
-            const data = await res.json();
+            const data = await this.apiSend({ acao: 'listar_tags' });
             if (!data.sucesso) throw new Error(data.mensagem || 'Erro ao carregar tags');
 
             this.tagsDisponiveis = Array.isArray(data.tags) ? data.tags : [];
@@ -269,17 +312,10 @@ class ArtigosApp extends window.BaseModule {
         }
 
         try {
-            const res = await this.apiFetch('artigos.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    acao: 'inserir_tag',
-                    nome
-                })
+            const data = await this.apiSend({
+                acao: 'inserir_tag',
+                nome
             });
-
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            const data = await res.json();
             if (!data.sucesso || !data.tag?.id) {
                 throw new Error(data.mensagem || 'Erro ao cadastrar tag');
             }
@@ -314,13 +350,10 @@ class ArtigosApp extends window.BaseModule {
 
     async carregarArtigos(termo = '') {
         try {
-            const params = new URLSearchParams({ acao: 'listar' });
-            if (termo) params.set('termo', termo);
-
-            const res = await this.apiFetch(`artigos.php?${params}`);
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
-            const data = await res.json();
+            const data = await this.apiSend({
+                acao: 'listar',
+                termo
+            });
             if (!data.sucesso) throw new Error(data.mensagem || 'Erro ao carregar artigos');
 
             this.artigos = data.artigos || [];
@@ -367,9 +400,10 @@ class ArtigosApp extends window.BaseModule {
 
     async abrirArtigo(id) {
         try {
-            const res = await this.apiFetch(`artigos.php?acao=obter&id=${encodeURIComponent(id)}`);
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            const data = await res.json();
+            const data = await this.apiSend({
+                acao: 'obter',
+                id
+            });
             if (!data.sucesso) throw new Error(data.mensagem || 'Erro ao carregar artigo');
 
             this.artigoAtual = data.artigo;
@@ -543,14 +577,7 @@ class ArtigosApp extends window.BaseModule {
         }
 
         try {
-            const res = await this.apiFetch('artigos.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            const data = await res.json();
+            const data = await this.apiSend(payload);
             if (!data.sucesso) throw new Error(data.mensagem || 'Erro ao salvar');
 
             if (data.id) {
@@ -608,14 +635,7 @@ class ArtigosApp extends window.BaseModule {
         if (!id) return;
 
         try {
-            const res = await this.apiFetch('artigos.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ acao: 'excluir', id })
-            });
-
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            const data = await res.json();
+            const data = await this.apiSend({ acao: 'excluir', id });
             if (!data.sucesso) throw new Error(data.mensagem || 'Erro ao excluir');
 
             this.showToast('Artigo excluído com sucesso!', 'success');
@@ -691,21 +711,19 @@ class ArtigosApp extends window.BaseModule {
             return;
         }
 
-        const formData = new FormData();
-        formData.append('acao', 'upload_imagem_artigo');
-        formData.append('id', this.artigoId.value);
-        formData.append('imagem', file);
-
         if (this.btnImagemArtigo) this.btnImagemArtigo.disabled = true;
 
         try {
-            const res = await this.apiFetch('artigos.php', {
-                method: 'POST',
-                body: formData
-            });
-
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            const data = await res.json();
+            const data = await this.apiSend(
+                {
+                    acao: 'upload_imagem_artigo',
+                    id: this.artigoId.value
+                },
+                {
+                    file: this.artigoImagemUpload,
+                    fileFieldName: 'imagem'
+                }
+            );
             if (!data.sucesso) throw new Error(data.mensagem || 'Erro ao enviar imagem');
 
             this.inserirMarcacaoImagem(data.name);
@@ -1221,27 +1239,25 @@ class ArtigosApp extends window.BaseModule {
         this.clampThumbOffsets();
         this.renderizarCropThumb();
 
-        const formData = new FormData();
-        formData.append('acao', 'upload_thumb');
-        formData.append('id', id);
-        formData.append('thumb_nome', thumbNumero);
-        formData.append('bx', String(Math.round(this.thumbCropState.bx)));
-        formData.append('by', String(Math.round(this.thumbCropState.by)));
-        formData.append('width', String(Math.round(this.thumbCropState.displayWidth)));
-        formData.append('qualidade_g', this.thumbQualidadeG?.value || '75');
-        formData.append('qualidade_p', this.thumbQualidadeP?.value || '75');
-        formData.append('thumb', this.thumbCropState.file);
-
         this.thumbUploadAction.disabled = true;
 
         try {
-            const res = await this.apiFetch('artigos.php', {
-                method: 'POST',
-                body: formData
-            });
-
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            const data = await res.json();
+            const data = await this.apiSend(
+                {
+                    acao: 'upload_thumb',
+                    id,
+                    thumb_nome: thumbNumero,
+                    bx: String(Math.round(this.thumbCropState.bx)),
+                    by: String(Math.round(this.thumbCropState.by)),
+                    width: String(Math.round(this.thumbCropState.displayWidth)),
+                    qualidade_g: this.thumbQualidadeG?.value || '75',
+                    qualidade_p: this.thumbQualidadeP?.value || '75'
+                },
+                {
+                    file: this.thumbUploadInput,
+                    fileFieldName: 'thumb'
+                }
+            );
             if (!data.sucesso) throw new Error(data.mensagem || 'Erro ao enviar thumb');
 
             if (!this.artigoAtual) this.artigoAtual = {};

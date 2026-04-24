@@ -263,7 +263,11 @@ function buildRootCss($debug, $type)
 
 function buildTagLinks($query, $type)
 {
-    $db = new database('localhost', BD_LOGIN, BD_SENHA, BD);
+    $db = $GLOBALS['cache_templates_db'] ?? null;
+    if (!($db instanceof database)) {
+        $db = new database('localhost', BD_LOGIN, BD_SENHA, BD);
+    }
+
     $tags = $db->v_select($query);
 
     if ($tags === false || !is_array($tags)) {

@@ -73,7 +73,7 @@
             });
         });
 
-        form.addEventListener('submit', function (event) {
+        form.addEventListener('submit', async function (event) {
             event.preventDefault();
 
             var d1 = parseDate(form.elements.data_inicial.value);
@@ -88,33 +88,38 @@
             button.disabled = true;
             setStatus(status, 'Calculando...', false);
 
-            window.send({
-                a: ENDPOINT_ACTION,
-                dados: {
+            try {
+                var response = await window.send(buildEndpointUrl(ENDPOINT_ACTION), {
                     data_inicial: d1,
                     data_final: d2
-                },
-                f: function (response) {
-                    button.disabled = false;
+                });
 
-                    if (!response || !response.cabecalho || response.cabecalho.status !== 'ok' || !response.dados || !response.dados.resultado) {
-                        setStatus(status, extractMessage(response) || 'Não foi possível calcular a diferença.', true);
-                        results.classList.remove('is-visible');
-                        return;
-                    }
-
-                    var result = response.dados.resultado;
-                    var totalDias = Math.abs(result.total_dias);
-                    
-                    resultValue.textContent = totalDias.toLocaleString('pt-BR') + (totalDias === 1 ? ' dia' : ' dias');
-                    summary.textContent = 'A diferença total entre ' + form.elements.data_inicial.value + ' e ' + form.elements.data_final.value + ' é de ' + totalDias.toLocaleString('pt-BR') + (totalDias === 1 ? ' dia.' : ' dias.');
-                        
-                    results.classList.add('is-visible');
-                    setStatus(status, response.cabecalho.msg || 'Cálculo concluído com sucesso.', false);
-                    scrollToResults(results);
+                if (!response || !response.cabecalho || response.cabecalho.status !== 'ok' || !response.dados || !response.dados.resultado) {
+                    setStatus(status, extractMessage(response) || 'Não foi possível calcular a diferença.', true);
+                    results.classList.remove('is-visible');
+                    return;
                 }
-            });
+
+                var result = response.dados.resultado;
+                var totalDias = Math.abs(result.total_dias);
+
+                resultValue.textContent = totalDias.toLocaleString('pt-BR') + (totalDias === 1 ? ' dia' : ' dias');
+                summary.textContent = 'A diferença total entre ' + form.elements.data_inicial.value + ' e ' + form.elements.data_final.value + ' é de ' + totalDias.toLocaleString('pt-BR') + (totalDias === 1 ? ' dia.' : ' dias.');
+
+                results.classList.add('is-visible');
+                setStatus(status, response.cabecalho.msg || 'Cálculo concluído com sucesso.', false);
+                scrollToResults(results);
+            } catch (error) {
+                setStatus(status, error.message || 'Não foi possível calcular a diferença.', true);
+                results.classList.remove('is-visible');
+            } finally {
+                button.disabled = false;
+            }
         });
+    }
+
+    function buildEndpointUrl(action) {
+        return '/comum/php/xhr/' + String(action || '').replace(/^comum\//, '') + '.php';
     }
 
     function formatDateInput(value) {

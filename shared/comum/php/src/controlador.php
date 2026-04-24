@@ -106,6 +106,15 @@ class controlador
     public $observador;
     public $db;
 
+    private function iniciaDb()
+    {
+        if (!($this->db instanceof database)) {
+            $this->db = new database('localhost', BD_LOGIN, BD_SENHA, BD);
+        }
+
+        return $this->db;
+    }
+
     public function __construct(bool $guardiao = false, bool $logger = false, bool $autenticador = false, bool $observador = false)
     {
         if ($logger || $guardiao || $autenticador) {
@@ -117,7 +126,7 @@ class controlador
         }
 
         if ($observador || $autenticador) {
-            $this->db = new database('localhost', BD_LOGIN, BD_SENHA, BD);
+            $this->iniciaDb();
             $this->observador = new observador($this->db);
         }
 
@@ -132,7 +141,7 @@ class controlador
         $this->contador_de_tempo = $contador_de_tempo;        
         $this->cache = new cache(CACHE_ATIVO, $this->guardiao);                
         $this->verificaCache();                
-        $c = new carregador($this->guardiao, $this->cache, $this->logger);        
+        $c = new carregador($this->guardiao, $this->cache, $this->logger, $this->iniciaDb());        
     }   
 
     private function verificaCache()

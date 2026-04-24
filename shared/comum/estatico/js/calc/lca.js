@@ -139,7 +139,7 @@
         setRateMode(rateModeField, rateModeButtons, rateModeField.value);
         syncRateFieldUi(rateModeField, rateField, rateLabel);
 
-        form.addEventListener('submit', function (event) {
+        form.addEventListener('submit', async function (event) {
             event.preventDefault();
 
             var payload = buildPayload(form);
@@ -152,33 +152,38 @@
             button.disabled = true;
             setStatus(status, 'Calculando...', false);
 
-            window.send({
-                a: ENDPOINT_ACTION,
-                dados: payload,
-                f: function (response) {
-                    button.disabled = false;
+            try {
+                var response = await window.send(buildEndpointUrl(ENDPOINT_ACTION), payload);
 
-                    if (!response || !response.cabecalho || response.cabecalho.status !== 'ok' || !response.dados || !response.dados.resultado) {
-                        setStatus(status, extractMessage(response) || 'Não foi possível calcular agora.', true);
-                        results.classList.remove('is-visible');
-                        return;
-                    }
-
-                    var result = response.dados.resultado;
-                    renderResult(result, {
-                        results: results,
-                        resultValue: resultValue,
-                        investedValue: investedValue,
-                        earnedValue: earnedValue,
-                        impostoResgateValue: impostoResgateValue,
-                        summary: summary,
-                        relatorioContainer: relatorioContainer,
-                        status: status,
-                        response: response
-                    });
+                if (!response || !response.cabecalho || response.cabecalho.status !== 'ok' || !response.dados || !response.dados.resultado) {
+                    setStatus(status, extractMessage(response) || 'Não foi possível calcular agora.', true);
+                    results.classList.remove('is-visible');
+                    return;
                 }
-            });
+
+                var result = response.dados.resultado;
+                renderResult(result, {
+                    results: results,
+                    resultValue: resultValue,
+                    investedValue: investedValue,
+                    earnedValue: earnedValue,
+                    impostoResgateValue: impostoResgateValue,
+                    summary: summary,
+                    relatorioContainer: relatorioContainer,
+                    status: status,
+                    response: response
+                });
+            } catch (error) {
+                setStatus(status, error.message || 'Não foi possível calcular agora.', true);
+                results.classList.remove('is-visible');
+            } finally {
+                button.disabled = false;
+            }
         });
+    }
+
+    function buildEndpointUrl(action) {
+        return '/comum/php/xhr/' + String(action || '').replace(/^comum\//, '') + '.php';
     }
 
     function renderResult(result, nodes) {

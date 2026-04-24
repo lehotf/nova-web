@@ -67,10 +67,6 @@ class autenticador
             $_SESSION['id'] = $id;
             setcookie('login', $login, time() + 2592000, '/');
             setcookie('token', $senha, time() + 2592000, '/');
-            if ($this->observador) {
-                $this->observador->dados['nome'] = $nome;
-            }
-
             return true;
         } else {
             setcookie('token', '');

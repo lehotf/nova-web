@@ -6,6 +6,7 @@ require 'cacheTemplatesCore.php';
 $c = new controlador(observador: true, autenticador: true);
 $c->autenticador->acesso(2);
 $o = $c->observador;
+$GLOBALS['cache_templates_db'] = $c->db;
 
 $forcar = $o->numero('forcar');
 

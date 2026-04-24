@@ -8,6 +8,7 @@ require $_SERVER['DOCUMENT_ROOT'] . '/comum/php/autoload.php';
 
 $c = new controlador(observador: true, autenticador: true);
 $c->autenticador->acesso(2);
+$o = $c->observador;
 
 $baseDir = rtrim($_SERVER['DOCUMENT_ROOT'], '/') . '/cache/sistema';
 $files = [
@@ -30,16 +31,9 @@ try {
         $removed++;
     }
 
-    echo json_encode([
-        'sucesso' => true,
-        'mensagem' => $removed > 0 ? 'Logs de acesso removidos.' : 'Nenhum arquivo de log encontrado.',
-        'removidos' => $removed,
-    ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    $o->r['removidos'] = $removed;
+    $o->envia($removed > 0 ? 'Logs de acesso removidos.' : 'Nenhum arquivo de log encontrado.');
 } catch (Throwable $e) {
-    http_response_code(500);
-    echo json_encode([
-        'sucesso' => false,
-        'mensagem' => 'Erro ao limpar logs de acesso.',
-        'detalhe' => $e->getMessage(),
-    ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    $o->r['detalhe'] = $e->getMessage();
+    $o->envia('Erro ao limpar logs de acesso.', 'erro');
 }

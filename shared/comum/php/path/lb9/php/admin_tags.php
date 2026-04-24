@@ -7,47 +7,36 @@ header('Expires: 0');
 require $_SERVER['DOCUMENT_ROOT'] . '/comum/php/autoload.php';
 $c = new controlador(observador: true, autenticador: true);
 $c->autenticador->acesso(2);
+$db = $c->db;
+$o = $c->observador;
 
-$db = new database('localhost', BD_LOGIN, BD_SENHA, BD);
-
-$metodo = $_SERVER['REQUEST_METHOD'] ?? 'GET';
-$acao = $_GET['acao'] ?? '';
-$data = [];
-
-if ($metodo === 'POST') {
-    $raw = file_get_contents('php://input');
-    $data = json_decode($raw, true) ?: [];
-    $acao = $data['acao'] ?? $acao;
-}
+$data = is_array($o->dados) ? $o->dados : [];
+$acao = (string) ($data['acao'] ?? '');
 
 try {
     switch ($acao) {
         case 'listar':
-            listarTagsAdmin($db);
+            listarTagsAdmin($db, $o);
             break;
         case 'inserir':
-            inserirTagAdmin($db, $data);
+            inserirTagAdmin($db, $o, $data);
             break;
         case 'atualizar':
-            atualizarTagAdmin($db, $data);
+            atualizarTagAdmin($db, $o, $data);
             break;
         case 'excluir':
-            excluirTagAdmin($db, $data);
+            excluirTagAdmin($db, $o, $data);
             break;
         default:
-            echo json_encode(['sucesso' => false, 'mensagem' => 'Ação inválida.']);
+            $o->envia('Ação inválida.', 'erro');
             break;
     }
 } catch (Throwable $e) {
-    http_response_code(500);
-    echo json_encode([
-        'sucesso' => false,
-        'mensagem' => 'Erro interno no servidor.',
-        'detalhe' => $e->getMessage()
-    ]);
+    $o->r['detalhe'] = $e->getMessage();
+    $o->envia('Erro interno no servidor.', 'erro');
 }
 
-function listarTagsAdmin(database $db): void
+function listarTagsAdmin(database $db, observador $o): void
 {
     $sql = "SELECT tags.id, tags.nome, tags.path, tags.destaque, COUNT(links_tags.linkID) AS total_links
             FROM tags
@@ -63,24 +52,26 @@ function listarTagsAdmin(database $db): void
         }
     }
 
-    echo json_encode(['sucesso' => true, 'tags' => $tags]);
+    $o->r['tags'] = $tags;
+    $o->envia('Tags carregadas.');
 }
 
-function inserirTagAdmin(database $db, array $data): void
+function inserirTagAdmin(database $db, observador $o, array $data): void
 {
     $nome = normalizarNomeTagAdmin($data['nome'] ?? '');
     $path = normalizarPathTagAdmin($data['path'] ?? $nome);
     $destaque = (int) ($data['destaque'] ?? 0) ? 1 : 0;
 
-    validarDadosTagAdmin($db, 0, $nome, $path);
+    validarDadosTagAdmin($db, $o, 0, $nome, $path);
 
     $db->query("INSERT INTO tags (nome, path, destaque) VALUES (?, ?, ?)", 'ssi', [$nome, $path, $destaque]);
     $id = (int) $db->link->insert_id;
 
-    echo json_encode(['sucesso' => true, 'tag' => obterTagAdmin($db, $id)]);
+    $o->r['tag'] = obterTagAdmin($db, $id);
+    $o->envia('Tag inserida.');
 }
 
-function atualizarTagAdmin(database $db, array $data): void
+function atualizarTagAdmin(database $db, observador $o, array $data): void
 {
     $id = (int) ($data['id'] ?? 0);
     $nome = normalizarNomeTagAdmin($data['nome'] ?? '');
@@ -88,28 +79,26 @@ function atualizarTagAdmin(database $db, array $data): void
     $destaque = (int) ($data['destaque'] ?? 0) ? 1 : 0;
 
     if ($id <= 0) {
-        echo json_encode(['sucesso' => false, 'mensagem' => 'ID inválido.']);
-        return;
+        $o->envia('ID inválido.', 'erro');
     }
 
-    validarDadosTagAdmin($db, $id, $nome, $path);
+    validarDadosTagAdmin($db, $o, $id, $nome, $path);
     $db->query("UPDATE tags SET nome = ?, path = ?, destaque = ? WHERE id = ?", 'ssii', [$nome, $path, $destaque, $id]);
 
-    echo json_encode(['sucesso' => true, 'tag' => obterTagAdmin($db, $id)]);
+    $o->r['tag'] = obterTagAdmin($db, $id);
+    $o->envia('Tag atualizada.');
 }
 
-function excluirTagAdmin(database $db, array $data): void
+function excluirTagAdmin(database $db, observador $o, array $data): void
 {
     $id = (int) ($data['id'] ?? 0);
     if ($id <= 0) {
-        echo json_encode(['sucesso' => false, 'mensagem' => 'ID inválido.']);
-        return;
+        $o->envia('ID inválido.', 'erro');
     }
 
     $res = $db->query("SELECT id FROM tags WHERE id = ? LIMIT 1", 'i', [$id]);
     if (!($res instanceof mysqli_result) || !($res->fetch_assoc())) {
-        echo json_encode(['sucesso' => false, 'mensagem' => 'Tag não encontrada.']);
-        return;
+        $o->envia('Tag não encontrada.', 'erro');
     }
 
     $db->link->begin_transaction();
@@ -127,7 +116,7 @@ function excluirTagAdmin(database $db, array $data): void
         throw $e;
     }
 
-    echo json_encode(['sucesso' => true]);
+    $o->envia('Tag excluída.');
 }
 
 function obterTagAdmin(database $db, int $id): array
@@ -150,24 +139,21 @@ function obterTagAdmin(database $db, int $id): array
     throw new RuntimeException('Tag não encontrada após a operação.');
 }
 
-function validarDadosTagAdmin(database $db, int $idAtual, string $nome, string $path): void
+function validarDadosTagAdmin(database $db, observador $o, int $idAtual, string $nome, string $path): void
 {
     if ($nome === '') {
-        echo json_encode(['sucesso' => false, 'mensagem' => 'Informe o nome da tag.']);
-        exit;
+        $o->envia('Informe o nome da tag.', 'erro');
     }
 
     if ($path === '') {
-        echo json_encode(['sucesso' => false, 'mensagem' => 'Informe o path da tag.']);
-        exit;
+        $o->envia('Informe o path da tag.', 'erro');
     }
 
     $res = $db->query("SELECT id FROM tags WHERE path = ? LIMIT 1", 's', [$path]);
     if ($res instanceof mysqli_result && ($row = $res->fetch_assoc())) {
         $idEncontrado = (int) ($row['id'] ?? 0);
         if ($idEncontrado !== $idAtual) {
-            echo json_encode(['sucesso' => false, 'mensagem' => 'Já existe uma tag com esse path.']);
-            exit;
+            $o->envia('Já existe uma tag com esse path.', 'erro');
         }
     }
 }

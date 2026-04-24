@@ -2,11 +2,11 @@
 /**
  * Endpoint AJAX — Módulo de Artigos
  *
- * GET  ?acao=listar[&termo=busca]  → { sucesso, artigos[] }
- * GET  ?acao=obter&id=X            → { sucesso, artigo{} }
- * POST (JSON) acao=inserir         → { sucesso, id }
- * POST (JSON) acao=atualizar       → { sucesso, id }
- * POST (JSON) acao=excluir         → { sucesso }
+ * POST acao=listar[&termo=busca]   → { sucesso, artigos[] }
+ * POST acao=obter&id=X             → { sucesso, artigo{} }
+ * POST acao=inserir                → { sucesso, id }
+ * POST acao=atualizar              → { sucesso, id }
+ * POST acao=excluir                → { sucesso }
  * POST (multipart) acao=upload_thumb → { sucesso, id, timestamp }
  * POST (multipart) acao=upload_imagem_artigo → { sucesso, name }
  */
@@ -23,33 +23,32 @@ require $_SERVER['DOCUMENT_ROOT'] . '/comum/php/autoload.php';
 
 $c = new controlador(observador: true, autenticador: true);
 $c->autenticador->acesso(2);
+$db = $c->db;
+$o = $c->observador;
+$GLOBALS['artigos_observador'] = $o;
 
-$db = new database('localhost', BD_LOGIN, BD_SENHA, BD);
-
-$metodo = $_SERVER['REQUEST_METHOD'] ?? 'GET';
-$acao = $_GET['acao'] ?? '';
+$metodo = $_SERVER['REQUEST_METHOD'] ?? 'POST';
 $data = [];
 
 if ($metodo === 'POST') {
     $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
 
     if (stripos($contentType, 'multipart/form-data') !== false) {
-        $data = $_POST;
-        $acao = $data['acao'] ?? $acao;
+        $data = is_array($_POST) ? $_POST : [];
     } else {
-        $raw = file_get_contents('php://input');
-        $data = json_decode($raw, true) ?: [];
-        $acao = $data['acao'] ?? $acao;
+        $data = is_array($o->dados) ? $o->dados : [];
     }
 }
+
+$acao = (string) ($data['acao'] ?? '');
 
 try {
     switch ($acao) {
         case 'listar':
-            listar($db);
+            listar($db, $data);
             break;
         case 'obter':
-            obter($db);
+            obter($db, $data);
             break;
         case 'listar_tags':
             listarTags($db);
@@ -73,21 +72,28 @@ try {
             uploadImagemArtigo($data);
             break;
         default:
-            echo json_encode(['sucesso' => false, 'mensagem' => 'Ação inválida.']);
+            artigosErro('Ação inválida.');
             break;
     }
 } catch (Throwable $e) {
-    http_response_code(500);
-    echo json_encode([
-        'sucesso' => false,
-        'mensagem' => 'Erro interno no servidor.',
-        'detalhe' => $e->getMessage()
-    ]);
+    artigosErro('Erro interno no servidor.', ['detalhe' => $e->getMessage()]);
 }
 
-function listar(database $db): void
+function artigosResponder(array $dados = [], ?string $msg = null, string $status = 'ok'): void
 {
-    $termo = trim($_GET['termo'] ?? '');
+    $o = $GLOBALS['artigos_observador'];
+    $o->r = $dados;
+    $o->envia($msg, $status);
+}
+
+function artigosErro(string $msg, array $dados = []): void
+{
+    artigosResponder($dados, $msg, 'erro');
+}
+
+function listar(database $db, array $data): void
+{
+    $termo = trim((string) ($data['termo'] ?? ''));
     $limit = 20;
 
     if ($termo !== '') {
@@ -119,15 +125,14 @@ function listar(database $db): void
         }
     }
 
-    echo json_encode(['sucesso' => true, 'artigos' => $artigos]);
+    artigosResponder(['artigos' => $artigos]);
 }
 
-function obter(database $db): void
+function obter(database $db, array $data): void
 {
-    $id = (int) ($_GET['id'] ?? 0);
+    $id = (int) ($data['id'] ?? 0);
     if (!$id) {
-        echo json_encode(['sucesso' => false, 'mensagem' => 'ID inválido.']);
-        return;
+        artigosErro('ID inválido.');
     }
 
     $sql = "SELECT links.id, links.titulo, links.thumb_titulo, links.subtitulo,
@@ -147,13 +152,12 @@ function obter(database $db): void
     $res = $db->query($sql, 'i', [$id]);
 
     if (!($res instanceof mysqli_result) || !($artigo = $res->fetch_assoc())) {
-        echo json_encode(['sucesso' => false, 'mensagem' => 'Artigo não encontrado.']);
-        return;
+        artigosErro('Artigo não encontrado.');
     }
 
     $artigo['tag_ids'] = obterTagIdsArtigo($db, (int) $artigo['id']);
 
-    echo json_encode(['sucesso' => true, 'artigo' => $artigo]);
+    artigosResponder(['artigo' => $artigo]);
 }
 
 function listarTags(database $db): void
@@ -167,40 +171,35 @@ function listarTags(database $db): void
         }
     }
 
-    echo json_encode(['sucesso' => true, 'tags' => $tags]);
+    artigosResponder(['tags' => $tags]);
 }
 
 function inserirTag(database $db, array $data): void
 {
     $nome = trim((string) ($data['nome'] ?? ''));
     if ($nome === '') {
-        echo json_encode(['sucesso' => false, 'mensagem' => 'Informe o nome da tag.']);
-        return;
+        artigosErro('Informe o nome da tag.');
     }
 
     $nome = mb_substr($nome, 0, 25);
     $path = mb_substr(url_amigavel($nome), 0, 25);
 
     if ($path === '') {
-        echo json_encode(['sucesso' => false, 'mensagem' => 'Não foi possível gerar o path da tag.']);
-        return;
+        artigosErro('Não foi possível gerar o path da tag.');
     }
 
     $resExistente = $db->query("SELECT id, nome, path, destaque FROM tags WHERE path = ? LIMIT 1", 's', [$path]);
     if ($resExistente instanceof mysqli_result && ($tag = $resExistente->fetch_assoc())) {
-        echo json_encode([
-            'sucesso' => true,
+        artigosResponder([
             'existente' => true,
             'tag' => $tag
         ]);
-        return;
     }
 
     $db->query("INSERT INTO tags (nome, path, destaque) VALUES (?, ?, 0)", 'ss', [$nome, $path]);
     $id = (int) $db->link->insert_id;
 
-    echo json_encode([
-        'sucesso' => true,
+    artigosResponder([
         'existente' => false,
         'tag' => [
             'id' => $id,
@@ -232,8 +231,7 @@ function inserir(database $db, array $data): void
     $destaque = normalizarDestaque($data['destaque'] ?? null);
 
     if ($titulo === '') {
-        echo json_encode(['sucesso' => false, 'mensagem' => 'Título obrigatório.']);
-        return;
+        artigosErro('Título obrigatório.');
     }
     $sql = "INSERT INTO links
                 (titulo, thumb_titulo, subtitulo, path,
@@ -263,7 +261,7 @@ function inserir(database $db, array $data): void
         throw $e;
     }
 
-    echo json_encode(['sucesso' => true, 'id' => $novoId, 'thumb' => $thumb]);
+    artigosResponder(['id' => $novoId, 'thumb' => $thumb]);
 }
 
 function atualizar(database $db, array $data): void
@@ -274,15 +272,13 @@ function atualizar(database $db, array $data): void
     $destaque = normalizarDestaque($data['destaque'] ?? null);
 
     if (!$id) {
-        echo json_encode(['sucesso' => false, 'mensagem' => 'ID obrigatório.']);
-        return;
+        artigosErro('ID obrigatório.');
     }
 
     try {
         [$set, $types, $params] = montarCamposAtualizacaoArtigo($data);
     } catch (InvalidArgumentException $e) {
-        echo json_encode(['sucesso' => false, 'mensagem' => $e->getMessage()]);
-        return;
+        artigosErro($e->getMessage());
     }
 
     $db->link->begin_transaction();
@@ -301,15 +297,14 @@ function atualizar(database $db, array $data): void
         throw $e;
     }
 
-    echo json_encode(['sucesso' => true, 'id' => $id]);
+    artigosResponder(['id' => $id]);
 }
 
 function excluir(database $db, array $data): void
 {
     $id = (int) ($data['id'] ?? 0);
     if (!$id) {
-        echo json_encode(['sucesso' => false, 'mensagem' => 'ID obrigatório.']);
-        return;
+        artigosErro('ID obrigatório.');
     }
 
     $db->link->begin_transaction();
@@ -323,7 +318,7 @@ function excluir(database $db, array $data): void
         throw $e;
     }
 
-    echo json_encode(['sucesso' => true]);
+    artigosResponder();
 }
 
 function uploadThumb(database $db, array $data): void
@@ -337,34 +332,28 @@ function uploadThumb(database $db, array $data): void
     $qualidadeG = limitarQualidade((int) ($data['qualidade_g'] ?? 0));
 
     if (!$id) {
-        echo json_encode(['sucesso' => false, 'mensagem' => 'ID inválido para upload da thumb.']);
-        return;
+        artigosErro('ID inválido para upload da thumb.');
     }
 
     if ($thumbNome <= 0) {
-        echo json_encode(['sucesso' => false, 'mensagem' => 'Número da thumb inválido.']);
-        return;
+        artigosErro('Número da thumb inválido.');
     }
 
     if (!isset($_FILES['thumb']) || !is_uploaded_file($_FILES['thumb']['tmp_name'])) {
-        echo json_encode(['sucesso' => false, 'mensagem' => 'Selecione uma imagem para a thumb.']);
-        return;
+        artigosErro('Selecione uma imagem para a thumb.');
     }
 
     $arquivo = $_FILES['thumb'];
     if (($arquivo['error'] ?? UPLOAD_ERR_OK) !== UPLOAD_ERR_OK) {
-        echo json_encode(['sucesso' => false, 'mensagem' => 'Falha no upload da imagem.']);
-        return;
+        artigosErro('Falha no upload da imagem.');
     }
 
     if (($arquivo['size'] ?? 0) > 2_000_000) {
-        echo json_encode(['sucesso' => false, 'mensagem' => 'Tamanho máximo de arquivo é 2MB.']);
-        return;
+        artigosErro('Tamanho máximo de arquivo é 2MB.');
     }
 
     if ($width < 1280) {
-        echo json_encode(['sucesso' => false, 'mensagem' => 'Largura de corte inválida.']);
-        return;
+        artigosErro('Largura de corte inválida.');
     }
 
     $extensao = strtolower(pathinfo($arquivo['name'] ?? '', PATHINFO_EXTENSION));
@@ -373,21 +362,18 @@ function uploadThumb(database $db, array $data): void
     $mimesPermitidos = ['image/jpeg', 'image/png'];
 
     if (!in_array($extensao, $permitidos, true) || !in_array($mime, $mimesPermitidos, true)) {
-        echo json_encode(['sucesso' => false, 'mensagem' => 'Extensão não permitida. Utilize JPEG ou PNG.']);
-        return;
+        artigosErro('Extensão não permitida. Utilize JPEG ou PNG.');
     }
 
     $imagemOrigem = criarImagemOrigem($arquivo['tmp_name'], $mime);
     if (!$imagemOrigem) {
-        echo json_encode(['sucesso' => false, 'mensagem' => 'Não foi possível processar a imagem enviada.']);
-        return;
+        artigosErro('Não foi possível processar a imagem enviada.');
     }
 
     $dimensoes = getimagesize($arquivo['tmp_name']);
     if (!$dimensoes) {
         imagedestroy($imagemOrigem);
-        echo json_encode(['sucesso' => false, 'mensagem' => 'Imagem inválida.']);
-        return;
+        artigosErro('Imagem inválida.');
     }
 
     [$origWidth, $origHeight] = $dimensoes;
@@ -399,7 +385,7 @@ function uploadThumb(database $db, array $data): void
     imagecopyresampled($frame, $imagemOrigem, $bx, $by, 0, 0, $width, $newHeight, $origWidth, $origHeight);
     imagedestroy($imagemOrigem);
 
-    $uploadDirectory = $GLOBALS['docRoot'] . '/cache/img/upload/t/';
+    $uploadDirectory = $_SERVER['DOCUMENT_ROOT'] . '/cache/img/upload/t/';
     ensureDirectory($uploadDirectory);
 
     $ampFile = $uploadDirectory . $thumbNome . 'amp.jpg';
@@ -408,22 +394,19 @@ function uploadThumb(database $db, array $data): void
 
     if (!imagejpeg($frame, $ampFile, 60)) {
         imagedestroy($frame);
-        echo json_encode(['sucesso' => false, 'mensagem' => 'Falha ao salvar a thumb AMP.']);
-        return;
+        artigosErro('Falha ao salvar a thumb AMP.');
     }
 
     if (!salvarResizeJpeg($frame, 283, $smallFile, $qualidadeP) || !salvarResizeJpeg($frame, 586, $largeFile, $qualidadeG)) {
         imagedestroy($frame);
-        echo json_encode(['sucesso' => false, 'mensagem' => 'Falha ao gerar os tamanhos da thumb.']);
-        return;
+        artigosErro('Falha ao gerar os tamanhos da thumb.');
     }
 
     imagedestroy($frame);
 
     $db->query("UPDATE links SET thumb = ?, dateModified = NOW() WHERE id = ?", 'ii', [$thumbNome, $id]);
 
-    echo json_encode([
-        'sucesso' => true,
+    artigosResponder([
         'id' => $id,
         'thumb' => $thumbNome,
         'timestamp' => time()
@@ -434,24 +417,20 @@ function uploadImagemArtigo(array $data): void
 {
     $id = (int) ($data['id'] ?? 0);
     if (!$id) {
-        echo json_encode(['sucesso' => false, 'mensagem' => 'Você deve salvar o artigo antes de fazer upload de imagem.']);
-        return;
+        artigosErro('Você deve salvar o artigo antes de fazer upload de imagem.');
     }
 
     if (!isset($_FILES['imagem']) || !is_uploaded_file($_FILES['imagem']['tmp_name'])) {
-        echo json_encode(['sucesso' => false, 'mensagem' => 'Selecione uma imagem para upload.']);
-        return;
+        artigosErro('Selecione uma imagem para upload.');
     }
 
     $arquivo = $_FILES['imagem'];
     if (($arquivo['error'] ?? UPLOAD_ERR_OK) !== UPLOAD_ERR_OK) {
-        echo json_encode(['sucesso' => false, 'mensagem' => 'Falha no upload da imagem.']);
-        return;
+        artigosErro('Falha no upload da imagem.');
     }
 
     if (($arquivo['size'] ?? 0) > 2_000_000) {
-        echo json_encode(['sucesso' => false, 'mensagem' => 'Tamanho máximo de arquivo é 2MB.']);
-        return;
+        artigosErro('Tamanho máximo de arquivo é 2MB.');
     }
 
     $extensao = strtolower(pathinfo($arquivo['name'] ?? '', PATHINFO_EXTENSION));
@@ -460,11 +439,10 @@ function uploadImagemArtigo(array $data): void
     $mimesPermitidos = ['image/jpeg', 'image/png'];
 
     if (!in_array($extensao, $permitidos, true) || !in_array($mime, $mimesPermitidos, true)) {
-        echo json_encode(['sucesso' => false, 'mensagem' => 'Extensão não permitida. Utilize JPEG ou PNG.']);
-        return;
+        artigosErro('Extensão não permitida. Utilize JPEG ou PNG.');
     }
 
-    $uploadDirectory = $GLOBALS['docRoot'] . '/cache/img/upload/a/';
+    $uploadDirectory = $_SERVER['DOCUMENT_ROOT'] . '/cache/img/upload/a/';
     ensureDirectory($uploadDirectory);
 
     $nome = proximoNomeImagemArtigo($uploadDirectory, $id);
@@ -472,20 +450,17 @@ function uploadImagemArtigo(array $data): void
 
     $imagem = criarImagemOrigem($arquivo['tmp_name'], $mime);
     if (!$imagem) {
-        echo json_encode(['sucesso' => false, 'mensagem' => 'Não foi possível processar a imagem enviada.']);
-        return;
+        artigosErro('Não foi possível processar a imagem enviada.');
     }
 
     $ok = imagejpeg($imagem, $destino, 70);
     imagedestroy($imagem);
 
     if (!$ok) {
-        echo json_encode(['sucesso' => false, 'mensagem' => 'Falha ao salvar a imagem enviada.']);
-        return;
+        artigosErro('Falha ao salvar a imagem enviada.');
     }
 
-    echo json_encode([
-        'sucesso' => true,
+    artigosResponder([
         'name' => $nome
     ]);
 }

@@ -478,6 +478,10 @@ function lb9AssetVersion(string $path): string
     <script src="<?= lb9AssetVersion('js/utils.js') ?>"></script>
     <script src="<?= lb9AssetVersion('js/app-modules.js') ?>"></script>
     <script src="<?= lb9AssetVersion('js/artigos.js') ?>"></script>
+    <script src="<?= lb9AssetVersion('js/admin-shared.js') ?>"></script>
+    <script src="<?= lb9AssetVersion('js/admin-general.js') ?>"></script>
+    <script src="<?= lb9AssetVersion('js/admin-tags.js') ?>"></script>
+    <script src="<?= lb9AssetVersion('js/admin-access.js') ?>"></script>
     <script src="<?= lb9AssetVersion('js/admin.js') ?>"></script>
     <script src="<?= lb9AssetVersion('js/spa.js') ?>"></script>
 

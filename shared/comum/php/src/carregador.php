@@ -18,11 +18,12 @@ class carregador
  * 2- Identifica qual o comando dado pelo usuário
  * 3- Executa o comando
  */
-    public function __construct($guardiao, $cache, $logger)
+    public function __construct($guardiao, $cache, $logger, $db = null)
     {
         $this->guardiao = $guardiao;
         $this->cache = $cache;
         $this->logger = $logger;
+        $this->db = $db instanceof database ? $db : null;
         $this->urlBase = $this->guardiao->getUrl();
         $this->verificaAMP();
         $comando = $this->identificaComando();
@@ -271,7 +272,9 @@ class carregador
 
     private function executaPadrao($comando)
     {                
-        $this->db = new database('localhost', BD_LOGIN, BD_SENHA, BD);
+        if (!($this->db instanceof database)) {
+            $this->db = new database('localhost', BD_LOGIN, BD_SENHA, BD);
+        }
         require 'comum/php/include/ad.php';
         
         if ($comando == 'root') {            

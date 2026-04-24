@@ -102,7 +102,7 @@
             });
         });
 
-        form.addEventListener('submit', function (event) {
+        form.addEventListener('submit', async function (event) {
             event.preventDefault();
 
             var payload = buildPayload(form);
@@ -115,38 +115,41 @@
             button.disabled = true;
             setStatus(status, 'Calculando...', false);
 
-            window.send({
-                a: ENDPOINT_ACTION,
-                dados: payload,
-                f: function (response) {
-                    button.disabled = false;
+            try {
+                var response = await window.send(buildEndpointUrl(ENDPOINT_ACTION), payload);
 
-                    if (!response || !response.cabecalho || response.cabecalho.status !== 'ok' || !response.dados || !response.dados.resultado) {
-                        setStatus(status, extractMessage(response) || 'Não foi possível calcular a rentabilidade.', true);
-                        results.classList.remove('is-visible');
-                        return;
-                    }
-
-                    var result = response.dados.resultado;
-                    
-                    resultValue.textContent = currencyFormatter.format(result.valor_futuro || 0);
-                    investedValue.textContent = currencyFormatter.format(result.total_investido || 0);
-                    earnedValue.textContent = currencyFormatter.format(result.juros_acumulados || 0);
-                    
-                    // A taxa que o backend encontrou no DB
-                    rateValue.textContent = numberFormatter.format(result.taxa_juros_mensal || 0) + '%';
-                    
-                    summary.textContent = 'Em ' + result.numero_meses + ' meses, com aporte inicial de ' +
-                        currencyFormatter.format(result.investimento_inicial || 0) +
-                        ' e aplicações mensais de ' + currencyFormatter.format(result.aplicacao_mensal || 0) +
-                        ', na Poupança.';
-                        
-                    results.classList.add('is-visible');
-                    setStatus(status, response.cabecalho.msg || 'Cálculo concluído com sucesso.', false);
-                    scrollToResults(results);
+                if (!response || !response.cabecalho || response.cabecalho.status !== 'ok' || !response.dados || !response.dados.resultado) {
+                    setStatus(status, extractMessage(response) || 'Não foi possível calcular a rentabilidade.', true);
+                    results.classList.remove('is-visible');
+                    return;
                 }
-            });
+
+                var result = response.dados.resultado;
+
+                resultValue.textContent = currencyFormatter.format(result.valor_futuro || 0);
+                investedValue.textContent = currencyFormatter.format(result.total_investido || 0);
+                earnedValue.textContent = currencyFormatter.format(result.juros_acumulados || 0);
+                rateValue.textContent = numberFormatter.format(result.taxa_juros_mensal || 0) + '%';
+
+                summary.textContent = 'Em ' + result.numero_meses + ' meses, com aporte inicial de ' +
+                    currencyFormatter.format(result.investimento_inicial || 0) +
+                    ' e aplicações mensais de ' + currencyFormatter.format(result.aplicacao_mensal || 0) +
+                    ', na Poupança.';
+
+                results.classList.add('is-visible');
+                setStatus(status, response.cabecalho.msg || 'Cálculo concluído com sucesso.', false);
+                scrollToResults(results);
+            } catch (error) {
+                setStatus(status, error.message || 'Não foi possível calcular a rentabilidade.', true);
+                results.classList.remove('is-visible');
+            } finally {
+                button.disabled = false;
+            }
         });
+    }
+
+    function buildEndpointUrl(action) {
+        return '/comum/php/xhr/' + String(action || '').replace(/^comum\//, '') + '.php';
     }
 
     function scrollToResults(results) {
