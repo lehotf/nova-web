@@ -1,5 +1,12 @@
 <?php
 require $_SERVER['DOCUMENT_ROOT'] . '/comum/php/autoload.php';
+
+const LB9_ASSET_VERSION = '1.0.0';
+
+function lb9AssetVersion(string $path): string
+{
+    return $path . '?v=' . LB9_ASSET_VERSION;
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -8,12 +15,12 @@ require $_SERVER['DOCUMENT_ROOT'] . '/comum/php/autoload.php';
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gerenciador de Conteúdo — Painel Admin</title>
     <meta name="description" content="Painel de controle para administração de conteúdo do site">
-    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="icon" type="image/svg+xml" href="<?= lb9AssetVersion('favicon.svg') ?>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/launcher.css">
-    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="<?= lb9AssetVersion('css/launcher.css') ?>">
+    <link rel="stylesheet" href="<?= lb9AssetVersion('css/styles.css') ?>">
     <script src="/comum/estatico/js/send.js"></script>
 </head>
 <body class="has-launcher" data-module="artigos">
@@ -465,12 +472,12 @@ require $_SERVER['DOCUMENT_ROOT'] . '/comum/php/autoload.php';
         </div>
     </template>
 
-    <script src="js/launcher.js"></script>
-    <script src="js/utils.js"></script>
-    <script src="js/app-modules.js"></script>
-    <script src="js/artigos.js"></script>
-    <script src="js/admin.js"></script>
-    <script src="js/spa.js"></script>
+    <script src="<?= lb9AssetVersion('js/launcher.js') ?>"></script>
+    <script src="<?= lb9AssetVersion('js/utils.js') ?>"></script>
+    <script src="<?= lb9AssetVersion('js/app-modules.js') ?>"></script>
+    <script src="<?= lb9AssetVersion('js/artigos.js') ?>"></script>
+    <script src="<?= lb9AssetVersion('js/admin.js') ?>"></script>
+    <script src="<?= lb9AssetVersion('js/spa.js') ?>"></script>
 
 </body>
 </html>
