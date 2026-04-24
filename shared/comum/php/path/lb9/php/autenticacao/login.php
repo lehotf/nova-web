@@ -1,4 +1,5 @@
 <?php
+
 require $_SERVER['DOCUMENT_ROOT'] . '/comum/php/autoload.php';
 
 $c = new controlador(guardiao: true, logger: true, autenticador: true, observador: true);
