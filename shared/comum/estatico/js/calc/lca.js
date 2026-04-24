@@ -153,7 +153,7 @@
             setStatus(status, 'Calculando...', false);
 
             try {
-                var response = await window.send(ENDPOINT_URL, payload);
+                var response = await send(ENDPOINT_URL, payload);
 
                 if (!response || !response.cabecalho || response.cabecalho.status !== 'ok' || !response.dados || !response.dados.resultado) {
                     setStatus(status, extractMessage(response) || 'Não foi possível calcular agora.', true);

@@ -105,7 +105,7 @@
             setStatus(status, 'Calculando...', false);
 
             try {
-                var response = await window.send(ENDPOINT_URL, {
+                var response = await send(ENDPOINT_URL, {
                     peso: parseInt(peso, 10),
                     altura: parseInt(altura, 10)
                 });

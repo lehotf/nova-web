@@ -164,44 +164,6 @@ class ArtigosApp extends window.BaseModule {
         await this.carregarArtigos();
     }
 
-    async apiSend(dados = {}, extra = {}) {
-        var payload = dados;
-
-        if (extra.formData instanceof FormData) {
-            payload = { formData: extra.formData };
-        } else if (extra.file || extra.files) {
-            payload = { formData: this.montarFormDataArtigos(dados, extra) };
-        }
-
-        const payloadResposta = await send(`${this.apiBase}/artigos.php`, payload);
-        return this.normalizarRespostaApi(payloadResposta);
-    }
-
-    normalizarRespostaApi(payload) {
-        if (!payload || typeof payload !== 'object') {
-            return {
-                sucesso: false,
-                mensagem: 'Resposta inválida do servidor'
-            };
-        }
-
-        if (!payload.cabecalho || typeof payload.cabecalho !== 'object') {
-            return {
-                sucesso: false,
-                mensagem: 'Resposta fora do padrão do observador'
-            };
-        }
-
-        const cabecalho = payload.cabecalho || {};
-        const dados = payload.dados || {};
-
-        return {
-            sucesso: cabecalho.status === 'ok',
-            mensagem: cabecalho.msg || '',
-            ...dados
-        };
-    }
-
     montarFormDataArtigos(dados = {}, extra = {}) {
         const formData = new FormData();
 
@@ -226,13 +188,25 @@ class ArtigosApp extends window.BaseModule {
         return formData;
     }
 
+    montarPayloadEnvio(dados = {}, extra = {}) {
+        if (extra.formData instanceof FormData) {
+            return extra.formData;
+        }
+
+        if (extra.file || extra.files) {
+            return this.montarFormDataArtigos(dados, extra);
+        }
+
+        return dados;
+    }
+
     async carregarTags() {
         if (!this.artigoTagsList) return;
 
         this.artigoTagsList.innerHTML = '<p class="artigo-tags-empty">Carregando tags...</p>';
 
         try {
-            const data = await this.apiSend({ acao: 'listar_tags' });
+            const data = await send(`${this.apiBase}/artigos.php`, this.montarPayloadEnvio({ acao: 'listar_tags' }));
             if (!data.sucesso) throw new Error(data.mensagem || 'Erro ao carregar tags');
 
             this.tagsDisponiveis = Array.isArray(data.tags) ? data.tags : [];
@@ -312,10 +286,10 @@ class ArtigosApp extends window.BaseModule {
         }
 
         try {
-            const data = await this.apiSend({
+            const data = await send(`${this.apiBase}/artigos.php`, this.montarPayloadEnvio({
                 acao: 'inserir_tag',
                 nome
-            });
+            }));
             if (!data.sucesso || !data.tag?.id) {
                 throw new Error(data.mensagem || 'Erro ao cadastrar tag');
             }
@@ -350,10 +324,10 @@ class ArtigosApp extends window.BaseModule {
 
     async carregarArtigos(termo = '') {
         try {
-            const data = await this.apiSend({
+            const data = await send(`${this.apiBase}/artigos.php`, this.montarPayloadEnvio({
                 acao: 'listar',
                 termo
-            });
+            }));
             if (!data.sucesso) throw new Error(data.mensagem || 'Erro ao carregar artigos');
 
             this.artigos = data.artigos || [];
@@ -400,10 +374,10 @@ class ArtigosApp extends window.BaseModule {
 
     async abrirArtigo(id) {
         try {
-            const data = await this.apiSend({
+            const data = await send(`${this.apiBase}/artigos.php`, this.montarPayloadEnvio({
                 acao: 'obter',
                 id
-            });
+            }));
             if (!data.sucesso) throw new Error(data.mensagem || 'Erro ao carregar artigo');
 
             this.artigoAtual = data.artigo;
@@ -577,7 +551,7 @@ class ArtigosApp extends window.BaseModule {
         }
 
         try {
-            const data = await this.apiSend(payload);
+            const data = await send(`${this.apiBase}/artigos.php`, this.montarPayloadEnvio(payload));
             if (!data.sucesso) throw new Error(data.mensagem || 'Erro ao salvar');
 
             if (data.id) {
@@ -635,7 +609,7 @@ class ArtigosApp extends window.BaseModule {
         if (!id) return;
 
         try {
-            const data = await this.apiSend({ acao: 'excluir', id });
+            const data = await send(`${this.apiBase}/artigos.php`, this.montarPayloadEnvio({ acao: 'excluir', id }));
             if (!data.sucesso) throw new Error(data.mensagem || 'Erro ao excluir');
 
             this.showToast('Artigo excluído com sucesso!', 'success');
@@ -714,15 +688,18 @@ class ArtigosApp extends window.BaseModule {
         if (this.btnImagemArtigo) this.btnImagemArtigo.disabled = true;
 
         try {
-            const data = await this.apiSend(
-                {
-                    acao: 'upload_imagem_artigo',
-                    id: this.artigoId.value
-                },
-                {
-                    file: this.artigoImagemUpload,
-                    fileFieldName: 'imagem'
-                }
+            const data = await send(
+                `${this.apiBase}/artigos.php`,
+                this.montarPayloadEnvio(
+                    {
+                        acao: 'upload_imagem_artigo',
+                        id: this.artigoId.value
+                    },
+                    {
+                        file: this.artigoImagemUpload,
+                        fileFieldName: 'imagem'
+                    }
+                )
             );
             if (!data.sucesso) throw new Error(data.mensagem || 'Erro ao enviar imagem');
 
@@ -1242,21 +1219,24 @@ class ArtigosApp extends window.BaseModule {
         this.thumbUploadAction.disabled = true;
 
         try {
-            const data = await this.apiSend(
-                {
-                    acao: 'upload_thumb',
-                    id,
-                    thumb_nome: thumbNumero,
-                    bx: String(Math.round(this.thumbCropState.bx)),
-                    by: String(Math.round(this.thumbCropState.by)),
-                    width: String(Math.round(this.thumbCropState.displayWidth)),
-                    qualidade_g: this.thumbQualidadeG?.value || '75',
-                    qualidade_p: this.thumbQualidadeP?.value || '75'
-                },
-                {
-                    file: this.thumbUploadInput,
-                    fileFieldName: 'thumb'
-                }
+            const data = await send(
+                `${this.apiBase}/artigos.php`,
+                this.montarPayloadEnvio(
+                    {
+                        acao: 'upload_thumb',
+                        id,
+                        thumb_nome: thumbNumero,
+                        bx: String(Math.round(this.thumbCropState.bx)),
+                        by: String(Math.round(this.thumbCropState.by)),
+                        width: String(Math.round(this.thumbCropState.displayWidth)),
+                        qualidade_g: this.thumbQualidadeG?.value || '75',
+                        qualidade_p: this.thumbQualidadeP?.value || '75'
+                    },
+                    {
+                        file: this.thumbUploadInput,
+                        fileFieldName: 'thumb'
+                    }
+                )
             );
             if (!data.sucesso) throw new Error(data.mensagem || 'Erro ao enviar thumb');
 

@@ -8,10 +8,10 @@
             }
 
             try {
-                const data = await this.apiSend(this.tagsEndpoint, {
+                const data = await send(this.tagsEndpoint, this.buildSendPayload({
                     acao: 'listar',
                     _ts: String(Date.now())
-                });
+                }));
                 if (!data.sucesso) throw new Error(data.mensagem || 'Erro ao carregar tags');
 
                 this.tags = Array.isArray(data.tags) ? data.tags : [];
@@ -71,12 +71,12 @@
             }
 
             try {
-                const data = await this.apiSend(this.tagsEndpoint, {
+                const data = await send(this.tagsEndpoint, this.buildSendPayload({
                     acao: 'inserir',
                     nome,
                     path,
                     destaque: 0
-                });
+                }));
                 if (!data.sucesso || !data.tag) throw new Error(data.mensagem || 'Erro ao criar tag');
 
                 this.activeTagId = Number(data.tag.id);
@@ -174,7 +174,7 @@
             };
 
             try {
-                const data = await this.apiSend(this.tagsEndpoint, payload);
+                const data = await send(this.tagsEndpoint, this.buildSendPayload(payload));
                 if (!data.sucesso || !data.tag) throw new Error(data.mensagem || 'Erro ao salvar tag');
 
                 this.activeTagId = Number(data.tag.id);
@@ -222,10 +222,10 @@
             }
 
             try {
-                const data = await this.apiSend(this.tagsEndpoint, {
+                const data = await send(this.tagsEndpoint, this.buildSendPayload({
                     acao: 'excluir',
                     id
-                });
+                }));
                 if (!data.sucesso) throw new Error(data.mensagem || 'Erro ao excluir tag');
 
                 this.tags = this.tags.filter((item) => Number(item.id) !== id);

@@ -89,7 +89,7 @@
             setStatus(status, 'Calculando...', false);
 
             try {
-                var response = await window.send(ENDPOINT_URL, {
+                var response = await send(ENDPOINT_URL, {
                     data_inicial: d1,
                     data_final: d2
                 });

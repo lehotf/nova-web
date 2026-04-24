@@ -9,10 +9,10 @@
             this.setAccessButtonsDisabled(true);
 
             try {
-                const data = await this.apiSend(this.accessEndpoint, {
+                const data = await send(this.accessEndpoint, this.buildSendPayload({
                     limit: '500',
                     _ts: String(Date.now())
-                });
+                }));
                 if (!data.sucesso) throw new Error(data.mensagem || 'Erro ao carregar acessos');
 
                 const arquivos = data?.arquivos || {};
@@ -66,7 +66,7 @@
             this.setAccessButtonsDisabled(true);
 
             try {
-                const data = await this.apiSend(this.clearAccessEndpoint, {});
+                const data = await send(this.clearAccessEndpoint, this.buildSendPayload({}));
                 if (!data.sucesso) throw new Error(data.mensagem || 'Erro ao limpar acessos');
 
                 this.showToast(data.mensagem || 'Logs de acesso removidos.', 'success');

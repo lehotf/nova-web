@@ -2,19 +2,6 @@
     const mixins = global.LB9AdminMixins = global.LB9AdminMixins || {};
 
     mixins.shared = {
-        async apiSend(url, dados = {}, extra = {}) {
-            var payload = dados;
-
-            if (extra.formData instanceof FormData) {
-                payload = { formData: extra.formData };
-            } else if (extra.file || extra.files) {
-                payload = { formData: buildAdminFormData(dados, extra) };
-            }
-
-            const response = await send(url, payload);
-            return this.normalizeObserverResponse(response);
-        },
-
         normalizeSearch(value) {
             return String(value || '')
                 .normalize('NFD')
@@ -34,29 +21,16 @@
                 .slice(0, 25);
         },
 
-        normalizeObserverResponse(payload) {
-            if (!payload || typeof payload !== 'object') {
-                return {
-                    sucesso: false,
-                    mensagem: 'Resposta inválida do servidor'
-                };
+        buildSendPayload(dados = {}, extra = {}) {
+            if (extra.formData instanceof FormData) {
+                return extra.formData;
             }
 
-            if (!payload.cabecalho || typeof payload.cabecalho !== 'object') {
-                return {
-                    sucesso: false,
-                    mensagem: 'Resposta fora do padrão do observador'
-                };
+            if (extra.file || extra.files) {
+                return buildAdminFormData(dados, extra);
             }
 
-            const cabecalho = payload.cabecalho || {};
-            const dados = payload.dados || {};
-
-            return {
-                sucesso: cabecalho.status === 'ok',
-                mensagem: cabecalho.msg || '',
-                ...dados
-            };
+            return dados;
         }
     };
 

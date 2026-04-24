@@ -5,11 +5,11 @@
         async loadGeneral() {
             try {
                 const payload = await send(`${this.apiBase}/admin_cache_status.php`, {});
-                const status = payload?.cabecalho?.status || '';
-                const message = payload?.cabecalho?.msg || 'Erro ao carregar estado do cache';
-                const cache = payload?.dados?.cache;
+                const status = payload?.sucesso;
+                const message = payload?.mensagem || 'Erro ao carregar estado do cache';
+                const cache = payload?.cache;
 
-                if (status !== 'ok' || !cache) {
+                if (!status || !cache) {
                     this.showToast(message, 'error');
                     return;
                 }
@@ -28,11 +28,11 @@
 
             try {
                 const payload = await send(`${this.apiBase}/admin_toggle_cache.php`, {});
-                const status = payload?.cabecalho?.status || '';
-                const message = payload?.cabecalho?.msg || 'Erro ao alternar cache';
-                const cache = payload?.dados?.cache;
+                const status = payload?.sucesso;
+                const message = payload?.mensagem || 'Erro ao alternar cache';
+                const cache = payload?.cache;
 
-                if (status !== 'ok' || !cache) {
+                if (!status || !cache) {
                     this.showToast(message, 'error');
                     return;
                 }
@@ -78,10 +78,10 @@
 
             try {
                 const payload = await send(this.commandEndpoints[commandId], {});
-                const status = payload?.cabecalho?.status || '';
-                const message = payload?.cabecalho?.msg || `${this.getCommandLabel(commandId)} executado.`;
+                const status = payload?.sucesso;
+                const message = payload?.mensagem || `${this.getCommandLabel(commandId)} executado.`;
 
-                if (status !== 'ok') {
+                if (!status) {
                     this.showToast(message || `Erro ao executar ${this.getCommandLabel(commandId)}.`, 'error');
                     return;
                 }
@@ -117,10 +117,10 @@
                 rebuildButton.textContent = `Executando: ${this.getCommandLabel(commandId)}`;
 
                 this.executeCommandRequest(commandId).then((payload) => {
-                    const status = payload?.cabecalho?.status || '';
-                    const message = payload?.cabecalho?.msg || `${this.getCommandLabel(commandId)} executado.`;
+                    const status = payload?.sucesso;
+                    const message = payload?.mensagem || `${this.getCommandLabel(commandId)} executado.`;
 
-                    if (status !== 'ok') {
+                    if (!status) {
                         rebuildButton.disabled = false;
                         this.setCommandButtonsDisabled(steps, false);
                         rebuildButton.textContent = originalLabel;
