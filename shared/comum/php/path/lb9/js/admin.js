@@ -8,6 +8,7 @@
             this.searchInput = this.root.querySelector('#adminSearch');
             this.panelGeral = this.root.querySelector('#adminPanelGeral');
             this.panelTags = this.root.querySelector('#adminPanelTags');
+            this.panelAcessos = this.root.querySelector('#adminPanelAcessos');
             this.toggleCacheBtn = this.root.querySelector('#toggleCacheBtn');
             this.toggleCacheLabel = this.root.querySelector('#toggleCacheLabel');
             this.toggleCacheHint = this.root.querySelector('#toggleCacheHint');
@@ -25,14 +26,28 @@
             this.tagDeleteMessage = this.root.querySelector('#adminTagDeleteMessage');
             this.tagDeleteCancel = this.root.querySelector('#adminTagDeleteCancel');
             this.tagDeleteConfirm = this.root.querySelector('#adminTagDeleteConfirm');
+            this.accessList = this.root.querySelector('#adminAccessList');
+            this.accessSearchInput = this.root.querySelector('#adminAccessSearch');
+            this.accessTypeInput = this.root.querySelector('#adminAccessType');
+            this.accessRefreshBtn = this.root.querySelector('#adminAccessRefresh');
+            this.accessClearBtn = this.root.querySelector('#adminAccessClear');
+            this.accessSummary = this.root.querySelector('#adminAccessSummary');
+            this.accessClearModal = this.root.querySelector('#adminAccessClearModal');
+            this.accessClearTitle = this.root.querySelector('#adminAccessClearTitle');
+            this.accessClearMessage = this.root.querySelector('#adminAccessClearMessage');
+            this.accessClearCancel = this.root.querySelector('#adminAccessClearCancel');
+            this.accessClearConfirm = this.root.querySelector('#adminAccessClearConfirm');
             this.toastContainer = this.root.querySelector('#adminToastContainer');
 
             this.activeOption = 'geral';
             this.cacheState = false;
             this.tags = [];
             this.filteredTags = [];
+            this.accessLogs = [];
+            this.filteredAccessLogs = [];
             this.activeTagId = null;
             this.pendingDeleteTagId = null;
+            this.pendingClearAccessLogs = false;
             this.commandEndpoints = {
                 rebuild_all: `${this.apiBase}/admin_rebuild_all.php`,
                 cache_templates: `${this.apiBase}/gerador/cacheTemplates.php`,
@@ -42,6 +57,8 @@
                 clear_cache: `${this.apiBase}/clear_cache.php`
             };
             this.tagsEndpoint = `${this.apiBase}/admin_tags.php`;
+            this.accessEndpoint = `${this.apiBase}/admin_acessos.php`;
+            this.clearAccessEndpoint = `${this.apiBase}/admin_clear_acessos.php`;
 
             this.attachEvents();
             this.initialize();
@@ -56,6 +73,18 @@
             });
             this.tagSearchInput?.addEventListener('keydown', (event) => {
                 this.handleTagSearchKeydown(event);
+            });
+            this.accessSearchInput?.addEventListener('input', () => {
+                this.filterAccessLogs();
+            });
+            this.accessTypeInput?.addEventListener('change', () => {
+                this.filterAccessLogs();
+            });
+            this.accessRefreshBtn?.addEventListener('click', () => {
+                this.loadAccessLogs();
+            });
+            this.accessClearBtn?.addEventListener('click', () => {
+                this.openClearAccessLogsConfirm();
             });
 
             this.optionList?.addEventListener('click', (event) => {
@@ -92,6 +121,7 @@
             });
 
             const deleteOverlay = this.tagDeleteModal?.querySelector('.modal-overlay');
+            const clearAccessOverlay = this.accessClearModal?.querySelector('.modal-overlay');
             window.AppUtils.bindModalListeners([
                 { element: this.tagDeleteCancel, event: 'click', handler: (event) => {
                     event.preventDefault();
@@ -103,7 +133,18 @@
                     event.stopPropagation();
                     this.closeDeleteTagConfirm(true);
                 } },
-                { element: deleteOverlay, event: 'click', handler: () => this.closeDeleteTagConfirm(false) }
+                { element: deleteOverlay, event: 'click', handler: () => this.closeDeleteTagConfirm(false) },
+                { element: this.accessClearCancel, event: 'click', handler: (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    this.closeClearAccessLogsConfirm(false);
+                } },
+                { element: this.accessClearConfirm, event: 'click', handler: (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    this.closeClearAccessLogsConfirm(true);
+                } },
+                { element: clearAccessOverlay, event: 'click', handler: () => this.closeClearAccessLogsConfirm(false) }
             ]);
 
         }
@@ -134,6 +175,11 @@
 
             if (this.activeOption === 'tags') {
                 this.loadTags();
+                return;
+            }
+
+            if (this.activeOption === 'acessos') {
+                this.loadAccessLogs();
             }
         }
 
@@ -145,6 +191,7 @@
 
             this.panelGeral?.classList.toggle('hidden', this.activeOption !== 'geral');
             this.panelTags?.classList.toggle('hidden', this.activeOption !== 'tags');
+            this.panelAcessos?.classList.toggle('hidden', this.activeOption !== 'acessos');
         }
 
         loadGeneral() {
@@ -375,6 +422,158 @@
                 }
                 this.showToast('Erro ao carregar tags', 'error');
             }
+        }
+
+        async loadAccessLogs() {
+            if (this.accessList) {
+                this.accessList.innerHTML = '<p class="empty-message">Carregando acessos...</p>';
+            }
+            this.setAccessButtonsDisabled(true);
+
+            try {
+                const url = new URL(this.accessEndpoint, window.location.origin);
+                url.searchParams.set('limit', '500');
+                url.searchParams.set('_ts', String(Date.now()));
+
+                const res = await fetch(url.toString(), { cache: 'no-store' });
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+                const data = await res.json();
+                if (!data.sucesso) throw new Error(data.mensagem || 'Erro ao carregar acessos');
+
+                this.accessLogs = Array.isArray(data.logs) ? data.logs : [];
+                this.renderAccessSummary(data.resumo || {});
+                this.filterAccessLogs();
+            } catch (err) {
+                console.error('Erro ao carregar acessos:', err);
+                if (this.accessList) {
+                    this.accessList.innerHTML = '<p class="empty-message">Não foi possível carregar os acessos.</p>';
+                }
+                this.showToast(err.message || 'Erro ao carregar acessos', 'error');
+            } finally {
+                this.setAccessButtonsDisabled(false);
+            }
+        }
+
+        openClearAccessLogsConfirm() {
+            this.pendingClearAccessLogs = true;
+            window.AppUtils.showDeleteConfirm({
+                modal: this.accessClearModal,
+                titleElement: this.accessClearTitle,
+                messageElement: this.accessClearMessage,
+                actionElement: this.accessClearConfirm,
+                title: 'Limpar acessos',
+                message: 'Deseja realmente apagar os arquivos de log de acessos e acessos negados?',
+                onEscape: () => this.closeClearAccessLogsConfirm(false)
+            });
+        }
+
+        async closeClearAccessLogsConfirm(confirmado) {
+            window.AppUtils.closeDeleteConfirm(this.accessClearModal);
+            if (!confirmado) {
+                this.pendingClearAccessLogs = false;
+                return;
+            }
+
+            await this.clearAccessLogs();
+        }
+
+        async clearAccessLogs() {
+            if (!this.pendingClearAccessLogs) {
+                return;
+            }
+
+            this.pendingClearAccessLogs = false;
+            this.setAccessButtonsDisabled(true);
+
+            try {
+                const res = await fetch(this.clearAccessEndpoint, {
+                    method: 'POST',
+                    cache: 'no-store'
+                });
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+                const data = await res.json();
+                if (!data.sucesso) throw new Error(data.mensagem || 'Erro ao limpar acessos');
+
+                this.showToast(data.mensagem || 'Logs de acesso removidos.', 'success');
+                await this.loadAccessLogs();
+            } catch (err) {
+                console.error('Erro ao limpar acessos:', err);
+                this.showToast(err.message || 'Erro ao limpar acessos', 'error');
+                this.setAccessButtonsDisabled(false);
+            }
+        }
+
+        setAccessButtonsDisabled(disabled) {
+            if (this.accessRefreshBtn) {
+                this.accessRefreshBtn.disabled = disabled;
+            }
+            if (this.accessClearBtn) {
+                this.accessClearBtn.disabled = disabled;
+            }
+        }
+
+        renderAccessSummary(summary) {
+            if (!this.accessSummary) return;
+
+            const acessos = Number(summary?.acessos?.total || 0);
+            const negados = Number(summary?.acessos_negados?.total || 0);
+            this.accessSummary.textContent = `${acessos} acesso(s) e ${negados} negado(s) carregados.`;
+        }
+
+        filterAccessLogs() {
+            const query = this.normalizeSearch(this.accessSearchInput?.value || '');
+            const type = this.accessTypeInput?.value || 'todos';
+
+            this.filteredAccessLogs = this.accessLogs.filter((item) => {
+                const matchesType = type === 'todos' || item.tipo === type;
+                const haystack = this.normalizeSearch([
+                    item.tipo_label,
+                    item.data,
+                    item.hora,
+                    item.ip,
+                    item.rota,
+                    item.status,
+                    item.raw
+                ].join(' '));
+                return matchesType && (!query || haystack.includes(query));
+            });
+
+            this.renderAccessList();
+        }
+
+        renderAccessList() {
+            if (!this.accessList) return;
+
+            if (!this.accessLogs.length) {
+                this.accessList.innerHTML = '<p class="empty-message">Nenhum log encontrado.</p>';
+                return;
+            }
+
+            if (!this.filteredAccessLogs.length) {
+                this.accessList.innerHTML = '<p class="empty-message">Nenhum acesso encontrado para esse filtro.</p>';
+                return;
+            }
+
+            this.accessList.innerHTML = this.filteredAccessLogs.map((item) => {
+                const typeClass = item.tipo === 'acessos_negados' ? ' denied' : '';
+                const status = item.status ? `<span class="admin-access-status">${this.escapeHtml(item.status)}</span>` : '';
+
+                return `
+                    <div class="admin-access-row${typeClass}">
+                        <div class="admin-access-main">
+                            <span class="admin-access-type">${this.escapeHtml(item.tipo_label || '')}</span>
+                            <span class="admin-access-route">${this.escapeHtml(item.rota || item.raw || '')}</span>
+                            ${status}
+                        </div>
+                        <div class="admin-access-meta">
+                            <span>${this.escapeHtml(`${item.data || ''} ${item.hora || ''}`.trim())}</span>
+                            <span>${this.escapeHtml(item.ip || '')}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
         }
 
         filterTags() {

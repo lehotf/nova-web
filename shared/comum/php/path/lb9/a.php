@@ -320,6 +320,7 @@ require $_SERVER['DOCUMENT_ROOT'] . '/comum/php/autoload.php';
                     <div id="adminOptionList" class="model-list admin-option-list">
                         <button class="model-name admin-option active" data-option="geral">Geral</button>
                         <button class="model-name admin-option" data-option="tags">Tags</button>
+                        <button class="model-name admin-option" data-option="acessos">Acessos</button>
                     </div>
                 </aside>
 
@@ -385,6 +386,31 @@ require $_SERVER['DOCUMENT_ROOT'] . '/comum/php/autoload.php';
                                 </div>
                             </div>
                         </div>
+
+                        <div id="adminPanelAcessos" class="task-form admin-form hidden">
+                            <div class="form-grid">
+                                <div class="admin-panel-header">
+                                    <h2>Acessos</h2>
+                                    <p>Logs recentes de acessos permitidos e negados.</p>
+                                </div>
+
+                                <div class="admin-access-toolbar">
+                                    <input id="adminAccessSearch" class="search-input" type="text" placeholder="Filtrar por IP, rota ou status...">
+                                    <select id="adminAccessType" class="search-input admin-access-select" aria-label="Tipo de log">
+                                        <option value="todos">Todos</option>
+                                        <option value="acessos">Acessos</option>
+                                        <option value="acessos_negados">Negados</option>
+                                    </select>
+                                    <button type="button" id="adminAccessRefresh" class="btn btn-secondary">Atualizar</button>
+                                    <button type="button" id="adminAccessClear" class="btn btn-danger">Limpar Acessos</button>
+                                </div>
+
+                                <div id="adminAccessSummary" class="admin-access-summary">Carregando acessos...</div>
+                                <div id="adminAccessList" class="admin-access-list">
+                                    <p class="empty-message">Carregando acessos...</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </section>
             </main>
@@ -411,6 +437,29 @@ require $_SERVER['DOCUMENT_ROOT'] . '/comum/php/autoload.php';
                 <div class="modal-actions">
                     <button type="button" id="adminTagDeleteCancel" class="btn btn-secondary">Cancelar</button>
                     <button type="button" id="adminTagDeleteConfirm" class="btn btn-danger">Excluir</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="adminAccessClearModal" class="modal hidden">
+            <div class="modal-overlay"></div>
+            <div class="modal-content">
+                <div class="modal-head">
+                    <div class="modal-icon modal-icon-input">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="3 6 5 6 21 6"></polyline>
+                            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+                            <path d="M10 11v6"></path>
+                            <path d="M14 11v6"></path>
+                            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path>
+                        </svg>
+                    </div>
+                    <h2 id="adminAccessClearTitle" class="modal-title">Limpar acessos</h2>
+                </div>
+                <p id="adminAccessClearMessage" class="modal-message">Deseja realmente apagar os arquivos de log de acessos e acessos negados?</p>
+                <div class="modal-actions">
+                    <button type="button" id="adminAccessClearCancel" class="btn btn-secondary">Cancelar</button>
+                    <button type="button" id="adminAccessClearConfirm" class="btn btn-danger">Limpar</button>
                 </div>
             </div>
         </div>
