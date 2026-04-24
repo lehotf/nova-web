@@ -1,7 +1,7 @@
 <?php
 require $_SERVER['DOCUMENT_ROOT'] . '/comum/php/autoload.php';
 
-const LB9_ASSET_VERSION = '1.0.0';
+const LB9_ASSET_VERSION = '1.0.1';
 
 function lb9AssetVersion(string $path): string
 {
