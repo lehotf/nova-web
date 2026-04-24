@@ -4,6 +4,10 @@ header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
 header('Pragma: no-cache');
 header('Expires: 0');
 
+require $_SERVER['DOCUMENT_ROOT'] . '/comum/php/autoload.php';
+$c = new controlador(observador: true, autenticador: true);
+$c->autenticador->acesso(2);
+
 $docRoot = $_SERVER['DOCUMENT_ROOT'] ?: dirname(__DIR__, 6);
 $baseDir = rtrim($docRoot, '/') . '/cache/sistema';
 

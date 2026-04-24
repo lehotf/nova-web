@@ -1,5 +1,7 @@
 <?php
 require $_SERVER['DOCUMENT_ROOT'] . '/comum/php/autoload.php';
+$c = new controlador(observador: true, autenticador: true);
+$c->autenticador->acesso(2);
 
 const LB9_ASSET_VERSION = '1.0.1';
 

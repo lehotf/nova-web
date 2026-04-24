@@ -18,5 +18,5 @@ define('DESCRICAO', 'Uma maneira mais simples e precisa de calcular o que você 
 define('LOCALHOST', $_SERVER['SERVER_NAME'] != 'calculatudo.com' ? 1 : 0);
 
 #MUDAR
-define('CACHE_ATIVO', true);
+define('CACHE_ATIVO', false);
 define('DEBUG', false);

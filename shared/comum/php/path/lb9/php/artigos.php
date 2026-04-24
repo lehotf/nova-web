@@ -19,12 +19,10 @@ header('Expires: 0');
 header('Surrogate-Control: no-store');
 header('Vary: Accept');
 
-$docRoot = $_SERVER['DOCUMENT_ROOT'] ?: dirname(__DIR__, 6);
-$autoload = $docRoot . '/comum/php/autoload.php';
-if (!file_exists($autoload)) {
-    $autoload = dirname(__DIR__, 4) . '/php/autoload.php';
-}
-require_once $autoload;
+require $_SERVER['DOCUMENT_ROOT'] . '/comum/php/autoload.php';
+
+$c = new controlador(observador: true, autenticador: true);
+$c->autenticador->acesso(2);
 
 $db = new database('localhost', BD_LOGIN, BD_SENHA, BD);
 
