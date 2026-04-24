@@ -587,11 +587,26 @@ body {
 .admin-access-list {
     display: flex;
     flex-direction: column;
-    gap: 1px;
+    gap: 12px;
     max-height: calc(100vh - 245px);
     min-width: 0;
     overflow-y: auto;
     padding-right: 6px;
+}
+
+.admin-access-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.admin-access-section-title {
+    padding: 0 0 8px;
+    color: var(--color-text-secondary);
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
 }
 
 .admin-access-row {
