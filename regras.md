@@ -25,7 +25,7 @@ Mas sugira as alterações ao usuário. Só altere após a aprovação.
 require $_SERVER['DOCUMENT_ROOT'] . '/comum/php/autoload.php';
 
 ## Verificação de login
-Toda as páginas php que estiverem dentro de /shared/comum/php/path/lb9/php devem verificar se o usuário está logado e com a permissão adequada, utilizando o código abaixo:
+Toda as páginas php que forem criadas, a partir de agora, dentro de /shared/comum/php/path/lb9/php devem verificar se o usuário está logado e com a permissão adequada, utilizando o código abaixo:
 
 $c = new controlador(observador: true, autenticador: true);
 $c->autenticador->acesso(2);
