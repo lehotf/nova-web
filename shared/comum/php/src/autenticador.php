@@ -111,7 +111,6 @@ class autenticador
     {
         $_SESSION['id'] = (int) $usuario['id'];
         $_SESSION['login'] = (string) $usuario['login'];
-        $_SESSION['nome'] = (string) $usuario['login'];
         $_SESSION['autorizacao'] = (int) $usuario['autorizacao'];
     }
 
@@ -155,8 +154,6 @@ class autenticador
         );
 
         $this->definirCookiePersistente($selector . ':' . $validator);
-        $this->apagarCookieLegado('login');
-        $this->apagarCookieLegado('token');
     }
 
     private function validarCookiePersistente($cookie)
@@ -217,8 +214,6 @@ class autenticador
         }
 
         $this->apagarCookiePersistente();
-        $this->apagarCookieLegado('login');
-        $this->apagarCookieLegado('token');
     }
 
     private function definirCookiePersistente($value)
@@ -235,17 +230,6 @@ class autenticador
     private function apagarCookiePersistente()
     {
         setcookie(self::REMEMBER_COOKIE, '', [
-            'expires' => time() - 3600,
-            'path' => '/',
-            'secure' => $this->isHttps(),
-            'httponly' => true,
-            'samesite' => 'Lax',
-        ]);
-    }
-
-    private function apagarCookieLegado($name)
-    {
-        setcookie($name, '', [
             'expires' => time() - 3600,
             'path' => '/',
             'secure' => $this->isHttps(),
