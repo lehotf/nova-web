@@ -14,8 +14,8 @@
     async function autenticarComCookie() {
         try {
             const payload = await send(`${apiBase}/cookie.php`, {});
-            const status = payload?.sucesso;
-            const message = payload?.mensagem || '';
+            const status = payload?.ok;
+            const message = payload?.message || '';
 
             if (status || message === 'Autenticado') {
                 window.location.href = redirect;
@@ -38,7 +38,7 @@
 
         try {
             const tokenPayload = await send(`${apiBase}/get_token.php`, { login: login });
-            const token = tokenPayload?.token;
+            const token = tokenPayload?.data?.token;
 
             if (!token) {
                 notifySendMessage('Não foi possível iniciar a autenticação.', 'erro');
@@ -50,20 +50,18 @@
                 login: login,
                 senha: md5(md5(senha) + token)
             });
-            const message = payload?.mensagem || 'Falha ao autenticar.';
+            const message = payload?.message || 'Falha ao autenticar.';
 
-            if (message !== 'Autenticado') {
-                notifySendMessage(message, 'erro');
-                submitBtn.disabled = false;
-                senhaInput.select();
-                return;
+            if (!payload?.ok) {
+                throw new Error(message);
             }
 
-            notifySendMessage('Autenticado.', 'ok');
+            notifySendMessage(message || 'Autenticado.', 'ok');
             window.location.href = redirect;
         } catch (error) {
             submitBtn.disabled = false;
             senhaInput.select();
+            notifySendMessage(error.message || 'Falha ao autenticar.', 'erro');
         }
     });
 

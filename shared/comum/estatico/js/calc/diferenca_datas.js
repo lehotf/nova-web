@@ -94,20 +94,20 @@
                     data_final: d2
                 });
 
-                if (!response || !response.cabecalho || response.cabecalho.status !== 'ok' || !response.dados || !response.dados.resultado) {
+                if (!response || !response.ok || !response.data || !response.data.resultado) {
                     setStatus(status, extractMessage(response) || 'Não foi possível calcular a diferença.', true);
                     results.classList.remove('is-visible');
                     return;
                 }
 
-                var result = response.dados.resultado;
+                var result = response.data.resultado;
                 var totalDias = Math.abs(result.total_dias);
 
                 resultValue.textContent = totalDias.toLocaleString('pt-BR') + (totalDias === 1 ? ' dia' : ' dias');
                 summary.textContent = 'A diferença total entre ' + form.elements.data_inicial.value + ' e ' + form.elements.data_final.value + ' é de ' + totalDias.toLocaleString('pt-BR') + (totalDias === 1 ? ' dia.' : ' dias.');
 
                 results.classList.add('is-visible');
-                setStatus(status, response.cabecalho.msg || 'Cálculo concluído com sucesso.', false);
+                setStatus(status, response.message || 'Cálculo concluído com sucesso.', false);
                 scrollToResults(results);
             } catch (error) {
                 setStatus(status, error.message || 'Não foi possível calcular a diferença.', true);
@@ -161,7 +161,19 @@
     }
 
     function extractMessage(response) {
-        return (response && response.cabecalho && response.cabecalho.msg) || '';
+        if (!response || typeof response !== 'object') {
+            return '';
+        }
+
+        if (typeof response.message === 'string' && response.message.trim() !== '') {
+            return response.message;
+        }
+
+        if (response.error && typeof response.error.message === 'string') {
+            return response.error.message;
+        }
+
+        return '';
     }
 
     boot();

@@ -13,9 +13,9 @@
                     limit: '500',
                     _ts: String(Date.now())
                 }));
-                if (!data.sucesso) throw new Error(data.mensagem || 'Erro ao carregar acessos');
+                if (!data.ok) throw new Error(data.message || 'Erro ao carregar acessos');
 
-                const arquivos = data?.arquivos || {};
+                const arquivos = data?.data?.arquivos || {};
                 this.accessFiles = {
                     acessos: String(arquivos?.acessos?.conteudo || ''),
                     acessos_negados: String(arquivos?.acessos_negados?.conteudo || '')
@@ -67,9 +67,9 @@
 
             try {
                 const data = await send(this.clearAccessEndpoint, this.buildSendPayload({}));
-                if (!data.sucesso) throw new Error(data.mensagem || 'Erro ao limpar acessos');
+                if (!data.ok) throw new Error(data.message || 'Erro ao limpar acessos');
 
-                this.showToast(data.mensagem || 'Logs de acesso removidos.', 'success');
+                this.showToast(data.message || 'Logs de acesso removidos.', 'success');
                 await this.loadAccessLogs();
             } catch (err) {
                 console.error('Erro ao limpar acessos:', err);

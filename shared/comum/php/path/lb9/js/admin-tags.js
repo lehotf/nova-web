@@ -12,9 +12,9 @@
                     acao: 'listar',
                     _ts: String(Date.now())
                 }));
-                if (!data.sucesso) throw new Error(data.mensagem || 'Erro ao carregar tags');
+                if (!data.ok) throw new Error(data.message || 'Erro ao carregar tags');
 
-                this.tags = Array.isArray(data.tags) ? data.tags : [];
+                this.tags = Array.isArray(data?.data?.tags) ? data.data.tags : [];
                 this.filterTags();
 
                 if (this.activeTagId) {
@@ -77,9 +77,9 @@
                     path,
                     destaque: 0
                 }));
-                if (!data.sucesso || !data.tag) throw new Error(data.mensagem || 'Erro ao criar tag');
+                if (!data.ok || !data?.data?.tag) throw new Error(data.message || 'Erro ao criar tag');
 
-                this.activeTagId = Number(data.tag.id);
+                this.activeTagId = Number(data.data.tag.id);
                 if (this.tagSearchInput) {
                     this.tagSearchInput.value = '';
                 }
@@ -175,9 +175,9 @@
 
             try {
                 const data = await send(this.tagsEndpoint, this.buildSendPayload(payload));
-                if (!data.sucesso || !data.tag) throw new Error(data.mensagem || 'Erro ao salvar tag');
+                if (!data.ok || !data?.data?.tag) throw new Error(data.message || 'Erro ao salvar tag');
 
-                this.activeTagId = Number(data.tag.id);
+                this.activeTagId = Number(data.data.tag.id);
                 await this.loadTags();
                 this.showToast('Tag salva com sucesso.', 'success');
             } catch (err) {
@@ -226,7 +226,7 @@
                     acao: 'excluir',
                     id
                 }));
-                if (!data.sucesso) throw new Error(data.mensagem || 'Erro ao excluir tag');
+                if (!data.ok) throw new Error(data.message || 'Erro ao excluir tag');
 
                 this.tags = this.tags.filter((item) => Number(item.id) !== id);
                 this.filteredTags = this.filteredTags.filter((item) => Number(item.id) !== id);

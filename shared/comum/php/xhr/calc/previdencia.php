@@ -41,7 +41,7 @@ if ($modoTaxa === 'cdi') {
 }
 
 if (!in_array($modalidadeTributacao, ['progressiva', 'regressiva'], true)) {
-    $o->resposta(status: 'erro', msg: 'Modalidade de tributação inválida.');
+    $o->erro('Modalidade de tributação inválida.');
 }
 
 $taxaDecimal = $taxaJurosMensal / 100;

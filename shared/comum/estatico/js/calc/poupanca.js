@@ -118,13 +118,13 @@
             try {
                 var response = await send(ENDPOINT_URL, payload);
 
-                if (!response || !response.cabecalho || response.cabecalho.status !== 'ok' || !response.dados || !response.dados.resultado) {
+                if (!response || !response.ok || !response.data || !response.data.resultado) {
                     setStatus(status, extractMessage(response) || 'Não foi possível calcular a rentabilidade.', true);
                     results.classList.remove('is-visible');
                     return;
                 }
 
-                var result = response.dados.resultado;
+                var result = response.data.resultado;
 
                 resultValue.textContent = currencyFormatter.format(result.valor_futuro || 0);
                 investedValue.textContent = currencyFormatter.format(result.total_investido || 0);
@@ -137,7 +137,7 @@
                     ', na Poupança.';
 
                 results.classList.add('is-visible');
-                setStatus(status, response.cabecalho.msg || 'Cálculo concluído com sucesso.', false);
+                setStatus(status, response.message || 'Cálculo concluído com sucesso.', false);
                 scrollToResults(results);
             } catch (error) {
                 setStatus(status, error.message || 'Não foi possível calcular a rentabilidade.', true);
@@ -188,8 +188,16 @@
     }
 
     function extractMessage(response) {
-        if (response && response.cabecalho && response.cabecalho.msg) {
-            return response.cabecalho.msg;
+        if (!response || typeof response !== 'object') {
+            return '';
+        }
+
+        if (typeof response.message === 'string' && response.message.trim() !== '') {
+            return response.message;
+        }
+
+        if (response.error && typeof response.error.message === 'string') {
+            return response.error.message;
         }
 
         return '';

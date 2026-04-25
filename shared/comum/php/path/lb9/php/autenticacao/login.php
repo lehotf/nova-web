@@ -9,5 +9,5 @@ $senha = $c->observador->texto("senha");
 if ($c->autenticador->login($login, $senha)) {
     $c->observador->envia("Autenticado");
 } else {
-    $c->observador->envia("Acesso Negado");
+    $c->observador->erro("Acesso Negado");
 }

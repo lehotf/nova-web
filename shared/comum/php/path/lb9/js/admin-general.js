@@ -5,9 +5,9 @@
         async loadGeneral() {
             try {
                 const payload = await send(`${this.apiBase}/admin_cache_status.php`, {});
-                const status = payload?.sucesso;
-                const message = payload?.mensagem || 'Erro ao carregar estado do cache';
-                const cache = payload?.cache;
+                const status = payload?.ok;
+                const message = payload?.message || 'Erro ao carregar estado do cache';
+                const cache = payload?.data?.cache;
 
                 if (!status || !cache) {
                     this.showToast(message, 'error');
@@ -28,9 +28,9 @@
 
             try {
                 const payload = await send(`${this.apiBase}/admin_toggle_cache.php`, {});
-                const status = payload?.sucesso;
-                const message = payload?.mensagem || 'Erro ao alternar cache';
-                const cache = payload?.cache;
+                const status = payload?.ok;
+                const message = payload?.message || 'Erro ao alternar cache';
+                const cache = payload?.data?.cache;
 
                 if (!status || !cache) {
                     this.showToast(message, 'error');
@@ -78,8 +78,8 @@
 
             try {
                 const payload = await send(this.commandEndpoints[commandId], {});
-                const status = payload?.sucesso;
-                const message = payload?.mensagem || `${this.getCommandLabel(commandId)} executado.`;
+                const status = payload?.ok;
+                const message = payload?.message || `${this.getCommandLabel(commandId)} executado.`;
 
                 if (!status) {
                     this.showToast(message || `Erro ao executar ${this.getCommandLabel(commandId)}.`, 'error');
@@ -117,8 +117,8 @@
                 rebuildButton.textContent = `Executando: ${this.getCommandLabel(commandId)}`;
 
                 this.executeCommandRequest(commandId).then((payload) => {
-                    const status = payload?.sucesso;
-                    const message = payload?.mensagem || `${this.getCommandLabel(commandId)} executado.`;
+                    const status = payload?.ok;
+                    const message = payload?.message || `${this.getCommandLabel(commandId)} executado.`;
 
                     if (!status) {
                         rebuildButton.disabled = false;

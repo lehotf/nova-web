@@ -110,13 +110,13 @@
                     altura: parseInt(altura, 10)
                 });
 
-                if (!response || !response.cabecalho || response.cabecalho.status !== 'ok' || !response.dados || !response.dados.resultado) {
+                if (!response || !response.ok || !response.data || !response.data.resultado) {
                     setStatus(status, extractMessage(response) || 'Erro ao calcular.', true);
                     results.classList.remove('is-visible');
                     return;
                 }
 
-                var res = response.dados.resultado;
+                var res = response.data.resultado;
 
                 resultValue.textContent = res.imc.toLocaleString('pt-BR');
                 classValue.textContent = res.classificacao;
@@ -126,7 +126,7 @@
                 summary.textContent = 'Com ' + res.peso.toLocaleString('pt-BR') + 'kg e ' + res.altura.toLocaleString('pt-BR') + 'm, seu IMC indica: ' + res.classificacao + '.';
 
                 results.classList.add('is-visible');
-                setStatus(status, response.cabecalho.msg || 'Cálculo concluído.', false);
+                setStatus(status, response.message || 'Cálculo concluído.', false);
                 scrollToResults(results);
             } catch (error) {
                 setStatus(status, error.message || 'Erro ao calcular.', true);
@@ -160,7 +160,19 @@
     }
 
     function extractMessage(response) {
-        return (response && response.cabecalho && response.cabecalho.msg) || '';
+        if (!response || typeof response !== 'object') {
+            return '';
+        }
+
+        if (typeof response.message === 'string' && response.message.trim() !== '') {
+            return response.message;
+        }
+
+        if (response.error && typeof response.error.message === 'string') {
+            return response.error.message;
+        }
+
+        return '';
     }
 
     function onlyDigits(value) {

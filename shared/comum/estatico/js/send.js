@@ -12,8 +12,8 @@
  * - envia objeto simples como JSON
  * - envia `FormData` sem sobrescrever o `Content-Type`
  * - lança erro em falha HTTP, rede ou resposta inválida
- * - normaliza respostas JSON no padrão do `observador`
- * - retorna o corpo já processado (`json` ou `text`)
+ * - aceita apenas respostas JSON no padrão atual do `observador`
+ * - retorna o envelope normalizado (`ok`, `message`, `data`, `error`)
  *
  * @param {string} url Destino da requisição
  * @param {*} payload Payload JSON puro ou `FormData`
@@ -31,12 +31,13 @@ async function send(url, payload, options) {
     try {
         var fetchOptions = buildSendFetchOptions(payload, config);
         var response = await fetch(requestUrl, fetchOptions);
+        var parsedResponse = await parseSendFetchResponse(response);
 
         if (!response.ok) {
-            throw new Error('Erro ' + response.status + ' recebido: ' + (response.statusText || 'falha na requisição'));
+            throw createSendHttpError(response, parsedResponse);
         }
 
-        return await parseSendFetchResponse(response);
+        return parsedResponse;
     } catch (error) {
         notifySendMessage(error.message || 'Falha no envio.', 'erro', 1);
         throw error;
@@ -69,27 +70,23 @@ function buildSendFetchOptions(payload, options) {
 }
 
 async function parseSendFetchResponse(response) {
-    if (response.status === 204) {
-        return null;
-    }
-
     var contentType = String(response.headers.get('content-type') || '').toLowerCase();
     var text = await response.text();
 
     if (text === '') {
-        return null;
+        throw new Error('O servidor respondeu sem corpo JSON.');
     }
 
-    if (contentType.indexOf('application/json') !== -1 || text.charAt(0) === '{' || text.charAt(0) === '[') {
-        try {
-            return normalizeSendResponsePayload(JSON.parse(text));
-        } catch (error) {
-            console.error('Resposta inválida do servidor:', text, error);
-            throw new Error('O servidor respondeu em formato inválido.');
-        }
+    if (contentType.indexOf('application/json') === -1) {
+        throw new Error('O servidor respondeu fora do contrato JSON do observador.');
     }
 
-    return text;
+    try {
+        return normalizeSendResponsePayload(JSON.parse(text));
+    } catch (error) {
+        console.error('Resposta inválida do servidor:', text, error);
+        throw new Error('O servidor respondeu em formato inválido.');
+    }
 }
 
 function normalizeSendResponsePayload(payload) {
@@ -97,30 +94,47 @@ function normalizeSendResponsePayload(payload) {
         throw new Error('Resposta fora do padrão do observador.');
     }
 
-    if (!payload.cabecalho || typeof payload.cabecalho !== 'object') {
+    if (typeof payload.ok !== 'boolean') {
         throw new Error('Resposta fora do padrão do observador.');
     }
 
-    var cabecalho = payload.cabecalho || {};
-    var dados = payload.dados && typeof payload.dados === 'object' && !Array.isArray(payload.dados)
-        ? payload.dados
+    var data = payload.data && typeof payload.data === 'object' && !Array.isArray(payload.data)
+        ? payload.data
         : {};
+    var error = payload.error && typeof payload.error === 'object' && !Array.isArray(payload.error)
+        ? payload.error
+        : {};
+    var message = typeof payload.message === 'string'
+        ? payload.message
+        : (typeof error.message === 'string' ? error.message : '');
     var normalized = {
-        sucesso: cabecalho.status === 'ok',
-        mensagem: cabecalho.msg || '',
-        cabecalho: cabecalho,
-        dados: dados
+        ok: payload.ok,
+        message: message,
+        data: data,
+        error: error
     };
 
-    for (var key in dados) {
-        if (!Object.prototype.hasOwnProperty.call(dados, key) || Object.prototype.hasOwnProperty.call(normalized, key)) {
-            continue;
-        }
+    return normalized;
+}
 
-        normalized[key] = dados[key];
+function createSendHttpError(response, parsedResponse) {
+    var backendMessage = '';
+
+    if (parsedResponse && typeof parsedResponse === 'object' && !Array.isArray(parsedResponse)) {
+        if (typeof parsedResponse.message === 'string' && parsedResponse.message.trim() !== '') {
+            backendMessage = parsedResponse.message.trim();
+        } else if (parsedResponse.error && typeof parsedResponse.error.message === 'string' && parsedResponse.error.message.trim() !== '') {
+            backendMessage = parsedResponse.error.message.trim();
+        }
     }
 
-    return normalized;
+    var fallbackMessage = 'Erro ' + response.status + ' recebido: ' + (response.statusText || 'falha na requisição');
+    var error = new Error(backendMessage || fallbackMessage);
+
+    error.response = response;
+    error.payload = parsedResponse;
+
+    return error;
 }
 
 /**

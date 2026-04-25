@@ -161,13 +161,13 @@
             try {
                 var response = await send(ENDPOINT_URL, payload);
 
-                if (!response || !response.cabecalho || response.cabecalho.status !== 'ok' || !response.dados || !response.dados.resultado) {
+                if (!response || !response.ok || !response.data || !response.data.resultado) {
                     setStatus(status, extractMessage(response) || 'Não foi possível calcular agora.', true);
                     results.classList.remove('is-visible');
                     return;
                 }
 
-                var result = response.dados.resultado;
+                var result = response.data.resultado;
                 renderResult(result, {
                     results: results,
                     resultValue: resultValue,
@@ -235,7 +235,7 @@
         });
 
         nodes.results.classList.add('is-visible');
-        setStatus(nodes.status, nodes.response.cabecalho.msg || 'Cálculo concluído.', false);
+        setStatus(nodes.status, nodes.response.message || 'Cálculo concluído.', false);
         scrollToResults(nodes.results);
     }
 
@@ -362,8 +362,16 @@
     }
 
     function extractMessage(response) {
-        if (response && response.cabecalho && response.cabecalho.msg) {
-            return response.cabecalho.msg;
+        if (!response || typeof response !== 'object') {
+            return '';
+        }
+
+        if (typeof response.message === 'string' && response.message.trim() !== '') {
+            return response.message;
+        }
+
+        if (response.error && typeof response.error.message === 'string') {
+            return response.error.message;
         }
 
         return '';

@@ -2,13 +2,13 @@
 /**
  * Endpoint AJAX — Módulo de Artigos
  *
- * POST acao=listar[&termo=busca]   → { sucesso, artigos[] }
- * POST acao=obter&id=X             → { sucesso, artigo{} }
- * POST acao=inserir                → { sucesso, id }
- * POST acao=atualizar              → { sucesso, id }
- * POST acao=excluir                → { sucesso }
- * POST (multipart) acao=upload_thumb → { sucesso, id, timestamp }
- * POST (multipart) acao=upload_imagem_artigo → { sucesso, name }
+ * POST acao=listar[&termo=busca]   → { ok, data: { artigos[] } }
+ * POST acao=obter&id=X             → { ok, data: { artigo{} } }
+ * POST acao=inserir                → { ok, data: { id } }
+ * POST acao=atualizar              → { ok, data: { id } }
+ * POST acao=excluir                → { ok }
+ * POST (multipart) acao=upload_thumb → { ok, data: { id, timestamp } }
+ * POST (multipart) acao=upload_imagem_artigo → { ok, data: { name } }
  */
 
 header('Content-Type: application/json; charset=utf-8');

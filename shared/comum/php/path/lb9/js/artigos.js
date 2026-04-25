@@ -207,9 +207,9 @@ class ArtigosApp extends window.BaseModule {
 
         try {
             const data = await send(`${this.apiBase}/artigos.php`, this.montarPayloadEnvio({ acao: 'listar_tags' }));
-            if (!data.sucesso) throw new Error(data.mensagem || 'Erro ao carregar tags');
+            if (!data.ok) throw new Error(data.message || 'Erro ao carregar tags');
 
-            this.tagsDisponiveis = Array.isArray(data.tags) ? data.tags : [];
+            this.tagsDisponiveis = Array.isArray(data?.data?.tags) ? data.data.tags : [];
             this.renderizarTags();
         } catch (err) {
             console.error('Erro ao carregar tags:', err);
@@ -290,15 +290,15 @@ class ArtigosApp extends window.BaseModule {
                 acao: 'inserir_tag',
                 nome
             }));
-            if (!data.sucesso || !data.tag?.id) {
-                throw new Error(data.mensagem || 'Erro ao cadastrar tag');
+            if (!data.ok || !data?.data?.tag?.id) {
+                throw new Error(data.message || 'Erro ao cadastrar tag');
             }
 
-            const tagId = Number(data.tag.id);
+            const tagId = Number(data.data.tag.id);
             const jaExisteNaLista = this.tagsDisponiveis.some((tag) => Number(tag.id) === tagId);
 
             if (!jaExisteNaLista) {
-                this.tagsDisponiveis.push(data.tag);
+                this.tagsDisponiveis.push(data.data.tag);
                 this.tagsDisponiveis.sort((a, b) => String(a.nome || '').localeCompare(String(b.nome || ''), 'pt-BR'));
             }
 
@@ -311,7 +311,7 @@ class ArtigosApp extends window.BaseModule {
                 this.artigoNovaTag.focus();
             }
 
-            this.showToast(data.existente ? 'Tag existente vinculada ao artigo' : 'Tag cadastrada com sucesso!', 'success');
+            this.showToast(data?.data?.existente ? 'Tag existente vinculada ao artigo' : 'Tag cadastrada com sucesso!', 'success');
         } catch (err) {
             console.error('Erro ao cadastrar tag:', err);
             this.showToast(err.message || 'Erro ao cadastrar tag', 'error');
@@ -328,9 +328,9 @@ class ArtigosApp extends window.BaseModule {
                 acao: 'listar',
                 termo
             }));
-            if (!data.sucesso) throw new Error(data.mensagem || 'Erro ao carregar artigos');
+            if (!data.ok) throw new Error(data.message || 'Erro ao carregar artigos');
 
-            this.artigos = data.artigos || [];
+            this.artigos = data?.data?.artigos || [];
             this.renderizarLista();
         } catch (err) {
             console.error('Erro ao carregar artigos:', err);
@@ -378,10 +378,10 @@ class ArtigosApp extends window.BaseModule {
                 acao: 'obter',
                 id
             }));
-            if (!data.sucesso) throw new Error(data.mensagem || 'Erro ao carregar artigo');
+            if (!data.ok) throw new Error(data.message || 'Erro ao carregar artigo');
 
-            this.artigoAtual = data.artigo;
-            this.preencherFormulario(data.artigo);
+            this.artigoAtual = data?.data?.artigo;
+            this.preencherFormulario(data.data.artigo);
             this.renderizarLista();
         } catch (err) {
             console.error('Erro ao abrir artigo:', err);
@@ -552,22 +552,22 @@ class ArtigosApp extends window.BaseModule {
 
         try {
             const data = await send(`${this.apiBase}/artigos.php`, this.montarPayloadEnvio(payload));
-            if (!data.sucesso) throw new Error(data.mensagem || 'Erro ao salvar');
+            if (!data.ok) throw new Error(data.message || 'Erro ao salvar');
 
-            if (data.id) {
-                this.artigoId.value = data.id;
+            if (data?.data?.id) {
+                this.artigoId.value = data.data.id;
                 if (!this.artigoAtual) this.artigoAtual = {};
-                this.artigoAtual.id = data.id;
-                this.atualizarTituloPagina(data.id);
+                this.artigoAtual.id = data.data.id;
+                this.atualizarTituloPagina(data.data.id);
             }
             if (!this.artigoAtual) this.artigoAtual = {};
-            this.artigoAtual.thumb = Number(estadoAtual.thumb || data.thumb) || 0;
+            this.artigoAtual.thumb = Number(estadoAtual.thumb || data?.data?.thumb) || 0;
             this.artigoAtual.tag_ids = Array.from(this.tagsSelecionadas).sort((a, b) => a - b);
             this.artigoAtual.thumb_titulo = this.thumbTituloAtual;
             this.artigoAtual.destaque_id = payload.destaque ? destaqueAtual : this.obterDestaqueOriginal();
-            this.artigoOriginal = this.criarSnapshotPersistidoArtigo(data.id || this.artigoId.value, estadoAtual, this.artigoAtual.destaque_id, this.artigoAtual.thumb);
+            this.artigoOriginal = this.criarSnapshotPersistidoArtigo(data?.data?.id || this.artigoId.value, estadoAtual, this.artigoAtual.destaque_id, this.artigoAtual.thumb);
             this.sincronizarArtigoNaLista({
-                id: Number(data.id || this.artigoId.value || 0),
+                id: Number(data?.data?.id || this.artigoId.value || 0),
                 titulo: estadoAtual.titulo,
                 subtitulo: estadoAtual.subtitulo,
                 path: estadoAtual.path ? `/${estadoAtual.path}` : '',
@@ -610,7 +610,7 @@ class ArtigosApp extends window.BaseModule {
 
         try {
             const data = await send(`${this.apiBase}/artigos.php`, this.montarPayloadEnvio({ acao: 'excluir', id }));
-            if (!data.sucesso) throw new Error(data.mensagem || 'Erro ao excluir');
+            if (!data.ok) throw new Error(data.message || 'Erro ao excluir');
 
             this.showToast('Artigo excluído com sucesso!', 'success');
             this.artigoForm.classList.add('hidden');
@@ -701,9 +701,9 @@ class ArtigosApp extends window.BaseModule {
                     }
                 )
             );
-            if (!data.sucesso) throw new Error(data.mensagem || 'Erro ao enviar imagem');
+            if (!data.ok) throw new Error(data.message || 'Erro ao enviar imagem');
 
-            this.inserirMarcacaoImagem(data.name);
+            this.inserirMarcacaoImagem(data?.data?.name);
             this.showToast('Imagem enviada e inserida no texto', 'success');
         } catch (err) {
             console.error('Erro ao enviar imagem do artigo:', err);
@@ -1238,7 +1238,7 @@ class ArtigosApp extends window.BaseModule {
                     }
                 )
             );
-            if (!data.sucesso) throw new Error(data.mensagem || 'Erro ao enviar thumb');
+            if (!data.ok) throw new Error(data.message || 'Erro ao enviar thumb');
 
             if (!this.artigoAtual) this.artigoAtual = {};
             this.artigoAtual.id = id;

@@ -281,16 +281,25 @@ class observador
 
     public function envia($msg = null, $status = 'ok')
     {
-        $resp = ['cabecalho' => ['status' => $status]];
-        if ($msg !== null) {
-            $resp['cabecalho']['msg'] = $msg;
-        }
-        if (!empty($this->r)) {
-            $resp['dados'] = $this->r;
+        $statusCode = $status === 'ok' ? 200 : 400;
+        $resp = ['ok' => $status === 'ok'];
+
+        if ($status === 'ok') {
+            if ($msg !== null) {
+                $resp['message'] = $msg;
+            }
+            if (!empty($this->r)) {
+                $resp['data'] = $this->r;
+            }
+        } else {
+            $resp['error'] = ['message' => $msg !== null ? $msg : 'Erro na requisição.'];
+            if (!empty($this->r)) {
+                $resp['data'] = $this->r;
+            }
         }
 
         header('Content-Type: application/json; charset=utf-8');
-        http_response_code(200);
+        http_response_code($statusCode);
         die(json_encode($resp));
     }
 
