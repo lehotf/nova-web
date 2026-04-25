@@ -37,18 +37,9 @@
         submitBtn.disabled = true;
 
         try {
-            const tokenPayload = await send(`${apiBase}/get_token.php`, { login: login });
-            const token = tokenPayload?.data?.token;
-
-            if (!token) {
-                notifySendMessage('Não foi possível iniciar a autenticação.', 'erro');
-                submitBtn.disabled = false;
-                return;
-            }
-
             const payload = await send(`${apiBase}/login.php`, {
                 login: login,
-                senha: md5(md5(senha) + token)
+                senha: senha
             });
             const message = payload?.message || 'Falha ao autenticar.';
 

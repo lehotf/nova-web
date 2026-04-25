@@ -221,7 +221,7 @@ function comparaAtributos(&$elemento, &$atributo, &$vetor_final)
             $bytes1 = $bytes1 + strlen($nomeElemento);
         }
 
-        $byes1 = $bytes1 + 2;
+        $bytes1 = $bytes1 + 2;
 
         if ($bytes1 >= $bytes2) {
             continue;

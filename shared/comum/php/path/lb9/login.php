@@ -2,8 +2,14 @@
 $redirectPadrao = '/comum/php/path/lb9/a.php';
 $apiAutenticacao = '/comum/php/path/lb9/php/autenticacao';
 $redirect = isset($_GET['redirect']) ? (string) $_GET['redirect'] : $redirectPadrao;
+const LB9_LOGIN_ASSET_VERSION = '1.0.1';
 
-if (!preg_match('#^/[A-Za-z0-9/_?.=&-]*$#', $redirect)) {
+function lb9LoginAssetVersion(string $path): string
+{
+    return $path . '?v=' . LB9_LOGIN_ASSET_VERSION;
+}
+
+if (!preg_match('#^/(?!/)[A-Za-z0-9/_?.=&-]*$#', $redirect)) {
     $redirect = $redirectPadrao;
 }
 ?>
@@ -13,7 +19,7 @@ if (!preg_match('#^/[A-Za-z0-9/_?.=&-]*$#', $redirect)) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LB9 | Login</title>
-    <link rel="stylesheet" href="/comum/php/path/lb9/css/login.css">
+    <link rel="stylesheet" href="<?= lb9LoginAssetVersion('/comum/php/path/lb9/css/login.css') ?>">
 </head>
 <body>
     <main class="shell">
@@ -33,11 +39,10 @@ if (!preg_match('#^/[A-Za-z0-9/_?.=&-]*$#', $redirect)) {
     </main>
 
     <script src="/comum/estatico/js/send.js"></script>
-    <script src="/cache/js/md5.js"></script>
     <script>
         window.lb9LoginRedirect = <?php echo json_encode($redirect, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>;
         window.lb9AuthApiBase = <?php echo json_encode($apiAutenticacao, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>;
     </script>
-    <script src="/comum/php/path/lb9/js/login.js"></script>
+    <script src="<?= lb9LoginAssetVersion('/comum/php/path/lb9/js/login.js') ?>"></script>
 </body>
 </html>
