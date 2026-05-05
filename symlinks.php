@@ -58,20 +58,6 @@ function output($msg, $type = 'info') {
     }
 }
 
-function createSymlinkViaShell($fullTarget, $fullLink) {
-    $command = 'ln -s ' . escapeshellarg($fullTarget) . ' ' . escapeshellarg($fullLink) . ' 2>&1';
-    $output = [];
-    $exitCode = 0;
-
-    exec($command, $output, $exitCode);
-
-    return [
-        'success' => $exitCode === 0 && is_link($fullLink),
-        'command' => $command,
-        'message' => trim(implode("\n", $output)),
-    ];
-}
-
 function createSymlink($target, $link) {
     global $SITE_DIR, $DOMAINS_DIR;
 
@@ -118,46 +104,31 @@ function createSymlink($target, $link) {
         return false;
     }
 
-    if (function_exists('symlink')) {
-        output("Tentando criar symlink em: $fullLink", 'info');
-
-        $lastError = null;
-        set_error_handler(function ($severity, $message) use (&$lastError) {
-            $lastError = $message;
-            return true;
-        });
-
-        $created = symlink($fullTarget, $fullLink);
-        restore_error_handler();
-
-        if ($created) {
-            output("Symlink criado: $link → $target", 'success');
-            return true;
-        }
-
-        $details = $lastError ? " ($lastError)" : '';
-        output("Erro ao criar symlink via PHP: $link$details", 'warning');
-    } else {
-        output("Função symlink() não está disponível nesta hospedagem", 'warning');
-    }
-
-    if (function_exists('exec')) {
-        output("Tentando criar symlink via shell", 'info');
-        $shellResult = createSymlinkViaShell($fullTarget, $fullLink);
-
-        if ($shellResult['success']) {
-            output("Symlink criado via shell: $link → $target", 'success');
-            return true;
-        }
-
-        $details = $shellResult['message'] !== '' ? " ({$shellResult['message']})" : '';
-        output("Falha ao criar symlink via shell$details", 'warning');
-        output("Comando para executar por SSH: {$shellResult['command']}", 'info');
+    if (!function_exists('symlink')) {
+        output("Função symlink() não está disponível nesta hospedagem", 'error');
         return false;
     }
 
-    output("A hospedagem também bloqueia exec(); crie manualmente por SSH ou painel", 'error');
-    return false;
+    // Cria o symlink
+    output("Tentando criar symlink em: $fullLink", 'info');
+
+    $lastError = null;
+    set_error_handler(function ($severity, $message) use (&$lastError) {
+        $lastError = $message;
+        return true;
+    });
+
+    $created = symlink($fullTarget, $fullLink);
+    restore_error_handler();
+
+    if ($created) {
+        output("Symlink criado: $link → $target", 'success');
+        return true;
+    } else {
+        $details = $lastError ? " ($lastError)" : '';
+        output("Erro ao criar symlink: $link$details", 'error');
+        return false;
+    }
 }
 
 // Header
@@ -183,9 +154,7 @@ if (!is_dir($SHARED_DIR)) {
     exit(1);
 }
 
-$symlinks = $SITE_NAME === 'calculatudo.com' ? $SYMLINKS_CALCULATUDO : $SYMLINKS_ARTIGOS;
-
-foreach ($symlinks as $link => $target) {
+foreach ($SYMLINKS_ARTIGOS as $link => $target) {
     output("Criando symlink: $link → $target", 'info');
     createSymlink($target, $link);
 }
