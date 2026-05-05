@@ -8,5 +8,6 @@ sitemap.txt
 **/cache/
 **/nogit
 /*.com/site
+/*.com/public_html/config.php
 /*.com/public_html/log
 /*.com/public_html/comum
