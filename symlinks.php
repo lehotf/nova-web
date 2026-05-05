@@ -6,9 +6,17 @@
 
 // Configurações
 $SITE_DIR = __DIR__;
-$SITE_NAME = basename($SITE_DIR);
-$HTDOCS_DIR = dirname($SITE_DIR);
-$SHARED_DIR = $HTDOCS_DIR . '/shared';
+$SITE_ROOT_DIR = $SITE_DIR;
+
+// Em hospedagens como a Hostinger, o script pode ficar em
+// .../domains/<site>/public_html, enquanto o shared fica em .../domains/shared.
+if (basename($SITE_DIR) === 'public_html') {
+    $SITE_ROOT_DIR = dirname($SITE_DIR);
+}
+
+$SITE_NAME = basename($SITE_ROOT_DIR);
+$DOMAINS_DIR = dirname($SITE_ROOT_DIR);
+$SHARED_DIR = $DOMAINS_DIR . '/shared';
 
 // Symlinks para sites de artigos
 $SYMLINKS_ARTIGOS = [
@@ -44,13 +52,31 @@ function output($msg, $type = 'info') {
     } else {
         echo "<p style='margin: 5px 0;'>$prefix $msg</p>";
     }
+
+    if (function_exists('flush')) {
+        flush();
+    }
+}
+
+function createSymlinkViaShell($fullTarget, $fullLink) {
+    $command = 'ln -s ' . escapeshellarg($fullTarget) . ' ' . escapeshellarg($fullLink) . ' 2>&1';
+    $output = [];
+    $exitCode = 0;
+
+    exec($command, $output, $exitCode);
+
+    return [
+        'success' => $exitCode === 0 && is_link($fullLink),
+        'command' => $command,
+        'message' => trim(implode("\n", $output)),
+    ];
 }
 
 function createSymlink($target, $link) {
-    global $SITE_DIR, $HTDOCS_DIR;
+    global $SITE_DIR, $DOMAINS_DIR;
 
     $fullLink = $SITE_DIR . '/' . $link;
-    $fullTarget = $HTDOCS_DIR . '/' . ltrim($target, '/');
+    $fullTarget = $DOMAINS_DIR . '/' . ltrim($target, '/');
 
     // Verifica se o link já existe
     if (file_exists($fullLink) || is_link($fullLink)) {
@@ -75,25 +101,71 @@ function createSymlink($target, $link) {
         return false;
     }
 
+    output("Target resolvido: $fullTarget", 'info');
+
     // Cria diretório pai se não existir
     $linkDir = dirname($fullLink);
     if (!is_dir($linkDir)) {
-        mkdir($linkDir, 0755, true);
+        if (!mkdir($linkDir, 0755, true) && !is_dir($linkDir)) {
+            output("Falha ao criar diretório pai: $linkDir", 'error');
+            return false;
+        }
         output("Criado diretório: " . basename(dirname($link)), 'success');
     }
 
-    // Cria o symlink
-    if (symlink($fullTarget, $fullLink)) {
-        output("Symlink criado: $link → $target", 'success');
-        return true;
-    } else {
-        output("Erro ao criar symlink: $link", 'error');
+    if (!is_writable($linkDir)) {
+        output("Diretório sem permissão de escrita: $linkDir", 'error');
         return false;
     }
+
+    if (function_exists('symlink')) {
+        output("Tentando criar symlink em: $fullLink", 'info');
+
+        $lastError = null;
+        set_error_handler(function ($severity, $message) use (&$lastError) {
+            $lastError = $message;
+            return true;
+        });
+
+        $created = symlink($fullTarget, $fullLink);
+        restore_error_handler();
+
+        if ($created) {
+            output("Symlink criado: $link → $target", 'success');
+            return true;
+        }
+
+        $details = $lastError ? " ($lastError)" : '';
+        output("Erro ao criar symlink via PHP: $link$details", 'warning');
+    } else {
+        output("Função symlink() não está disponível nesta hospedagem", 'warning');
+    }
+
+    if (function_exists('exec')) {
+        output("Tentando criar symlink via shell", 'info');
+        $shellResult = createSymlinkViaShell($fullTarget, $fullLink);
+
+        if ($shellResult['success']) {
+            output("Symlink criado via shell: $link → $target", 'success');
+            return true;
+        }
+
+        $details = $shellResult['message'] !== '' ? " ({$shellResult['message']})" : '';
+        output("Falha ao criar symlink via shell$details", 'warning');
+        output("Comando para executar por SSH: {$shellResult['command']}", 'info');
+        return false;
+    }
+
+    output("A hospedagem também bloqueia exec(); crie manualmente por SSH ou painel", 'error');
+    return false;
 }
 
 // Header
 if (!$isCliMode) {
+    while (ob_get_level() > 0) {
+        ob_end_flush();
+    }
+    ob_implicit_flush(true);
     echo "<!DOCTYPE html><html><head><meta charset='UTF-8'><title>Setup Symlinks</title>";
     echo "<style>body{font-family:monospace;padding:20px;background:#1e1e1e;color:#d4d4d4;}</style></head><body>";
 }
@@ -102,6 +174,7 @@ output("=== Iniciando configuração de symlinks ===", 'info');
 output("Site: $SITE_NAME", 'info');
 output("Base do site: $SITE_DIR", 'info');
 output("Shared: $SHARED_DIR", 'info');
+output("Diretório domains: $DOMAINS_DIR", 'info');
 echo $isCliMode ? "\n" : "<br>";
 
 // Verifica se diretório shared existe
@@ -110,8 +183,10 @@ if (!is_dir($SHARED_DIR)) {
     exit(1);
 }
 
-foreach ($SYMLINKS_ARTIGOS as $link => $target) {
-    echo "Criando symlink: $link → $target >> ";
+$symlinks = $SITE_NAME === 'calculatudo.com' ? $SYMLINKS_CALCULATUDO : $SYMLINKS_ARTIGOS;
+
+foreach ($symlinks as $link => $target) {
+    output("Criando symlink: $link → $target", 'info');
     createSymlink($target, $link);
 }
 
