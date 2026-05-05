@@ -1017,11 +1017,11 @@ class ArtigosApp extends window.BaseModule {
         }
 
         if (this.thumbQualidadeG && !this.thumbQualidadeG.value) {
-            this.thumbQualidadeG.value = '65';
+            this.thumbQualidadeG.value = '60';
         }
 
         if (this.thumbQualidadeP && !this.thumbQualidadeP.value) {
-            this.thumbQualidadeP.value = '65';
+            this.thumbQualidadeP.value = '60';
         }
     }
 

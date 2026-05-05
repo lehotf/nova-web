@@ -245,11 +245,11 @@ function lb9AssetVersion(string $path): string
                     <div class="thumb-quality-grid">
                         <div class="form-group">
                             <label for="thumbQualidadeG">Qualidade G</label>
-                            <input id="thumbQualidadeG" type="number" min="20" max="100" value="65">
+                            <input id="thumbQualidadeG" type="number" min="20" max="100" value="60">
                         </div>
                         <div class="form-group">
                             <label for="thumbQualidadeP">Qualidade P</label>
-                            <input id="thumbQualidadeP" type="number" min="20" max="100" value="65">
+                            <input id="thumbQualidadeP" type="number" min="20" max="100" value="60">
                         </div>
                     </div>
                 </div>

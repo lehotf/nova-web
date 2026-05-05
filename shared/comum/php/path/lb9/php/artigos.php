@@ -392,6 +392,7 @@ function uploadThumb(database $db, array $data): void
     $smallFile = $uploadDirectory . $thumbNome . '.jpg';
     $largeFile = $uploadDirectory . $thumbNome . 'g.jpg';
 
+    imageinterlace($frame, true);
     if (!imagejpeg($frame, $ampFile, 60)) {
         imagedestroy($frame);
         artigosErro('Falha ao salvar a thumb AMP.');
@@ -658,6 +659,7 @@ function salvarResizeJpeg($source, int $targetWidth, string $outputPath, int $qu
 
     $target = imagecreatetruecolor($targetWidth, $targetHeight);
     imagecopyresampled($target, $source, 0, 0, 0, 0, $targetWidth, $targetHeight, $sourceWidth, $sourceHeight);
+    imageinterlace($target, true);
     $ok = imagejpeg($target, $outputPath, $quality);
     imagedestroy($target);
 
