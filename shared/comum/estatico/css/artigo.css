@@ -155,15 +155,13 @@ article h3 {
 }
 article p {
     text-align: justify;
-    margin-bottom: 20px;
-    margin-top: 20px;
+    margin: 20px 25px;
     line-height: 1.4em;
     font-size: 20px; 
     color: #e5e5e5;
     letter-spacing: 0.2px;
-    margin-left: 25px;
-    margin-right: 25px;
 }
+
 article div> :first-child {
     margin-top: 0px;
 }
@@ -216,7 +214,7 @@ article blockquote.blv {
     border-left: 5px solid #e8a0a0;
     color: #fdbfbf;
     box-shadow: 0px 3px 20px 0 rgba(0, 0, 0, 0.075);
-    margin: 20px 25px;
+    margin: 26px 25px;
 }
 article blockquote h1 {
     margin-top: 9px;
@@ -307,10 +305,7 @@ article .nota {
     color: #e5e892;    
     padding: 1em;
     border-radius: 6px;
-    margin-top: 20px;
-    margin-bottom: 20px;
-    margin-left: 25px;
-    margin-right: 25px;
+    margin: 26px 25px;
     box-shadow: 0px 3px 20px 0 rgba(0, 0, 0, 0.075);
 }
 article .nota:before {
@@ -376,10 +371,7 @@ article .atencao {
     padding: 1em;
     position: relative;
     border-radius: 6px;
-    margin-bottom: 20px;
-    margin-top: 20px;
-    margin-left: 25px;
-    margin-right: 25px;
+    margin: 26px 25px;
     box-shadow: 0px 3px 20px 0 rgba(0, 0, 0, 0.075);
 }
 article .atencao:before {
