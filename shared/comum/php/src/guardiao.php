@@ -124,7 +124,7 @@ class guardiao
     public function pnf()
     {        
         $this->logger->acesso_negado('PNF');
-        echo "<style>html,body{height:100%;margin:0;display:grid;place-items:center;font-size: 80px;color: #444;}</style><div>404</div>";
+        echo "<style>html,body{background-color:#0f1115;height:100%;margin:0;display:grid;place-items:center;font-size: 80px;color: #BBB;}</style><div>404</div>";
         http_response_code(404);
 
         if ($this->ipEmListaNegra()) {
