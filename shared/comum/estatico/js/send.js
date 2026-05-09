@@ -49,8 +49,6 @@ async function send(url, payload, options) {
 
 var sendLoadingToastCounter = 0;
 var sendLoadingToastElement = null;
-var sendLoadingToastHideTimer = null;
-var sendLoadingToastRemoveTimer = null;
 
 function beginSendLoadingToast() {
     if (typeof document === 'undefined' || !document.body) {
@@ -86,13 +84,7 @@ function showSendLoadingToast() {
         return;
     }
 
-    clearTimeout(sendLoadingToastHideTimer);
-    clearTimeout(sendLoadingToastRemoveTimer);
-    sendLoadingToastHideTimer = null;
-    sendLoadingToastRemoveTimer = null;
-
     if (sendLoadingToastElement && sendLoadingToastElement.parentNode) {
-        sendLoadingToastElement.style.animation = 'sendToastSlideIn 220ms ease';
         return;
     }
 
@@ -107,11 +99,6 @@ function hideSendLoadingToast() {
     if (!sendLoadingToastElement) {
         return;
     }
-
-    clearTimeout(sendLoadingToastHideTimer);
-    clearTimeout(sendLoadingToastRemoveTimer);
-    sendLoadingToastHideTimer = null;
-    sendLoadingToastRemoveTimer = null;
 
     var toast = sendLoadingToastElement;
     if (toast.parentNode) {
@@ -360,17 +347,10 @@ function ensureSendToastStyles() {
         '.send-toast-loading {' +
             'border-left: 4px solid #f3c969;' +
         '}' +
-        '.send-toast-loading svg {' +
-            'animation: sendToastSpin 900ms linear infinite;' +
-        '}' +
         '.send-toast svg {' +
             'width: 20px;' +
             'height: 20px;' +
             'flex-shrink: 0;' +
-        '}' +
-        '@keyframes sendToastSpin {' +
-            'from { transform: rotate(0deg); }' +
-            'to { transform: rotate(360deg); }' +
         '}' +
         '.send-toast-success { border-left: 4px solid #7ee0a0; }' +
         '.send-toast-error { border-left: 4px solid hsl(0, 75%, 60%); }' +
