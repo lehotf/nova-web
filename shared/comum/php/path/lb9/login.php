@@ -38,7 +38,7 @@ if (!preg_match('#^/(?!/)[A-Za-z0-9/_?.=&-]*$#', $redirect)) {
         </section>
     </main>
 
-    <script src="/comum/estatico/js/send.js"></script>
+    <script src="<?= lb9LoginAssetVersion('/comum/estatico/js/send.js') ?>"></script>
     <script>
         window.lb9LoginRedirect = <?php echo json_encode($redirect, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>;
         window.lb9AuthApiBase = <?php echo json_encode($apiAutenticacao, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>;

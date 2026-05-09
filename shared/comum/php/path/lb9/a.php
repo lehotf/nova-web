@@ -23,7 +23,7 @@ function lb9AssetVersion(string $path): string
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="<?= lb9AssetVersion('css/launcher.css') ?>">
     <link rel="stylesheet" href="<?= lb9AssetVersion('css/styles.css') ?>">
-    <script src="/comum/estatico/js/send.js"></script>
+    <script src="<?= lb9AssetVersion('/comum/estatico/js/send.js') ?>"></script>
 </head>
 <body class="has-launcher" data-module="artigos">
 
