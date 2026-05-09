@@ -90,7 +90,7 @@ function showSendLoadingToast() {
 
     var toast = document.createElement('div');
     toast.className = 'send-toast send-toast-info send-toast-loading';
-    toast.innerHTML = getSendLoadingToastIcon() + '<span>conectando ao servidor</span>';
+    toast.innerHTML = '<span>conectando ao servidor</span>';
     container.appendChild(toast);
     sendLoadingToastElement = toast;
 }
@@ -373,8 +373,4 @@ function getSendToastIcon(type) {
         default:
             return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>';
     }
-}
-
-function getSendLoadingToastIcon() {
-    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8" opacity="0.25"></circle><path d="M20 12a8 8 0 0 0-8-8"></path></svg>';
 }
