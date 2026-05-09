@@ -28,6 +28,7 @@ async function send(url, payload, options) {
         throw new Error('Destino de envio não informado.');
     }
 
+    beginSendLoadingToast();
     try {
         var fetchOptions = buildSendFetchOptions(payload, config);
         var response = await fetch(requestUrl, fetchOptions);
@@ -41,7 +42,83 @@ async function send(url, payload, options) {
     } catch (error) {
         notifySendMessage(error.message || 'Falha no envio.', 'erro', 1);
         throw error;
+    } finally {
+        endSendLoadingToast();
     }
+}
+
+var sendLoadingToastCounter = 0;
+var sendLoadingToastElement = null;
+var sendLoadingToastHideTimer = null;
+var sendLoadingToastRemoveTimer = null;
+
+function beginSendLoadingToast() {
+    if (typeof document === 'undefined' || !document.body) {
+        return;
+    }
+
+    sendLoadingToastCounter += 1;
+
+    if (sendLoadingToastCounter === 1) {
+        showSendLoadingToast();
+    }
+}
+
+function endSendLoadingToast() {
+    if (typeof document === 'undefined' || !document.body) {
+        return;
+    }
+
+    if (sendLoadingToastCounter > 0) {
+        sendLoadingToastCounter -= 1;
+    }
+
+    if (sendLoadingToastCounter === 0) {
+        hideSendLoadingToast();
+    }
+}
+
+function showSendLoadingToast() {
+    ensureSendToastStyles();
+
+    var container = ensureSendLoadingToastContainer();
+    if (!container) {
+        return;
+    }
+
+    clearTimeout(sendLoadingToastHideTimer);
+    clearTimeout(sendLoadingToastRemoveTimer);
+    sendLoadingToastHideTimer = null;
+    sendLoadingToastRemoveTimer = null;
+
+    if (sendLoadingToastElement && sendLoadingToastElement.parentNode) {
+        sendLoadingToastElement.style.animation = 'sendToastSlideIn 220ms ease';
+        return;
+    }
+
+    var toast = document.createElement('div');
+    toast.className = 'send-toast send-toast-info send-toast-loading';
+    toast.innerHTML = getSendLoadingToastIcon() + '<span>conectando ao servidor</span>';
+    container.appendChild(toast);
+    sendLoadingToastElement = toast;
+}
+
+function hideSendLoadingToast() {
+    if (!sendLoadingToastElement) {
+        return;
+    }
+
+    clearTimeout(sendLoadingToastHideTimer);
+    clearTimeout(sendLoadingToastRemoveTimer);
+    sendLoadingToastHideTimer = null;
+    sendLoadingToastRemoveTimer = null;
+
+    var toast = sendLoadingToastElement;
+    if (toast.parentNode) {
+        toast.parentNode.removeChild(toast);
+    }
+
+    sendLoadingToastElement = null;
 }
 
 function buildSendFetchOptions(payload, options) {
@@ -219,6 +296,24 @@ function ensureSendToastContainer() {
     return container;
 }
 
+function ensureSendLoadingToastContainer() {
+    var container = document.getElementById('sendLoadingToastContainer');
+    if (container) {
+        return container;
+    }
+
+    if (!document.body) {
+        return null;
+    }
+
+    container = document.createElement('div');
+    container.id = 'sendLoadingToastContainer';
+    container.className = 'send-toast-container send-toast-loading-container';
+    document.body.appendChild(container);
+
+    return container;
+}
+
 function ensureSendToastStyles() {
     if (document.getElementById('sendToastStyles')) {
         return;
@@ -262,10 +357,20 @@ function ensureSendToastStyles() {
             'min-width: 300px;' +
             'max-width: min(500px, calc(100vw - 32px));' +
         '}' +
+        '.send-toast-loading {' +
+            'border-left: 4px solid #f3c969;' +
+        '}' +
+        '.send-toast-loading svg {' +
+            'animation: sendToastSpin 900ms linear infinite;' +
+        '}' +
         '.send-toast svg {' +
             'width: 20px;' +
             'height: 20px;' +
             'flex-shrink: 0;' +
+        '}' +
+        '@keyframes sendToastSpin {' +
+            'from { transform: rotate(0deg); }' +
+            'to { transform: rotate(360deg); }' +
         '}' +
         '.send-toast-success { border-left: 4px solid #7ee0a0; }' +
         '.send-toast-error { border-left: 4px solid hsl(0, 75%, 60%); }' +
@@ -288,4 +393,8 @@ function getSendToastIcon(type) {
         default:
             return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>';
     }
+}
+
+function getSendLoadingToastIcon() {
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8" opacity="0.25"></circle><path d="M20 12a8 8 0 0 0-8-8"></path></svg>';
 }
