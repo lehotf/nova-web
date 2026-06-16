@@ -7,10 +7,6 @@
         style: 'currency',
         currency: 'BRL'
     });
-    var numberFormatter = new Intl.NumberFormat('pt-BR', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-    });
     var rateFormatter = new Intl.NumberFormat('pt-BR', {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2
