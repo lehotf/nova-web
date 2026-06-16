@@ -1,4 +1,5 @@
 (function () {
+    var CALCULATOR_VERSION = '1.0.1';
     var WIDGET_ID = 'calc-saldo-devedor-widget';
     var RESULT_ID = 'calc-saldo-devedor-resultado';
     var ENDPOINT_URL = '/comum/php/xhr/calc/saldo_devedor.php';
@@ -15,6 +16,8 @@
         maximumFractionDigits: 2
     });
 
+    window.__SALDO_DEVEDOR_VERSION__ = CALCULATOR_VERSION;
+
     function boot() {
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', init, { once: true });
@@ -25,13 +28,8 @@
     }
 
     function init() {
-        var currentWidget = document.getElementById(WIDGET_ID);
-        if (currentWidget) {
-            if (isCurrentWidget(currentWidget)) {
-                return;
-            }
-
-            currentWidget.parentNode.removeChild(currentWidget);
+        if (document.getElementById(WIDGET_ID)) {
+            return;
         }
 
         var articleBody = document.querySelector('.div_corpo_artigo');
@@ -40,17 +38,6 @@
         }
 
         renderCalculator(articleBody);
-    }
-
-    function isCurrentWidget(widget) {
-        if (!widget) {
-            return false;
-        }
-
-        return !!widget.querySelector('[data-role="taxa_juros"]') &&
-            !widget.querySelector('[data-role="taxa_nominal"]') &&
-            !widget.querySelector('[data-role="taxa_efetiva_mensal"]') &&
-            !widget.querySelector('[data-role="taxa_efetiva_anual"]');
     }
 
     function renderCalculator(articleBody) {
@@ -98,7 +85,8 @@
             '  <div class="calc-rf__footnote" data-role="resumo"></div>' +
             '  <div class="calc-rf__footnote" data-role="detalhe"></div>' +
             '  <div class="calc-rf__report" data-role="relatorio" style="margin-top: 20px; font-size: 16px; line-height: 1.7;"></div>' +
-            '</div>';
+            '</div>' +
+            '<div class="calc-rf__version" style="margin-top: 10px; font-size: 12px; line-height: 1.4; opacity: 0.65;">Versão da calculadora: ' + CALCULATOR_VERSION + '</div>';
 
         articleBody.insertBefore(wrapper, articleBody.firstChild);
         bindCalculator(wrapper);
