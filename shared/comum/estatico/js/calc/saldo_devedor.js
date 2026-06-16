@@ -65,7 +65,7 @@
             '      <input class="calc-rf__input" type="number" name="prazo" min="1" max="600" step="1" placeholder="Ex.: 48" />' +
             '    </label>' +
             '  </div>' +
-            '  <p class="calc-rf__disclaimer" style="margin: 8px 0 0; font-size: 13px; line-height: 1.5; opacity: 0.85;">Simulação educacional de <strong>saldo devedor de empréstimo</strong>. Use datas no formato <strong>DD/MM/AAAA</strong>. A taxa contratual é estimada a partir das parcelas e da carência entre a contratação e a primeira prestação. A taxa efetiva também considera o <strong>IOF</strong>.</p>' +
+            '  <p class="calc-rf__disclaimer" style="margin: 8px 0 0; font-size: 13px; line-height: 1.5; opacity: 0.85;">Simulação educacional de <strong>saldo devedor de empréstimo</strong>. Use datas no formato <strong>DD/MM/AAAA</strong>. O IOF é calculado a partir do valor solicitado, prazo e carência; depois a taxa contratual é estimada pelas parcelas.</p>' +
             '  <div class="calc-rf__actions">' +
             '    <button class="calc-rf__button" type="submit">Calcular Saldo Devedor</button>' +
             '    <div class="calc-rf__status" aria-live="polite"></div>' +
@@ -75,9 +75,7 @@
             '  <div class="calc-rf__result-main">Saldo devedor atual <span class="calc-rf__result-value">-</span></div>' +
             '  <div class="calc-rf__cards">' +
             '    <div class="calc-rf__card"><span class="calc-rf__card-label">Juros de carência</span><span class="calc-rf__card-value" data-role="juros_carencia">-</span></div>' +
-            '    <div class="calc-rf__card"><span class="calc-rf__card-label">Taxa nominal mensal</span><span class="calc-rf__card-value" data-role="taxa_nominal">-</span></div>' +
-            '    <div class="calc-rf__card"><span class="calc-rf__card-label">Taxa efetiva mensal</span><span class="calc-rf__card-value" data-role="taxa_efetiva_mensal">-</span></div>' +
-            '    <div class="calc-rf__card"><span class="calc-rf__card-label">Taxa efetiva anual</span><span class="calc-rf__card-value" data-role="taxa_efetiva_anual">-</span></div>' +
+            '    <div class="calc-rf__card"><span class="calc-rf__card-label">Taxa de juros</span><span class="calc-rf__card-value" data-role="taxa_juros">-</span></div>' +
             '    <div class="calc-rf__card"><span class="calc-rf__card-label">IOF total</span><span class="calc-rf__card-value" data-role="iof_total">-</span></div>' +
             '    <div class="calc-rf__card"><span class="calc-rf__card-label">Parcelas restantes</span><span class="calc-rf__card-value" data-role="parcelas_restantes">-</span></div>' +
             '  </div>' +
@@ -97,9 +95,7 @@
         var status = wrapper.querySelector('.calc-rf__status');
         var results = wrapper.querySelector('.calc-rf__results');
         var resultValue = wrapper.querySelector('.calc-rf__result-value');
-        var taxaNominalValue = wrapper.querySelector('[data-role="taxa_nominal"]');
-        var taxaEfetivaMensalValue = wrapper.querySelector('[data-role="taxa_efetiva_mensal"]');
-        var taxaEfetivaAnualValue = wrapper.querySelector('[data-role="taxa_efetiva_anual"]');
+        var taxaJurosValue = wrapper.querySelector('[data-role="taxa_juros"]');
         var iofTotalValue = wrapper.querySelector('[data-role="iof_total"]');
         var jurosCarenciaValue = wrapper.querySelector('[data-role="juros_carencia"]');
         var parcelasRestantesValue = wrapper.querySelector('[data-role="parcelas_restantes"]');
@@ -156,9 +152,7 @@
                 renderResult(response.data.resultado, {
                     results: results,
                     resultValue: resultValue,
-                    taxaNominalValue: taxaNominalValue,
-                    taxaEfetivaMensalValue: taxaEfetivaMensalValue,
-                    taxaEfetivaAnualValue: taxaEfetivaAnualValue,
+                    taxaJurosValue: taxaJurosValue,
                     iofTotalValue: iofTotalValue,
                     jurosCarenciaValue: jurosCarenciaValue,
                     parcelasRestantesValue: parcelasRestantesValue,
@@ -179,22 +173,19 @@
 
     function renderResult(result, nodes) {
         var taxaContratualMensal = result.taxa_contratual_mensal || 0;
-        var taxaEfetivaMensal = result.taxa_efetiva_mensal || 0;
-        var taxaEfetivaAnual = result.taxa_efetiva_anual || 0;
         var iofTotal = result.iof_total || 0;
         var jurosCarencia = result.juros_carencia || 0;
         var saldoDevedor = result.saldo_devedor_atual || 0;
         var parcelasRestantes = result.parcelas_restantes || 0;
         var prazo = result.prazo || 0;
         var diasCarencia = result.dias_carencia || 0;
+        var dataBaseCarencia = result.data_base_carencia_br || result.data_base_carencia || '-';
 
         nodes.resultValue.textContent = currencyFormatter.format(saldoDevedor);
         nodes.jurosCarenciaValue.textContent = currencyFormatter.format(jurosCarencia);
-        if (nodes.taxaNominalValue) {
-            nodes.taxaNominalValue.textContent = formatRate(taxaContratualMensal) + ' ao mês';
+        if (nodes.taxaJurosValue) {
+            nodes.taxaJurosValue.textContent = formatRate(taxaContratualMensal) + ' ao mês';
         }
-        nodes.taxaEfetivaMensalValue.textContent = formatRate(taxaEfetivaMensal) + ' ao mês';
-        nodes.taxaEfetivaAnualValue.textContent = formatRate(taxaEfetivaAnual) + ' ao ano';
         nodes.iofTotalValue.textContent = currencyFormatter.format(iofTotal);
         nodes.parcelasRestantesValue.textContent = Math.round(parcelasRestantes).toLocaleString('pt-BR');
 
@@ -203,8 +194,9 @@
             ' parcelas na simulação.';
 
         nodes.detail.textContent = 'Taxa contratual estimada: ' + formatRate(taxaContratualMensal) +
-            ' ao mês. Juros de carência: ' + currencyFormatter.format(jurosCarencia) + '. Carência entre contratação e 1ª parcela: ' +
-            diasCarencia.toLocaleString('pt-BR') + (diasCarencia === 1 ? ' dia.' : ' dias.') +
+            ' ao mês. Juros de carência: ' + currencyFormatter.format(jurosCarencia) +
+            '. Base de carência: ' + dataBaseCarencia + '. Dias de carência: ' + diasCarencia.toLocaleString('pt-BR') +
+            (diasCarencia === 1 ? ' dia.' : ' dias.') +
             ' IOF considerado na simulação: ' +
             formatRate(result.iof_aliquota_fixa_percentual || 0) + ' fixa + ' +
             formatRate(result.iof_aliquota_diaria_percentual || 0) + ' ao dia.';
@@ -212,8 +204,6 @@
         if (nodes.reportContainer) {
             nodes.reportContainer.innerHTML = buildReportHtml(result, {
                 taxaContratualMensal: taxaContratualMensal,
-                taxaEfetivaMensal: taxaEfetivaMensal,
-                taxaEfetivaAnual: taxaEfetivaAnual,
                 jurosCarencia: jurosCarencia,
                 iofTotal: iofTotal,
                 saldoDevedor: saldoDevedor,
@@ -229,11 +219,11 @@
     function buildReportHtml(result, metrics) {
         var html = '<div class="calc-rf__report-content">' +
             '<h3 style="margin: 0 0 14px; font-size: 22px; line-height: 1.2;">Explicação detalhada</h3>' +
-            '<p style="margin: 0 0 14px;">Esta calculadora estima o saldo devedor atual de um empréstimo a partir do valor liberado, do valor da parcela, do prazo e da data da primeira parcela. A taxa contratual é inferida pelos pagamentos previstos e, antes de qualquer projeção, é arredondada para duas casas decimais para manter a apresentação e o cálculo consistentes.</p>' +
-            '<p style="margin: 0 0 14px;">No cenário de contratação, o sistema também calcula o <strong>juros de carência</strong>, que é a remuneração acumulada entre a data da contratação e o vencimento da primeira parcela. Esse valor é derivado da taxa contratual já arredondada e serve para mostrar quanto o saldo cresce antes do ciclo normal de amortização começar.</p>' +
+            '<p style="margin: 0 0 14px;">Esta calculadora estima o saldo devedor atual de um empréstimo a partir do valor liberado, do valor da parcela, do prazo e da data da primeira parcela. O IOF é calculado antes da taxa mensal, e a taxa contratual é inferida pelas parcelas sobre o valor financiado.</p>' +
+            '<p style="margin: 0 0 14px;">No cenário de contratação, o sistema também calcula o <strong>juros de carência</strong>, quando a primeira parcela foi postergada além do primeiro vencimento normal. O saldo devedor evolui mensalmente pela tabela Price, com arredondamento de juros em cada prestação.</p>' +
             '<p style="margin: 0 0 14px;">A taxa efetiva considera o IOF como custo adicional da operação. Ou seja, o imposto entra no custo total do empréstimo e afeta o saldo final da simulação.</p>' +
             '<p style="margin: 0 0 14px;">Na data da simulação, o sistema estima um saldo devedor de <strong>' + currencyFormatter.format(metrics.saldoDevedor || 0) + '</strong>, com <strong>' + Math.round(metrics.parcelasRestantes || 0).toLocaleString('pt-BR') + '</strong> parcelas restantes.</p>' +
-            '<p style="margin: 0 0 14px;">Os principais indicadores da simulação são: taxa contratual mensal de <strong>' + rateFormatter.format(metrics.taxaContratualMensal || 0) + '%</strong>, taxa efetiva mensal de <strong>' + rateFormatter.format(metrics.taxaEfetivaMensal || 0) + '%</strong>, taxa efetiva anual de <strong>' + rateFormatter.format(metrics.taxaEfetivaAnual || 0) + '%</strong> e IOF total de <strong>' + currencyFormatter.format(metrics.iofTotal || 0) + '</strong>.</p>';
+            '<p style="margin: 0 0 14px;">Os principais indicadores da simulação são: taxa de juros de <strong>' + rateFormatter.format(metrics.taxaContratualMensal || 0) + '% ao mês</strong> e IOF total de <strong>' + currencyFormatter.format(metrics.iofTotal || 0) + '</strong>.</p>';
 
         html += '<p style="margin: 18px 0 0; padding: 15px; border-radius: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); font-size: 15px;">' +
             '<strong>Atenção:</strong> esta calculadora é uma estimativa educacional e não substitui a leitura do contrato, do demonstrativo financeiro ou a conferência com a instituição credora.' +

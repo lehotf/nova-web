@@ -15,6 +15,8 @@ $payload = $o->valida([
 const IOF_ALIQUOTA_FIXA_PORCENTAGEM = 0.38;
 const IOF_ALIQUOTA_DIARIA_PORCENTAGEM = 0.0082;
 const IOF_LIMITE_DIAS_DIARIOS = 365;
+const IOF_PRAZO_MEDIO_48_MESES_DIAS = 293.08292682927;
+const IOF_PESO_DIA_CARENCIA = 0.41523991710505;
 
 function parseDataCalculadora(string $valor, string $mensagemErro): DateTimeImmutable
 {
@@ -52,6 +54,20 @@ function gerarParcelas(DateTimeImmutable $dataPrimeiraParcela, int $prazo): arra
     return $datas;
 }
 
+function deslocarMeses(DateTimeImmutable $data, int $meses): DateTimeImmutable
+{
+    $ano = (int) $data->format('Y');
+    $mes = (int) $data->format('n');
+    $dia = (int) $data->format('j');
+
+    $mesIndex = ($mes - 1) + $meses;
+    $novoAno = $ano + intdiv($mesIndex, 12);
+    $novoMes = ($mesIndex % 12 + 12) % 12 + 1;
+    $novoDia = min($dia, cal_days_in_month(CAL_GREGORIAN, $novoMes, $novoAno));
+
+    return $data->setDate($novoAno, $novoMes, $novoDia);
+}
+
 function valorPresenteParcelas(array $datasParcelas, float $valorParcela, DateTimeImmutable $dataContrato, float $taxaDiaria): float
 {
     $vp = 0.0;
@@ -72,6 +88,90 @@ function taxaDiariaParaTaxaMensalPercentual(float $taxaDiaria): float
 function taxaMensalPercentualParaDiaria(float $taxaMensalPercentual): float
 {
     return pow(1 + ($taxaMensalPercentual / 100), 1 / 30) - 1;
+}
+
+function valorPresenteParcelasMensais(float $valorParcela, int $prazo, float $taxaMensalPercentual): float
+{
+    if ($prazo <= 0) {
+        return 0.0;
+    }
+
+    $taxaMensal = $taxaMensalPercentual / 100;
+
+    if (abs($taxaMensal) < 0.0000001) {
+        return $valorParcela * $prazo;
+    }
+
+    return $valorParcela * ((1 - pow(1 + $taxaMensal, -$prazo)) / $taxaMensal);
+}
+
+function calcularIofContrato(float $valorSolicitado, int $prazo, int $diasCarencia): array
+{
+    $aliquotaFixa = IOF_ALIQUOTA_FIXA_PORCENTAGEM / 100;
+    $aliquotaDiaria = IOF_ALIQUOTA_DIARIA_PORCENTAGEM / 100;
+    $prazoMedioSemCarencia = IOF_PRAZO_MEDIO_48_MESES_DIAS * ($prazo / 48);
+    $prazoMedio = min(IOF_LIMITE_DIAS_DIARIOS, $prazoMedioSemCarencia + ($diasCarencia * IOF_PESO_DIA_CARENCIA));
+    $iofFixo = $valorSolicitado * $aliquotaFixa;
+    $iofDiario = $valorSolicitado * $aliquotaDiaria * $prazoMedio;
+
+    return [
+        'iof_fixo' => $iofFixo,
+        'iof_diario' => $iofDiario,
+        'iof_total' => $iofFixo + $iofDiario,
+        'prazo_medio_dias' => $prazoMedio
+    ];
+}
+
+function valorPresenteBaseContrato(
+    float $valorParcela,
+    int $prazo,
+    float $taxaMensalPercentual,
+    int $diasCarencia
+): float {
+    $vpParcelas = valorPresenteParcelasMensais($valorParcela, $prazo, $taxaMensalPercentual);
+    $taxaMensal = $taxaMensalPercentual / 100;
+    $fatorCarencia = $diasCarencia > 0 ? pow(1 + $taxaMensal, $diasCarencia / 30) : 1.0;
+
+    return $fatorCarencia > 0 ? $vpParcelas / $fatorCarencia : $vpParcelas;
+}
+
+function resolverTaxaMensalContrato(float $valorFinanciado, float $valorParcela, int $prazo, int $diasCarencia): float
+{
+    $vpZero = valorPresenteBaseContrato($valorParcela, $prazo, 0.0, $diasCarencia);
+
+    if ($valorFinanciado > $vpZero) {
+        $GLOBALS['o']->erro('O valor financiado é maior que o valor presente das parcelas. Revise os dados informados.');
+    }
+
+    if (abs($valorFinanciado - $vpZero) < 0.000001) {
+        return 0.0;
+    }
+
+    $min = 0.0;
+    $max = 1.0;
+    $vpMax = valorPresenteBaseContrato($valorParcela, $prazo, $max, $diasCarencia);
+
+    while ($vpMax > $valorFinanciado && $max < 100) {
+        $max *= 2;
+        $vpMax = valorPresenteBaseContrato($valorParcela, $prazo, $max, $diasCarencia);
+    }
+
+    if ($vpMax > $valorFinanciado) {
+        $GLOBALS['o']->erro('Não foi possível calcular a taxa mensal com os dados informados.');
+    }
+
+    for ($i = 0; $i < 120; $i++) {
+        $meio = ($min + $max) / 2;
+        $vpMeio = valorPresenteBaseContrato($valorParcela, $prazo, $meio, $diasCarencia);
+
+        if ($vpMeio > $valorFinanciado) {
+            $min = $meio;
+        } else {
+            $max = $meio;
+        }
+    }
+
+    return ($min + $max) / 2;
 }
 
 function calcularIofDiarioDetalhado(
@@ -121,6 +221,41 @@ function calcularIofDiarioDetalhado(
         'iof_diario_total' => $iofDiarioTotal,
         'amortizacao_total' => $amortizacaoTotal,
         'detalhes' => $detalhes
+    ];
+}
+
+function calcularSaldoAtualComTaxaMensal(
+    DateTimeImmutable $dataContrato,
+    DateTimeImmutable $dataReferencia,
+    array $datasParcelas,
+    float $valorFinanciado,
+    float $valorParcela,
+    float $taxaMensalPercentual
+): array {
+    $saldo = $valorFinanciado;
+    $taxaMensal = $taxaMensalPercentual / 100;
+    $ultimoMarco = $dataContrato;
+    $parcelasPagas = 0;
+
+    foreach ($datasParcelas as $dataParcela) {
+        if ($dataParcela > $dataReferencia) {
+            break;
+        }
+
+        $jurosPeriodo = round($saldo * $taxaMensal, 2);
+        $saldo = round($saldo + $jurosPeriodo - $valorParcela, 2);
+        $parcelasPagas++;
+        $ultimoMarco = $dataParcela;
+    }
+
+    $diasRestantes = max(0, diasEntre($ultimoMarco, $dataReferencia));
+    if ($diasRestantes > 0) {
+        $saldo *= pow(1 + $taxaMensal, $diasRestantes / 30);
+    }
+
+    return [
+        'saldo' => max(0.0, $saldo),
+        'parcelas_pagas' => $parcelasPagas
     ];
 }
 
@@ -236,50 +371,43 @@ if ($prazo <= 0) {
     $o->erro('Informe um prazo válido.');
 }
 
-$diasCarencia = max(0, diasEntre($dataContratacao, $dataPrimeiraParcela));
-$diasBaseIof = min($diasCarencia, IOF_LIMITE_DIAS_DIARIOS);
-
-$iofFixo = $valorLiberado * (IOF_ALIQUOTA_FIXA_PORCENTAGEM / 100);
+$dataBaseCarencia = deslocarMeses($dataPrimeiraParcela, -1);
+$diasCarencia = max(0, diasEntre($dataContratacao, $dataBaseCarencia));
+$diasBaseIof = min(max(0, diasEntre($dataContratacao, $dataPrimeiraParcela)), IOF_LIMITE_DIAS_DIARIOS);
 $datasParcelas = gerarParcelas($dataPrimeiraParcela, $prazo);
 
-$taxaDiariaContratual = resolverTaxaDiaria($datasParcelas, $valorLiberado, $valorParcela, $dataContratacao);
-$taxaContratualMensal = round(taxaDiariaParaTaxaMensalPercentual($taxaDiariaContratual), 2);
+$iofContrato = calcularIofContrato($valorLiberado, $prazo, $diasCarencia);
+$iofFixo = $iofContrato['iof_fixo'];
+$iofDiario = $iofContrato['iof_diario'];
+$iofTotal = $iofContrato['iof_total'];
+$valorFinanciado = $valorLiberado + $iofTotal;
+
+$taxaContratualMensal = resolverTaxaMensalContrato($valorFinanciado, $valorParcela, $prazo, $diasCarencia);
+$taxaContratualEstimativa = $taxaContratualMensal;
+$taxaContratualMensalCalculada = $taxaContratualMensal;
+$taxaContratualMensal = round($taxaContratualMensal, 2);
+
 $taxaDiariaContratual = taxaMensalPercentualParaDiaria($taxaContratualMensal);
-
-$jurosCarencia = $diasCarencia > 0
-    ? $valorLiberado * (pow(1 + $taxaDiariaContratual, $diasCarencia) - 1)
+$fatorCarencia = $diasCarencia > 0
+    ? pow(1 + ($taxaContratualMensal / 100), $diasCarencia / 30) - 1
     : 0.0;
-
-$iofDiarioDetalhado = calcularIofDiarioDetalhado(
-    $valorLiberado,
-    $valorParcela,
-    $datasParcelas,
-    $dataContratacao,
-    $taxaDiariaContratual
-);
-
-$iofDiario = $iofDiarioDetalhado['iof_diario_total'];
-$iofTotal = $iofFixo + $iofDiario;
-
-$baseEfetiva = $valorLiberado - $iofTotal;
-if ($baseEfetiva <= 0) {
-    $o->erro('O valor liberado é insuficiente para absorver o IOF calculado.');
-}
-
-$taxaDiariaEfetiva = resolverTaxaDiaria($datasParcelas, $baseEfetiva, $valorParcela, $dataContratacao);
-$taxaEfetivaMensal = round(taxaDiariaParaTaxaMensalPercentual($taxaDiariaEfetiva), 2);
-$taxaDiariaEfetiva = taxaMensalPercentualParaDiaria($taxaEfetivaMensal);
-
-$taxaContratualAnual = round((pow(1 + $taxaDiariaContratual, 365) - 1) * 100, 2);
-$taxaEfetivaAnual = round((pow(1 + $taxaDiariaEfetiva, 365) - 1) * 100, 2);
-
-$saldoAtual = calcularSaldoAtual(
+$jurosCarencia = $valorFinanciado * $fatorCarencia;
+$basePrestacoes = $valorFinanciado + $jurosCarencia;
+$iofDiarioDetalhado = [
+    'iof_diario_total' => $iofDiario,
+    'amortizacao_total' => 0.0,
+    'detalhes' => []
+];
+$baseEfetiva = $valorFinanciado;
+$taxaDiariaEfetiva = $taxaDiariaContratual;
+$taxaEfetivaMensal = $taxaContratualMensal;
+$saldoAtual = calcularSaldoAtualComTaxaMensal(
     $dataContratacao,
     $dataReferencia,
     $datasParcelas,
-    $valorLiberado,
+    $valorFinanciado,
     $valorParcela,
-    $taxaDiariaContratual
+    $taxaContratualMensal
 );
 
 $saldoDevedorAtual = round($saldoAtual['saldo'], 2);
@@ -299,23 +427,27 @@ $o->r['resultado'] = [
     'data_simulacao' => $dataReferencia->format('Y-m-d'),
     'data_simulacao_br' => $dataReferencia->format('d/m/Y'),
     'valor_liberado' => round($valorLiberado, 2),
+    'valor_financiado' => round($valorFinanciado, 2),
+    'valor_base_prestacoes' => round($basePrestacoes, 2),
     'valor_parcela' => round($valorParcela, 2),
     'prazo' => $prazo,
     'dias_carencia' => $diasCarencia,
+    'data_base_carencia' => $dataBaseCarencia->format('Y-m-d'),
+    'data_base_carencia_br' => $dataBaseCarencia->format('d/m/Y'),
     'iof_aliquota_fixa_percentual' => IOF_ALIQUOTA_FIXA_PORCENTAGEM,
     'iof_aliquota_diaria_percentual' => IOF_ALIQUOTA_DIARIA_PORCENTAGEM,
     'iof_dias_considerados' => $diasBaseIof,
+    'iof_prazo_medio_dias' => round($iofContrato['prazo_medio_dias'], 6),
     'iof_fixo' => round($iofFixo, 2),
     'iof_diario' => round($iofDiario, 2),
     'iof_detalhes_parcelas' => $iofDiarioDetalhado['detalhes'],
     'iof_total' => round($iofTotal, 2),
     'juros_carencia' => round($jurosCarencia, 2),
     'taxa_contratual_diaria' => round($taxaDiariaContratual * 100, 10),
+    'taxa_contratual_mensal_calculada' => round($taxaContratualMensalCalculada, 10),
     'taxa_contratual_mensal' => round($taxaContratualMensal, 2),
-    'taxa_contratual_anual' => round($taxaContratualAnual, 2),
     'taxa_efetiva_diaria' => round($taxaDiariaEfetiva * 100, 10),
     'taxa_efetiva_mensal' => round($taxaEfetivaMensal, 2),
-    'taxa_efetiva_anual' => round($taxaEfetivaAnual, 2),
     'saldo_devedor_atual' => $saldoDevedorAtual,
     'parcelas_pagas' => $parcelasPagas,
     'parcelas_restantes' => $parcelasRestantes,
@@ -323,17 +455,16 @@ $o->r['resultado'] = [
     'custo_total_efetivo' => round($custoTotalEfetivo, 2),
     'custo_total_efetivo_percentual' => round($custoTotalEfetivoPercentual, 6),
     'observacoes_modelo' => [
-        'O saldo devedor atual foi estimado a partir do valor liberado, do prazo e da primeira parcela, usando a taxa contratual implícita pelas parcelas.',
+        'O saldo devedor atual foi calculado pela evolução mensal da tabela Price, com arredondamento de juros a cada prestação.',
         'O juros de carência representa apenas o período entre a contratação e a primeira parcela, antes do ciclo normal de amortização.',
-        'A taxa efetiva considera o IOF como custo adicional sobre o valor liberado.',
-        'O IOF foi parametrizado em constantes separadas para facilitar futuras alterações na legislação.',
-        'O cálculo de datas usa as datas reais dos vencimentos e preserva a lógica mensal do contrato.'
+        'O IOF foi calculado antes da taxa mensal, a partir do valor solicitado, prazo e carência.',
+        'O IOF foi parametrizado em constantes separadas para facilitar futuras alterações e conferências por contrato.',
+        'Após o último vencimento pago, o saldo é capitalizado proporcionalmente pelos dias até a data de referência.'
     ],
-    'metodologia' => 'carencia_por_datas_reais',
+    'metodologia' => 'contratual_com_taxa_estimativa',
     'resultado_geral' => [
         'saldo_devedor_atual' => $saldoDevedorAtual,
-        'taxa_efetiva_mensal' => round($taxaEfetivaMensal, 2),
-        'taxa_efetiva_anual' => round($taxaEfetivaAnual, 2)
+        'taxa_juros_mensal' => round($taxaContratualMensal, 2)
     ]
 ];
 
