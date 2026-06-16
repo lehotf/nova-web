@@ -25,8 +25,13 @@
     }
 
     function init() {
-        if (document.getElementById(WIDGET_ID)) {
-            return;
+        var currentWidget = document.getElementById(WIDGET_ID);
+        if (currentWidget) {
+            if (isCurrentWidget(currentWidget)) {
+                return;
+            }
+
+            currentWidget.parentNode.removeChild(currentWidget);
         }
 
         var articleBody = document.querySelector('.div_corpo_artigo');
@@ -35,6 +40,17 @@
         }
 
         renderCalculator(articleBody);
+    }
+
+    function isCurrentWidget(widget) {
+        if (!widget) {
+            return false;
+        }
+
+        return !!widget.querySelector('[data-role="taxa_juros"]') &&
+            !widget.querySelector('[data-role="taxa_nominal"]') &&
+            !widget.querySelector('[data-role="taxa_efetiva_mensal"]') &&
+            !widget.querySelector('[data-role="taxa_efetiva_anual"]');
     }
 
     function renderCalculator(articleBody) {
