@@ -1,8 +1,10 @@
 (function () {
-    var CALCULATOR_VERSION = '1.0.1';
+    var CALCULATOR_VERSION = '1.0.10';
     var WIDGET_ID = 'calc-saldo-devedor-widget';
     var RESULT_ID = 'calc-saldo-devedor-resultado';
     var ENDPOINT_URL = '/comum/php/xhr/calc/saldo_devedor.php';
+    var MAX_VALOR_SOLICITADO = 2000000;
+    var MAX_PRAZO = 150;
     var currencyFormatter = new Intl.NumberFormat('pt-BR', {
         style: 'currency',
         currency: 'BRL'
@@ -52,7 +54,7 @@
             '      <input class="calc-rf__input" type="text" name="data_primeira_parcela" placeholder="Ex.: 01/03/2025" />' +
             '    </label>' +
             '    <label class="calc-rf__field">' +
-            '      <span class="calc-rf__label">Valor liberado / financiado</span>' +
+            '      <span class="calc-rf__label">Valor solicitado</span>' +
             '      <input class="calc-rf__input" type="text" name="valor_liberado" inputmode="decimal" placeholder="Ex.: 50.000,00" />' +
             '    </label>' +
             '    <label class="calc-rf__field">' +
@@ -61,10 +63,10 @@
             '    </label>' +
             '    <label class="calc-rf__field">' +
             '      <span class="calc-rf__label">Prazo (número de parcelas)</span>' +
-            '      <input class="calc-rf__input" type="number" name="prazo" min="1" max="600" step="1" placeholder="Ex.: 48" />' +
+            '      <input class="calc-rf__input" type="number" name="prazo" min="1" max="150" step="1" placeholder="Ex.: 48" />' +
             '    </label>' +
             '  </div>' +
-            '  <p class="calc-rf__disclaimer" style="margin: 8px 0 0; font-size: 13px; line-height: 1.5; opacity: 0.85;">Simulação educacional de <strong>saldo devedor de empréstimo</strong>. Use datas no formato <strong>DD/MM/AAAA</strong>. O IOF é calculado a partir do valor solicitado, prazo e carência; depois a taxa contratual é estimada pelas parcelas.</p>' +
+            '  <p class="calc-rf__disclaimer" style="margin: 8px 0 0; font-size: 13px; line-height: 1.5; opacity: 0.85;">Simulação educacional de <strong>saldo devedor de empréstimo</strong>. Use datas no formato <strong>DD/MM/AAAA</strong>. O IOF é calculado sobre o valor solicitado e a taxa contratual é estimada pelas parcelas.</p>' +
             '  <div class="calc-rf__actions">' +
             '    <button class="calc-rf__button" type="submit">Calcular Saldo Devedor</button>' +
             '    <div class="calc-rf__status" aria-live="polite"></div>' +
@@ -219,9 +221,9 @@
     function buildReportHtml(result, metrics) {
         var html = '<div class="calc-rf__report-content">' +
             '<h3 style="margin: 0 0 14px; font-size: 22px; line-height: 1.2;">Explicação detalhada</h3>' +
-            '<p style="margin: 0 0 14px;">Esta calculadora estima o saldo devedor atual de um empréstimo a partir do valor liberado, do valor da parcela, do prazo e da data da primeira parcela. O IOF é calculado antes da taxa mensal, e a taxa contratual é inferida pelas parcelas sobre o valor financiado.</p>' +
+            '<p style="margin: 0 0 14px;">Esta calculadora estima o saldo devedor atual de um empréstimo a partir do valor solicitado, do valor da parcela, do prazo e da data da primeira parcela. O IOF e a taxa contratual são resolvidos em conjunto, considerando o total financiado.</p>' +
             '<p style="margin: 0 0 14px;">No cenário de contratação, o sistema também calcula o <strong>juros de carência</strong>, quando a primeira parcela foi postergada além do primeiro vencimento normal. O saldo devedor evolui mensalmente pela tabela Price, com arredondamento de juros em cada prestação.</p>' +
-            '<p style="margin: 0 0 14px;">A taxa efetiva considera o IOF como custo adicional da operação. Ou seja, o imposto entra no custo total do empréstimo e afeta o saldo final da simulação.</p>' +
+            '<p style="margin: 0 0 14px;">A taxa efetiva considera o IOF como custo adicional da operação. O total financiado corresponde ao valor solicitado mais o IOF, e esse total afeta o saldo final da simulação.</p>' +
             '<p style="margin: 0 0 14px;">Na data da simulação, o sistema estima um saldo devedor de <strong>' + currencyFormatter.format(metrics.saldoDevedor || 0) + '</strong>, com <strong>' + Math.round(metrics.parcelasRestantes || 0).toLocaleString('pt-BR') + '</strong> parcelas restantes.</p>' +
             '<p style="margin: 0 0 14px;">Os principais indicadores da simulação são: taxa de juros de <strong>' + rateFormatter.format(metrics.taxaContratualMensal || 0) + '% ao mês</strong> e IOF total de <strong>' + currencyFormatter.format(metrics.iofTotal || 0) + '</strong>.</p>';
 
@@ -243,7 +245,7 @@
             return null;
         }
 
-        if (!isFinite(valorLiberado) || valorLiberado <= 0) {
+        if (!isFinite(valorLiberado) || valorLiberado <= 0 || valorLiberado > MAX_VALOR_SOLICITADO) {
             return null;
         }
 
@@ -251,7 +253,7 @@
             return null;
         }
 
-        if (!isFinite(prazo) || prazo < 1) {
+        if (!isFinite(prazo) || prazo < 1 || prazo > MAX_PRAZO) {
             return null;
         }
 
