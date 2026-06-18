@@ -1,5 +1,5 @@
 (function () {
-    var CALCULATOR_VERSION = '1.0.10';
+    var CALCULATOR_VERSION = '1.0.21';
     var WIDGET_ID = 'calc-saldo-devedor-widget';
     var RESULT_ID = 'calc-saldo-devedor-resultado';
     var ENDPOINT_URL = '/comum/php/xhr/calc/saldo_devedor.php';
@@ -54,7 +54,7 @@
             '      <input class="calc-rf__input" type="text" name="data_primeira_parcela" placeholder="Ex.: 01/03/2025" />' +
             '    </label>' +
             '    <label class="calc-rf__field">' +
-            '      <span class="calc-rf__label">Valor solicitado</span>' +
+            '      <span class="calc-rf__label" data-role="valor_liberado_label">Valor financiado</span>' +
             '      <input class="calc-rf__input" type="text" name="valor_liberado" inputmode="decimal" placeholder="Ex.: 50.000,00" />' +
             '    </label>' +
             '    <label class="calc-rf__field">' +
@@ -65,8 +65,27 @@
             '      <span class="calc-rf__label">Prazo (número de parcelas)</span>' +
             '      <input class="calc-rf__input" type="number" name="prazo" min="1" max="150" step="1" placeholder="Ex.: 48" />' +
             '    </label>' +
+            '    <div class="calc-rf__field calc-rf__switch-field" data-role="campo_tipo_valor" style="grid-column: 1 / -1; min-height: 48px;">' +
+            '      <input type="hidden" name="tipo_valor" value="financiado" />' +
+            '      <span class="calc-rf__switch" data-role="tipo_valor_switch" aria-hidden="true" style="display: inline-flex; align-items: center; width: 100%; max-width: 360px; height: 44px; padding: 4px; border-radius: 8px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.14);">' +
+            '        <span data-role="tipo_valor_switch_financiado" style="flex: 1; height: 34px; display: inline-flex; align-items: center; justify-content: center; border-radius: 6px; font-weight: 700; color: #fff; background: rgba(142, 154, 168, 0.32); cursor: pointer; user-select: none;">Valor financiado</span>' +
+            '        <span data-role="tipo_valor_switch_solicitado" style="flex: 1; height: 34px; display: inline-flex; align-items: center; justify-content: center; border-radius: 6px; font-weight: 700; color: rgba(255,255,255,0.72); cursor: pointer; user-select: none;">Valor solicitado</span>' +
+            '      </span>' +
+            '    </div>' +
+            '    <div class="calc-rf__field calc-rf__switch-field" data-role="campo_renovacao" style="display: none; min-height: 48px;">' +
+            '      <span class="calc-rf__label">Tipo da operação</span>' +
+            '      <input class="calc-rf__switch-input" type="checkbox" name="renovacao" value="1" style="position: absolute; opacity: 0; pointer-events: none;" />' +
+            '      <span class="calc-rf__switch" data-role="renovacao_switch" aria-hidden="true" style="display: inline-flex; align-items: center; width: 100%; max-width: 260px; height: 44px; padding: 4px; border-radius: 8px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.14);">' +
+            '        <span data-role="renovacao_switch_novo" style="flex: 1; height: 34px; display: inline-flex; align-items: center; justify-content: center; border-radius: 6px; font-weight: 700; color: #fff; background: rgba(142, 154, 168, 0.32); cursor: pointer; user-select: none;">Novo</span>' +
+            '        <span data-role="renovacao_switch_renovacao" style="flex: 1; height: 34px; display: inline-flex; align-items: center; justify-content: center; border-radius: 6px; font-weight: 700; color: rgba(255,255,255,0.72); cursor: pointer; user-select: none;">Renovação</span>' +
+            '      </span>' +
+            '    </div>' +
+            '    <label class="calc-rf__field" data-role="campo_troco" style="display: none;">' +
+            '      <span class="calc-rf__label">Valor do troco</span>' +
+            '      <input class="calc-rf__input" type="text" name="valor_troco" inputmode="decimal" placeholder="Ex.: 2.000,00" />' +
+            '    </label>' +
             '  </div>' +
-            '  <p class="calc-rf__disclaimer" style="margin: 8px 0 0; font-size: 13px; line-height: 1.5; opacity: 0.85;">Simulação educacional de <strong>saldo devedor de empréstimo</strong>. Use datas no formato <strong>DD/MM/AAAA</strong>. O IOF é calculado sobre o valor solicitado e a taxa contratual é estimada pelas parcelas.</p>' +
+            '  <p class="calc-rf__disclaimer" data-role="disclaimer" style="margin: 8px 0 0; font-size: 13px; line-height: 1.5; opacity: 0.85;">Simulação educacional de <strong>saldo devedor de empréstimo</strong>. Use datas no formato <strong>DD/MM/AAAA</strong>. O valor financiado informado já deve incluir o IOF; por isso, o cálculo não recalcula IOF nem diferencia novo/renovação.</p>' +
             '  <div class="calc-rf__actions">' +
             '    <button class="calc-rf__button" type="submit">Calcular Saldo Devedor</button>' +
             '    <div class="calc-rf__status" aria-live="polite"></div>' +
@@ -104,10 +123,22 @@
         var summary = wrapper.querySelector('[data-role="resumo"]');
         var detail = wrapper.querySelector('[data-role="detalhe"]');
         var reportContainer = wrapper.querySelector('[data-role="relatorio"]');
+        var tipoValorField = form.elements.tipo_valor;
+        var valorLiberadoLabel = wrapper.querySelector('[data-role="valor_liberado_label"]');
+        var campoRenovacao = wrapper.querySelector('[data-role="campo_renovacao"]');
+        var disclaimer = wrapper.querySelector('[data-role="disclaimer"]');
+        var tipoValorSwitchSolicitado = wrapper.querySelector('[data-role="tipo_valor_switch_solicitado"]');
+        var tipoValorSwitchFinanciado = wrapper.querySelector('[data-role="tipo_valor_switch_financiado"]');
+        var renovacaoField = form.elements.renovacao;
+        var valorTrocoField = form.elements.valor_troco;
+        var campoTroco = wrapper.querySelector('[data-role="campo_troco"]');
+        var renovacaoSwitchNovo = wrapper.querySelector('[data-role="renovacao_switch_novo"]');
+        var renovacaoSwitchRenovacao = wrapper.querySelector('[data-role="renovacao_switch_renovacao"]');
 
         var currencyFields = [
             form.elements.valor_liberado,
-            form.elements.valor_parcela
+            form.elements.valor_parcela,
+            valorTrocoField
         ];
         var dateFields = [
             form.elements.data_contratacao,
@@ -128,6 +159,114 @@
                 field.value = formatDateInput(field.value);
             });
         });
+
+        function syncRenovacaoUi() {
+            if (!renovacaoField) {
+                return;
+            }
+
+            if (campoTroco) {
+                campoTroco.style.display = renovacaoField.checked ? '' : 'none';
+            }
+
+            if (renovacaoSwitchNovo && renovacaoSwitchRenovacao) {
+                renovacaoSwitchNovo.style.background = renovacaoField.checked ? 'transparent' : 'rgba(142, 154, 168, 0.32)';
+                renovacaoSwitchNovo.style.color = renovacaoField.checked ? 'rgba(255,255,255,0.72)' : '#fff';
+                renovacaoSwitchRenovacao.style.background = renovacaoField.checked ? 'rgba(142, 154, 168, 0.32)' : 'transparent';
+                renovacaoSwitchRenovacao.style.color = renovacaoField.checked ? '#fff' : 'rgba(255,255,255,0.72)';
+            }
+        }
+
+        function setSwitchState(activeNode, inactiveNode) {
+            if (!activeNode || !inactiveNode) {
+                return;
+            }
+
+            activeNode.style.background = 'rgba(142, 154, 168, 0.32)';
+            activeNode.style.color = '#fff';
+            inactiveNode.style.background = 'transparent';
+            inactiveNode.style.color = 'rgba(255,255,255,0.72)';
+        }
+
+        function syncTipoValorUi() {
+            var isValorFinanciado = tipoValorField && tipoValorField.value === 'financiado';
+
+            if (valorLiberadoLabel) {
+                valorLiberadoLabel.textContent = isValorFinanciado ? 'Valor financiado' : 'Valor solicitado';
+            }
+
+            if (campoRenovacao) {
+                campoRenovacao.style.display = isValorFinanciado ? 'none' : '';
+            }
+
+            if (isValorFinanciado && renovacaoField) {
+                renovacaoField.checked = false;
+                if (valorTrocoField) {
+                    valorTrocoField.value = '';
+                }
+            }
+
+            if (disclaimer) {
+                disclaimer.innerHTML = isValorFinanciado
+                    ? 'Simulação educacional de <strong>saldo devedor de empréstimo</strong>. Use datas no formato <strong>DD/MM/AAAA</strong>. O valor financiado informado já deve incluir o IOF; por isso, o cálculo não recalcula IOF nem diferencia novo/renovação.'
+                    : 'Simulação educacional de <strong>saldo devedor de empréstimo</strong>. Use datas no formato <strong>DD/MM/AAAA</strong>. Em empréstimo novo, o IOF usa o valor solicitado; em renovação, usa o valor do troco.';
+            }
+
+            if (isValorFinanciado) {
+                setSwitchState(tipoValorSwitchFinanciado, tipoValorSwitchSolicitado);
+            } else {
+                setSwitchState(tipoValorSwitchSolicitado, tipoValorSwitchFinanciado);
+            }
+
+            syncRenovacaoUi();
+        }
+
+        if (tipoValorField) {
+            if (tipoValorSwitchSolicitado) {
+                tipoValorSwitchSolicitado.addEventListener('click', function () {
+                    tipoValorField.value = 'solicitado';
+                    syncTipoValorUi();
+                });
+            }
+
+            if (tipoValorSwitchFinanciado) {
+                tipoValorSwitchFinanciado.addEventListener('click', function () {
+                    tipoValorField.value = 'financiado';
+                    syncTipoValorUi();
+                });
+            }
+
+            syncTipoValorUi();
+        }
+
+        if (renovacaoField && campoTroco) {
+            renovacaoField.addEventListener('change', function () {
+                syncRenovacaoUi();
+                if (!renovacaoField.checked && valorTrocoField) {
+                    valorTrocoField.value = '';
+                }
+            });
+
+            if (renovacaoSwitchNovo) {
+                renovacaoSwitchNovo.addEventListener('click', function (event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    renovacaoField.checked = false;
+                    renovacaoField.dispatchEvent(new Event('change'));
+                });
+            }
+
+            if (renovacaoSwitchRenovacao) {
+                renovacaoSwitchRenovacao.addEventListener('click', function (event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    renovacaoField.checked = true;
+                    renovacaoField.dispatchEvent(new Event('change'));
+                });
+            }
+
+            syncRenovacaoUi();
+        }
 
         form.addEventListener('submit', async function (event) {
             event.preventDefault();
@@ -182,13 +321,16 @@
         var prazo = result.prazo || 0;
         var diasCarencia = result.dias_carencia || 0;
         var dataBaseCarencia = result.data_base_carencia_br || result.data_base_carencia || '-';
+        var isValorFinanciadoInformado = result.tipo_valor_informado === 'financiado';
+        var baseIof = isValorFinanciadoInformado ? 0 : (result.valor_base_iof || result.valor_solicitado || result.valor_liberado || 0);
+        var iofComplementarRenovacao = result.iof_complementar_renovacao || 0;
 
         nodes.resultValue.textContent = currencyFormatter.format(saldoDevedor);
         nodes.jurosCarenciaValue.textContent = currencyFormatter.format(jurosCarencia);
         if (nodes.taxaJurosValue) {
             nodes.taxaJurosValue.textContent = formatRate(taxaContratualMensal) + ' ao mês';
         }
-        nodes.iofTotalValue.textContent = currencyFormatter.format(iofTotal);
+        nodes.iofTotalValue.textContent = isValorFinanciadoInformado ? 'Embutido' : currencyFormatter.format(iofTotal);
         nodes.parcelasRestantesValue.textContent = Math.round(parcelasRestantes).toLocaleString('pt-BR');
 
         nodes.summary.textContent = 'Na data da simulação ' + (result.data_simulacao_br || result.data_referencia_br || '-') + ', restam ' +
@@ -199,9 +341,13 @@
             ' ao mês. Juros de carência: ' + currencyFormatter.format(jurosCarencia) +
             '. Base de carência: ' + dataBaseCarencia + '. Dias de carência: ' + diasCarencia.toLocaleString('pt-BR') +
             (diasCarencia === 1 ? ' dia.' : ' dias.') +
-            ' IOF considerado na simulação: ' +
-            formatRate(result.iof_aliquota_fixa_percentual || 0) + ' fixa + ' +
-            formatRate(result.iof_aliquota_diaria_percentual || 0) + ' ao dia.';
+            (isValorFinanciadoInformado
+                ? ' IOF não recalculado: o valor financiado informado foi tratado como total já com IOF embutido.'
+                : ' Base de IOF: ' + currencyFormatter.format(baseIof) + '.' +
+                    (iofComplementarRenovacao > 0 ? ' IOF complementar estimado da renovação: ' + currencyFormatter.format(iofComplementarRenovacao) + '.' : '') +
+                    ' IOF considerado na simulação: ' +
+                    formatRate(result.iof_aliquota_fixa_percentual || 0) + ' fixa + ' +
+                    formatRate(result.iof_aliquota_diaria_percentual || 0) + ' ao dia.');
 
         if (nodes.reportContainer) {
             nodes.reportContainer.innerHTML = buildReportHtml(result, {
@@ -219,13 +365,20 @@
     }
 
     function buildReportHtml(result, metrics) {
+        var isValorFinanciadoInformado = result.tipo_valor_informado === 'financiado';
         var html = '<div class="calc-rf__report-content">' +
             '<h3 style="margin: 0 0 14px; font-size: 22px; line-height: 1.2;">Explicação detalhada</h3>' +
-            '<p style="margin: 0 0 14px;">Esta calculadora estima o saldo devedor atual de um empréstimo a partir do valor solicitado, do valor da parcela, do prazo e da data da primeira parcela. O IOF e a taxa contratual são resolvidos em conjunto, considerando o total financiado.</p>' +
+            '<p style="margin: 0 0 14px;">Esta calculadora estima o saldo devedor atual de um empréstimo a partir do valor informado, do valor da parcela, do prazo e da data da primeira parcela. ' +
+            (isValorFinanciadoInformado ? 'Como o valor financiado já foi informado, ele é usado diretamente como total do contrato.' : 'O IOF e a taxa contratual são resolvidos em conjunto, considerando o total financiado.') +
+            '</p>' +
             '<p style="margin: 0 0 14px;">No cenário de contratação, o sistema também calcula o <strong>juros de carência</strong>, quando a primeira parcela foi postergada além do primeiro vencimento normal. O saldo devedor evolui mensalmente pela tabela Price, com arredondamento de juros em cada prestação.</p>' +
-            '<p style="margin: 0 0 14px;">A taxa efetiva considera o IOF como custo adicional da operação. O total financiado corresponde ao valor solicitado mais o IOF, e esse total afeta o saldo final da simulação.</p>' +
+            '<p style="margin: 0 0 14px;">' +
+            (isValorFinanciadoInformado ? 'Neste modo, o IOF não é recalculado porque já está embutido no valor financiado informado.' : 'A taxa efetiva considera o IOF como custo adicional da operação. O total financiado corresponde ao valor solicitado mais o IOF, e esse total afeta o saldo final da simulação.') +
+            '</p>' +
             '<p style="margin: 0 0 14px;">Na data da simulação, o sistema estima um saldo devedor de <strong>' + currencyFormatter.format(metrics.saldoDevedor || 0) + '</strong>, com <strong>' + Math.round(metrics.parcelasRestantes || 0).toLocaleString('pt-BR') + '</strong> parcelas restantes.</p>' +
-            '<p style="margin: 0 0 14px;">Os principais indicadores da simulação são: taxa de juros de <strong>' + rateFormatter.format(metrics.taxaContratualMensal || 0) + '% ao mês</strong> e IOF total de <strong>' + currencyFormatter.format(metrics.iofTotal || 0) + '</strong>.</p>';
+            '<p style="margin: 0 0 14px;">Os principais indicadores da simulação são: taxa de juros de <strong>' + rateFormatter.format(metrics.taxaContratualMensal || 0) + '% ao mês</strong> e ' +
+            (isValorFinanciadoInformado ? '<strong>IOF embutido no valor financiado informado</strong>.' : 'IOF total de <strong>' + currencyFormatter.format(metrics.iofTotal || 0) + '</strong>.') +
+            '</p>';
 
         html += '<p style="margin: 18px 0 0; padding: 15px; border-radius: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); font-size: 15px;">' +
             '<strong>Atenção:</strong> esta calculadora é uma estimativa educacional e não substitui a leitura do contrato, do demonstrativo financeiro ou a conferência com a instituição credora.' +
@@ -240,6 +393,9 @@
         var valorLiberado = parseLocaleNumber(form.elements.valor_liberado.value);
         var valorParcela = parseLocaleNumber(form.elements.valor_parcela.value);
         var prazo = parseInt(form.elements.prazo.value, 10);
+        var tipoValor = form.elements.tipo_valor && form.elements.tipo_valor.value === 'financiado' ? 'financiado' : 'solicitado';
+        var isRenovacao = tipoValor === 'solicitado' && !!(form.elements.renovacao && form.elements.renovacao.checked);
+        var valorTroco = isRenovacao ? parseLocaleNumber(form.elements.valor_troco.value) : 0;
 
         if (!dataContratacao || !dataPrimeiraParcela) {
             return null;
@@ -257,12 +413,19 @@
             return null;
         }
 
+        if (isRenovacao && (!isFinite(valorTroco) || valorTroco < 0 || valorTroco > valorLiberado)) {
+            return null;
+        }
+
         return {
             data_contratacao: dataContratacao,
             data_primeira_parcela: dataPrimeiraParcela,
+            tipo_valor: tipoValor,
             valor_liberado: valorLiberado,
             valor_parcela: valorParcela,
-            prazo: prazo
+            prazo: prazo,
+            renovacao: isRenovacao ? 1 : 0,
+            valor_troco: valorTroco
         };
     }
 
