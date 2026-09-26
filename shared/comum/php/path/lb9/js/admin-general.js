@@ -21,6 +21,25 @@
             }
         },
 
+        async loadDebug() {
+            try {
+                const payload = await send(`${this.apiBase}/admin_debug_status.php`, {});
+                const status = payload?.ok;
+                const message = payload?.message || 'Erro ao carregar estado do debug';
+                const debug = payload?.data?.debug;
+
+                if (!status || !debug) {
+                    this.showToast(message, 'error');
+                    return;
+                }
+
+                this.debugState = !!debug.active;
+                this.renderDebugState(debug.source || 'config');
+            } catch (error) {
+                this.showToast(error.message || 'Erro ao carregar estado do debug', 'error');
+            }
+        },
+
         async toggleCache() {
             if (!this.toggleCacheBtn) return;
 
@@ -44,6 +63,32 @@
                 this.showToast(error.message || 'Erro ao alternar cache', 'error');
             } finally {
                 this.toggleCacheBtn.disabled = false;
+            }
+        },
+
+        async toggleDebug() {
+            if (!this.toggleDebugBtn) return;
+
+            this.toggleDebugBtn.disabled = true;
+
+            try {
+                const payload = await send(`${this.apiBase}/admin_toggle_debug.php`, {});
+                const status = payload?.ok;
+                const message = payload?.message || 'Erro ao alternar debug';
+                const debug = payload?.data?.debug;
+
+                if (!status || !debug) {
+                    this.showToast(message, 'error');
+                    return;
+                }
+
+                this.debugState = !!debug.active;
+                this.renderDebugState(debug.source || 'config');
+                this.showDebugTemplateModal(message);
+            } catch (error) {
+                this.showToast(error.message || 'Erro ao alternar debug', 'error');
+            } finally {
+                this.toggleDebugBtn.disabled = false;
             }
         },
 
@@ -181,6 +226,24 @@
 
             if (this.toggleCacheHint) {
                 this.toggleCacheHint.textContent = `Estado atual lido diretamente do arquivo de configuração (${sourceLabel}).`;
+            }
+        },
+
+        renderDebugState(sourceLabel) {
+            const activeText = this.debugState ? 'Debug ativo' : 'Debug desativado';
+            const actionText = this.debugState ? 'Desativar debug' : 'Ativar debug';
+
+            if (this.toggleDebugLabel) {
+                this.toggleDebugLabel.textContent = activeText;
+            }
+
+            if (this.toggleDebugBtn) {
+                this.toggleDebugBtn.textContent = actionText;
+                this.toggleDebugBtn.classList.toggle('is-active', this.debugState);
+            }
+
+            if (this.toggleDebugHint) {
+                this.toggleDebugHint.textContent = `Estado lido do config.php (${sourceLabel}). Após alterar, execute Cache Templates e, se o cache do site estiver ativo, Limpar Cache.`;
             }
         }
     };

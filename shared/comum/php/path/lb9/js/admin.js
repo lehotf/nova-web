@@ -12,6 +12,9 @@
             this.toggleCacheBtn = this.root.querySelector('#toggleCacheBtn');
             this.toggleCacheLabel = this.root.querySelector('#toggleCacheLabel');
             this.toggleCacheHint = this.root.querySelector('#toggleCacheHint');
+            this.toggleDebugBtn = this.root.querySelector('#toggleDebugBtn');
+            this.toggleDebugLabel = this.root.querySelector('#toggleDebugLabel');
+            this.toggleDebugHint = this.root.querySelector('#toggleDebugHint');
             this.commandButtons = Array.from(this.root.querySelectorAll('.admin-command-btn'));
             this.tagsList = this.root.querySelector('#adminTagsList');
             this.tagSearchInput = this.root.querySelector('#adminTagSearch');
@@ -37,10 +40,15 @@
             this.accessClearMessage = this.root.querySelector('#adminAccessClearMessage');
             this.accessClearCancel = this.root.querySelector('#adminAccessClearCancel');
             this.accessClearConfirm = this.root.querySelector('#adminAccessClearConfirm');
+            this.debugTemplateModal = this.root.querySelector('#adminDebugTemplateModal');
+            this.debugTemplateModalTitle = this.root.querySelector('#adminDebugTemplateTitle');
+            this.debugTemplateModalMessage = this.root.querySelector('#adminDebugTemplateMessage');
+            this.debugTemplateModalClose = this.root.querySelector('#adminDebugTemplateClose');
             this.toastContainer = this.root.querySelector('#adminToastContainer');
 
             this.activeOption = 'geral';
             this.cacheState = false;
+            this.debugState = false;
             this.tags = [];
             this.filteredTags = [];
             this.accessLogs = [];
@@ -101,6 +109,14 @@
                 this.toggleCache();
             });
 
+            this.toggleDebugBtn?.addEventListener('click', () => {
+                this.toggleDebug();
+            });
+
+            this.debugTemplateModalClose?.addEventListener('click', () => {
+                this.closeDebugTemplateModal();
+            });
+
             this.commandButtons.forEach((button) => {
                 button.addEventListener('click', () => {
                     this.runCommand(button.dataset.command || '');
@@ -155,8 +171,23 @@
         initialize() {
             this.renderOptionState();
             this.loadGeneral();
+            this.loadDebug();
             this.loadTags();
             this.loadAccessLogs();
+        }
+
+        showDebugTemplateModal(message) {
+            if (!this.debugTemplateModal) return;
+
+            this.debugTemplateModalTitle.textContent = this.debugState ? 'DEBUG ativado' : 'DEBUG desativado';
+            this.debugTemplateModalMessage.textContent = `${message} Para aplicar a alteração, execute Cache Templates. Se o cache HTML do site estiver ativo, limpe-o também.`;
+            this.debugTemplateModal.classList.remove('hidden');
+            this.debugTemplateModalClose?.focus();
+        }
+
+        closeDebugTemplateModal() {
+            this.debugTemplateModal?.classList.add('hidden');
+            this.toggleDebugBtn?.focus();
         }
 
         filterOptions() {

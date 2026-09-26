@@ -3,7 +3,7 @@ require $_SERVER['DOCUMENT_ROOT'] . '/comum/php/autoload.php';
 $c = new controlador(observador: true, autenticador: true);
 $c->autenticador->acesso(2);
 
-const LB9_ASSET_VERSION = '1.0.1';
+const LB9_ASSET_VERSION = '1.0.3';
 
 function lb9AssetVersion(string $path): string
 {
@@ -345,6 +345,14 @@ function lb9AssetVersion(string $path): string
                                     <button type="button" id="toggleCacheBtn" class="btn btn-secondary">Ativar cache</button>
                                 </div>
 
+                                <div class="admin-action-card">
+                                    <div>
+                                        <div id="toggleDebugLabel" class="admin-action-title">Debug desativado</div>
+                                        <div id="toggleDebugHint" class="admin-action-description">Após alterar, execute Cache Templates e, se o cache do site estiver ativo, Limpar Cache.</div>
+                                    </div>
+                                    <button type="button" id="toggleDebugBtn" class="btn btn-secondary">Ativar debug</button>
+                                </div>
+
                                 <div class="admin-actions-grid">
                                     <button type="button" class="btn btn-secondary admin-command-btn" data-command="rebuild_all">Reconstruir TUDO</button>
                                     <button type="button" class="btn btn-secondary admin-command-btn" data-command="cache_templates">Cache Templates</button>
@@ -469,6 +477,26 @@ function lb9AssetVersion(string $path): string
                 <div class="modal-actions">
                     <button type="button" id="adminAccessClearCancel" class="btn btn-secondary">Cancelar</button>
                     <button type="button" id="adminAccessClearConfirm" class="btn btn-danger">Limpar</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="adminDebugTemplateModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="adminDebugTemplateTitle" aria-describedby="adminDebugTemplateMessage">
+            <div class="modal-overlay"></div>
+            <div class="modal-content">
+                <div class="modal-head">
+                    <div class="modal-icon modal-icon-input">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="9"></circle>
+                            <line x1="12" y1="11" x2="12" y2="16"></line>
+                            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                        </svg>
+                    </div>
+                    <h2 id="adminDebugTemplateTitle" class="modal-title">DEBUG atualizado</h2>
+                </div>
+                <p id="adminDebugTemplateMessage" class="modal-message"></p>
+                <div class="modal-actions">
+                    <button type="button" id="adminDebugTemplateClose" class="btn btn-primary">Fechar</button>
                 </div>
             </div>
         </div>
