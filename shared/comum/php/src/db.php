@@ -127,7 +127,7 @@ class database
                 }
                 return $vetor;
             }
-            return false;
+            return [];
         }
         return false;
     }

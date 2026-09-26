@@ -482,13 +482,13 @@ Dropdown Menu
  h1 {
      font-size: 42px;
      line-height: 50px;
-     color: #eaeaea;
+     color: #d1d1d1;
      /* background-color: #FFF; */
  }
 h2 {
      font-size: 1.3em;
      line-height: 1em;
-     color: #9ca6b2;
+     color: #d1d1d1;
      font-weight: 700;
  }
  ul li {
