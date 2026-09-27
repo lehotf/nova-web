@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="32"
+   height="32"
+   viewBox="0 0 32 32"
+   id="svg2"
+   version="1.1"
+   inkscape:version="0.92.4 (5da689c313, 2019-01-14)"
+   sodipodi:docname="favicon quemoleza.svg"
+   inkscape:export-filename="/home/leo/Temp/favicon.png"
+   inkscape:export-xdpi="96"
+   inkscape:export-ydpi="96">
+  <defs
+     id="defs4">
+    <clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipPath4240">
+      <ellipse
+         style="fill:#000000;fill-opacity:0.37869825"
+         id="ellipse4242"
+         cx="124.45583"
+         cy="125.2984"
+         rx="123.90891"
+         ry="120.03189" />
+    </clipPath>
+  </defs>
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="4"
+     inkscape:cx="123.86841"
+     inkscape:cy="17.157014"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer2"
+     showgrid="false"
+     units="px"
+     borderlayer="true"
+     inkscape:showpageshadow="false"
+     inkscape:window-width="2522"
+     inkscape:window-height="1033"
+     inkscape:window-x="38"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     showguides="false" />
+  <metadata
+     id="metadata7">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(0,-1020.3622)" />
+  <g
+     inkscape:groupmode="layer"
+     id="layer2"
+     inkscape:label="Layer 2"
+     transform="translate(0,-118)">
+    <g
+       id="g3365"
+       inkscape:export-filename="C:\Users\Léo\Pictures\Que Moleza Redondo.png"
+       inkscape:export-xdpi="90"
+       inkscape:export-ydpi="90"
+       clip-path="url(#clipPath4240)"
+       transform="matrix(0.12894442,0,0,0.12894442,-0.04788526,117.84347)"
+       style="opacity:1;fill:none;stroke:none;stroke-linecap:square;stroke-miterlimit:10">
+      <path
+         style="fill:#ffffff;fill-rule:nonzero"
+         inkscape:connector-curvature="0"
+         d="M 0,0 H 250 V 250 H 0 Z"
+         id="path3343" />
+      <path
+         style="fill:#000000;fill-opacity:0;fill-rule:nonzero"
+         inkscape:connector-curvature="0"
+         d="m 157.45792,145.83272 49.35432,44.44095"
+         id="path3351" />
+      <path
+         style="fill:#f1c232;fill-rule:nonzero"
+         inkscape:connector-curvature="0"
+         d="m -17.154858,11.02559 v 222.98068 c 0,6.2957 2.500962,12.33356 6.952702,16.78531 4.4517405,4.45174 10.4895955,6.95268 16.7853055,6.95268 H 125.27034 c 10e-4,0 0.002,-10e-4 0.002,-0.002 l -0.002,-270.454466 v 0 c 0,-0.0012 -0.001,-0.0023 -0.002,-0.0023 l -118.6849412,0.0023 v 0 c -13.11014,0 -23.7380078,10.6278677 -23.7380078,23.738007 z"
+         id="path3345" />
+      <path
+         style="fill:#333333;fill-rule:nonzero"
+         inkscape:connector-curvature="0"
+         d="M 267.15485,11.029094 V 234.00976 c 0,6.29572 -2.50095,12.33358 -6.9527,16.78531 -4.45173,4.45174 -10.48959,6.9527 -16.78531,6.9527 H 124.72966 c -10e-4,0 -0.002,-10e-4 -0.002,-0.002 l 0.002,-270.454438 v 0 c 0,-0.0012 0.001,-0.0023 0.002,-0.0023 l 118.68493,0.0023 v 0 c 13.11014,0 23.73801,10.6278695 23.73801,23.738007 z"
+         id="path3347" />
+      <path
+         style="fill:#333333;fill-rule:nonzero"
+         inkscape:connector-curvature="0"
+         mask="none"
+         d="m 24.969793,124.19284 v 0 c 0,-53.645546 43.488304,-97.13386 97.133857,-97.13386 v 0 c 25.76151,0 50.46788,10.233715 68.68401,28.449848 18.21614,18.21613 28.44984,42.922512 28.44984,68.684002 v 0 c 0,53.64556 -43.48829,97.13387 -97.13385,97.13387 v 0 c -53.645551,0 -97.133857,-43.48831 -97.133857,-97.13387 z"
+         id="path3349" />
+      <path
+         style="fill-rule:nonzero;stroke:#f1c232;stroke-width:16;stroke-linecap:butt;stroke-linejoin:round"
+         inkscape:connector-curvature="0"
+         d="m 157.45792,145.83272 49.35432,44.44095"
+         id="path3353" />
+    </g>
+  </g>
+</svg>
